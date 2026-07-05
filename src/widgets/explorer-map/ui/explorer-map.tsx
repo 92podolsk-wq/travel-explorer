@@ -1,0 +1,280 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
+import type { Feature, FeatureCollection, Point } from "geojson";
+import type { Poi } from "@/entities/poi/model/types";
+import { kyotoRegion } from "@/entities/region/model/kyoto";
+import { explorationModes } from "@/features/exploration-mode/model/modes";
+import { getVisiblePois } from "@/features/smart-map/model/visibility";
+import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
+import { baseMapStyleUrl } from "@/shared/map/base-map-style";
+import { useExplorerStore } from "@/shared/model/explorer-store";
+
+const poiSourceId = "travel-explorer-pois";
+const poiHitLayerId = "poi-hit-area";
+const poiCircleLayerId = "poi-circles";
+const poiLabelLayerId = "poi-labels";
+
+type PoiFeatureProperties = {
+  id: string;
+  name: string;
+  selected: boolean;
+  mustVisit: boolean;
+};
+
+type PoiFeature = Feature<Point, PoiFeatureProperties>;
+type PoiFeatureCollection = FeatureCollection<Point, PoiFeatureProperties>;
+
+const emptyPoiCollection: PoiFeatureCollection = {
+  type: "FeatureCollection",
+  features: []
+};
+
+function createPoiCollection(pois: Poi[], selectedPoiId: string): PoiFeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: pois.map(
+      (poi): PoiFeature => ({
+        type: "Feature",
+        id: poi.id,
+        geometry: {
+          type: "Point",
+          coordinates: [poi.coordinates.lng, poi.coordinates.lat]
+        },
+        properties: {
+          id: poi.id,
+          name: poi.name,
+          selected: poi.id === selectedPoiId,
+          mustVisit: poi.mustVisit
+        }
+      })
+    )
+  };
+}
+
+function getPoiIdFromEvent(event: MapLayerMouseEvent) {
+  const feature = event.features?.[0];
+  const id = feature?.properties?.id;
+
+  return typeof id === "string" ? id : null;
+}
+
+function addPoiLayers(map: MapLibreMap) {
+  if (map.getSource(poiSourceId)) {
+    return;
+  }
+
+  map.addSource(poiSourceId, {
+    type: "geojson",
+    data: emptyPoiCollection
+  });
+
+  map.addLayer({
+    id: poiHitLayerId,
+    type: "circle",
+    source: poiSourceId,
+    paint: {
+      "circle-radius": 20,
+      "circle-color": "rgba(0, 0, 0, 0)",
+      "circle-stroke-width": 0
+    }
+  });
+
+  map.addLayer({
+    id: poiCircleLayerId,
+    type: "circle",
+    source: poiSourceId,
+    paint: {
+      "circle-radius": [
+        "case",
+        ["==", ["get", "selected"], true],
+        11,
+        ["==", ["get", "mustVisit"], true],
+        8.5,
+        7.5
+      ],
+      "circle-color": [
+        "case",
+        ["==", ["get", "selected"], true],
+        "#287f72",
+        "#ffffff"
+      ],
+      "circle-stroke-color": [
+        "case",
+        ["==", ["get", "selected"], true],
+        "#ffffff",
+        "#287f72"
+      ],
+      "circle-stroke-width": [
+        "case",
+        ["==", ["get", "selected"], true],
+        3,
+        2
+      ],
+      "circle-opacity": 0.98
+    }
+  });
+
+  map.addLayer({
+    id: poiLabelLayerId,
+    type: "symbol",
+    source: poiSourceId,
+    minzoom: 12,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-size": 12,
+      "text-anchor": "top",
+      "text-offset": [0, 1.35],
+      "text-allow-overlap": false,
+      "text-ignore-placement": false
+    },
+    paint: {
+      "text-color": "#23313d",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.6
+    }
+  });
+}
+
+function setPoiSourceData(map: MapLibreMap, data: PoiFeatureCollection) {
+  const source = map.getSource(poiSourceId);
+
+  if (!source) {
+    return;
+  }
+
+  (source as GeoJSONSource).setData(data);
+}
+
+export function ExplorerMap() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const [isMapReady, setIsMapReady] = useState(false);
+
+  const pois = useExplorerStore((state) => state.pois);
+  const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
+  const activeModeId = useExplorerStore((state) => state.activeModeId);
+  const searchQuery = useExplorerStore((state) => state.searchQuery);
+  const language = useExplorerStore((state) => state.language);
+  const zoom = useExplorerStore((state) => state.zoom);
+  const selectPoi = useExplorerStore((state) => state.selectPoi);
+  const setZoom = useExplorerStore((state) => state.setZoom);
+  const t = getTranslations(language);
+
+  const activeMode = useMemo(
+    () => explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0],
+    [activeModeId]
+  );
+
+  const visiblePois = useMemo(
+    () =>
+      getVisiblePois(pois, activeMode, zoom, searchQuery, (poi) =>
+        getLocalizedPoiSearchText(poi, language)
+      ),
+    [activeMode, language, pois, searchQuery, zoom]
+  );
+
+  const poiCollection = useMemo(
+    () => createPoiCollection(visiblePois, selectedPoiId),
+    [selectedPoiId, visiblePois]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function mountMap() {
+      if (!containerRef.current || mapRef.current) {
+        return;
+      }
+
+      const maplibre = await import("maplibre-gl");
+
+      if (!isMounted || !containerRef.current) {
+        return;
+      }
+
+      const map = new maplibre.Map({
+        container: containerRef.current,
+        style: baseMapStyleUrl,
+        center: [kyotoRegion.center.lng, kyotoRegion.center.lat],
+        zoom: kyotoRegion.defaultZoom,
+        maxBounds: kyotoRegion.bounds,
+        attributionControl: {
+          compact: true
+        }
+      });
+
+      const handlePoiClick = (event: MapLayerMouseEvent) => {
+        const poiId = getPoiIdFromEvent(event);
+
+        if (poiId) {
+          selectPoi(poiId);
+        }
+      };
+
+      const setPointerCursor = () => {
+        map.getCanvas().style.cursor = "pointer";
+      };
+
+      const resetCursor = () => {
+        map.getCanvas().style.cursor = "";
+      };
+
+      map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-left");
+      map.on("zoom", () => setZoom(map.getZoom()));
+      map.on("load", () => {
+        addPoiLayers(map);
+        map.on("click", poiHitLayerId, handlePoiClick);
+        map.on("mouseenter", poiHitLayerId, setPointerCursor);
+        map.on("mouseleave", poiHitLayerId, resetCursor);
+        setZoom(map.getZoom());
+        setIsMapReady(true);
+      });
+      mapRef.current = map;
+    }
+
+    void mountMap();
+
+    return () => {
+      isMounted = false;
+      setIsMapReady(false);
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, [selectPoi, setZoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    setPoiSourceData(map, poiCollection);
+  }, [isMapReady, poiCollection]);
+
+  useEffect(() => {
+    const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
+    const map = mapRef.current;
+
+    if (!selectedPoi || !map) {
+      return;
+    }
+
+    map.easeTo({
+      center: [selectedPoi.coordinates.lng, selectedPoi.coordinates.lat],
+      duration: 650,
+      zoom: Math.max(map.getZoom(), 12)
+    });
+  }, [pois, selectedPoiId]);
+
+  return (
+    <div className="absolute inset-0">
+      <div ref={containerRef} className="h-full w-full" />
+      <div className="pointer-events-none absolute left-[402px] top-6 hidden rounded-md border border-white/70 bg-white/[0.82] px-3 py-2 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-xl md:block">
+        Zoom {zoom.toFixed(1)} / {visiblePois.length} {t.app.places}
+      </div>
+    </div>
+  );
+}

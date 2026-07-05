@@ -1,0 +1,16 @@
+import type { Region } from "./types";
+
+export const kyotoRegion: Region = {
+  id: "kyoto",
+  name: "Kyoto",
+  country: "Japan",
+  center: {
+    lat: 35.0116,
+    lng: 135.7681
+  },
+  defaultZoom: 11,
+  bounds: [
+    [135.56, 34.86],
+    [135.91, 35.16]
+  ]
+};

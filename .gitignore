@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# production
+build/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# local env
+.env
+.env*.local
+
+# OS/editor
+.DS_Store
+Thumbs.db
+
+# Codex/local workspace state
+.agents/
+.codex/
+
+# local documents not used by the app
+*.docx
+*.xlsx
+*.xls

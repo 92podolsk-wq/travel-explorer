@@ -30,6 +30,14 @@ type TranslationDictionary = {
     signals: string;
     minutesShort: string;
     language: string;
+    hideDetails: string;
+    showDetails: string;
+    sunrise: string;
+    sunset: string;
+    exportKml: string;
+    exportKmlHint: string;
+    openInMaps: string;
+    openInMapsHint: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
@@ -56,7 +64,15 @@ export const translations: Record<Language, TranslationDictionary> = {
       bestTime: "Best Time",
       signals: "Signals",
       minutesShort: "m",
-      language: "Language"
+      language: "Language",
+      hideDetails: "Hide details",
+      showDetails: "Show details",
+      sunrise: "Sunrise",
+      sunset: "Sunset",
+      exportKml: "KML",
+      exportKmlHint: "Download saved places to open in Google My Maps",
+      openInMaps: "Maps",
+      openInMapsHint: "Open saved places as an optimized route in Google Maps"
     },
     modes: {
       photographer: {
@@ -184,7 +200,15 @@ export const translations: Record<Language, TranslationDictionary> = {
       bestTime: "Лучшее время",
       signals: "Признаки",
       minutesShort: "мин",
-      language: "Язык"
+      language: "Язык",
+      hideDetails: "Скрыть панель",
+      showDetails: "Показать панель",
+      sunrise: "Восход",
+      sunset: "Закат",
+      exportKml: "KML",
+      exportKmlHint: "Скачать сохранённые места для открытия в Google Мои карты",
+      openInMaps: "Maps",
+      openInMapsHint: "Открыть сохранённые места оптимизированным маршрутом в Google Maps"
     },
     modes: {
       photographer: {

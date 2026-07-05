@@ -1,5 +1,8 @@
 import { ExplorerPage } from "@/views/explorer";
+import { readPois } from "@/shared/server/pois-repository";
 
 export default function Home() {
-  return <ExplorerPage />;
+  const pois = readPois();
+
+  return <ExplorerPage initialPois={pois} />;
 }

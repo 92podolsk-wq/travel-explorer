@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
+import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
 import type { Feature, FeatureCollection, Point } from "geojson";
-import type { Poi } from "@/entities/poi/model/types";
+import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { kyotoRegion } from "@/entities/region/model/kyoto";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import { baseMapStyleUrl } from "@/shared/map/base-map-style";
+import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 
 const poiSourceId = "travel-explorer-pois";
 const poiHitLayerId = "poi-hit-area";
 const poiCircleLayerId = "poi-circles";
+const poiIconLayerId = "poi-icons";
 const poiLabelLayerId = "poi-labels";
 
 type PoiFeatureProperties = {
@@ -21,6 +23,7 @@ type PoiFeatureProperties = {
   name: string;
   selected: boolean;
   mustVisit: boolean;
+  category: PoiCategory;
 };
 
 type PoiFeature = Feature<Point, PoiFeatureProperties>;
@@ -46,7 +49,8 @@ function createPoiCollection(pois: Poi[], selectedPoiId: string): PoiFeatureColl
           id: poi.id,
           name: poi.name,
           selected: poi.id === selectedPoiId,
-          mustVisit: poi.mustVisit
+          mustVisit: poi.mustVisit,
+          category: poi.categories[0] ?? "district"
         }
       })
     )
@@ -60,10 +64,19 @@ function getPoiIdFromEvent(event: MapLayerMouseEvent) {
   return typeof id === "string" ? id : null;
 }
 
-function addPoiLayers(map: MapLibreMap) {
+const categoryColorMatchExpression = [
+  "match",
+  ["get", "category"],
+  ...Object.entries(categoryMarkerColors).flatMap(([category, color]) => [category, color]),
+  "#7a7a7a"
+] as unknown as ExpressionSpecification;
+
+async function addPoiLayers(map: MapLibreMap) {
   if (map.getSource(poiSourceId)) {
     return;
   }
+
+  await registerCategoryMarkerIcons(map);
 
   map.addSource(poiSourceId, {
     type: "geojson",
@@ -75,7 +88,7 @@ function addPoiLayers(map: MapLibreMap) {
     type: "circle",
     source: poiSourceId,
     paint: {
-      "circle-radius": 20,
+      "circle-radius": 24,
       "circle-color": "rgba(0, 0, 0, 0)",
       "circle-stroke-width": 0
     }
@@ -89,30 +102,42 @@ function addPoiLayers(map: MapLibreMap) {
       "circle-radius": [
         "case",
         ["==", ["get", "selected"], true],
-        11,
+        19,
         ["==", ["get", "mustVisit"], true],
-        8.5,
-        7.5
+        15,
+        12.5
       ],
       "circle-color": [
         "case",
         ["==", ["get", "selected"], true],
         "#287f72",
-        "#ffffff"
+        categoryColorMatchExpression
       ],
       "circle-stroke-color": [
         "case",
         ["==", ["get", "selected"], true],
-        "#ffffff",
-        "#287f72"
+        "#1d5c52",
+        "#ffffff"
       ],
       "circle-stroke-width": [
         "case",
         ["==", ["get", "selected"], true],
-        3,
-        2
+        4.5,
+        3
       ],
-      "circle-opacity": 0.98
+      "circle-opacity": 1
+    }
+  });
+
+  map.addLayer({
+    id: poiIconLayerId,
+    type: "symbol",
+    source: poiSourceId,
+    layout: {
+      "icon-image": ["concat", "poi-icon-", ["get", "category"]],
+      "icon-size": ["case", ["==", ["get", "selected"], true], 0.95, 0.72],
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true
     }
   });
 
@@ -133,6 +158,19 @@ function addPoiLayers(map: MapLibreMap) {
       "text-color": "#23313d",
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.6
+    }
+  });
+}
+
+function hideBasemapPoiLayers(map: MapLibreMap) {
+  const layers = map.getStyle()?.layers ?? [];
+
+  layers.forEach((layer) => {
+    const sourceLayer = "source-layer" in layer ? layer["source-layer"] : undefined;
+    const isPoiLayer = /poi/i.test(layer.id) || (typeof sourceLayer === "string" && /poi/i.test(sourceLayer));
+
+    if (isPoiLayer) {
+      map.setLayoutProperty(layer.id, "visibility", "none");
     }
   });
 }
@@ -158,7 +196,7 @@ export function ExplorerMap() {
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
-  const selectPoi = useExplorerStore((state) => state.selectPoi);
+  const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const setZoom = useExplorerStore((state) => state.setZoom);
   const t = getTranslations(language);
 
@@ -209,7 +247,7 @@ export function ExplorerMap() {
         const poiId = getPoiIdFromEvent(event);
 
         if (poiId) {
-          selectPoi(poiId);
+          selectPoiFromMap(poiId);
         }
       };
 
@@ -224,12 +262,17 @@ export function ExplorerMap() {
       map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-left");
       map.on("zoom", () => setZoom(map.getZoom()));
       map.on("load", () => {
-        addPoiLayers(map);
-        map.on("click", poiHitLayerId, handlePoiClick);
-        map.on("mouseenter", poiHitLayerId, setPointerCursor);
-        map.on("mouseleave", poiHitLayerId, resetCursor);
-        setZoom(map.getZoom());
-        setIsMapReady(true);
+        hideBasemapPoiLayers(map);
+        void addPoiLayers(map).then(() => {
+          if (!isMounted) {
+            return;
+          }
+          map.on("click", poiHitLayerId, handlePoiClick);
+          map.on("mouseenter", poiHitLayerId, setPointerCursor);
+          map.on("mouseleave", poiHitLayerId, resetCursor);
+          setZoom(map.getZoom());
+          setIsMapReady(true);
+        });
       });
       mapRef.current = map;
     }
@@ -242,7 +285,7 @@ export function ExplorerMap() {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [selectPoi, setZoom]);
+  }, [selectPoiFromMap, setZoom]);
 
   useEffect(() => {
     const map = mapRef.current;

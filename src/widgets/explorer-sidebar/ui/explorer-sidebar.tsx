@@ -1,15 +1,20 @@
 "use client";
 
-import { MapPin, Search, Star } from "lucide-react";
+import { useMemo } from "react";
+import { Bookmark, Camera, Clock, Eye, Globe, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { kyotoRegion } from "@/entities/region/model/kyoto";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
+import { modeIcons } from "@/features/exploration-mode/ui/mode-icon";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { getSunTimes } from "@/shared/lib/sun-times";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
 
@@ -38,6 +43,17 @@ export function ExplorerSidebar() {
     getLocalizedPoiSearchText(poi, language)
   );
 
+  const sunTimes = useMemo(
+    () =>
+      getSunTimes(
+        new Date(),
+        kyotoRegion.center.lat,
+        kyotoRegion.center.lng,
+        kyotoRegion.timezoneOffsetHours
+      ),
+    []
+  );
+
   return (
     <motion.aside
       initial={{ opacity: 0, x: -18 }}
@@ -48,18 +64,32 @@ export function ExplorerSidebar() {
       <div className="border-b border-white/70 p-5">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Travel Explorer
-            </p>
+            <div className="flex items-center gap-1.5">
+              <TravelKittenLogo />
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Travel Explorer
+              </p>
+            </div>
             <div className="mt-1 flex items-center gap-2">
               <h1 className="text-3xl font-semibold tracking-normal">{t.app.regionName}</h1>
               <MapPin className="mt-1 h-5 w-5 text-primary" />
             </div>
+            <div className="mt-1.5 flex items-center gap-3 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
+                <Sunrise className="h-3.5 w-3.5 text-amber-500" />
+                {sunTimes.sunrise ?? "—"}
+              </span>
+              <span className="inline-flex items-center gap-1" title={t.app.sunset}>
+                <Sunset className="h-3.5 w-3.5 text-amber-600" />
+                {sunTimes.sunset ?? "—"}
+              </span>
+            </div>
           </div>
           <div
             aria-label={t.app.language}
-            className="flex rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
+            className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
           >
+            <Globe className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
             {languageOptions.map((option) => (
               <button
                 key={option.language}
@@ -92,31 +122,38 @@ export function ExplorerSidebar() {
 
       <div className="border-b border-white/70 p-4">
         <div className="flex flex-wrap gap-2">
-          {explorationModes.map((mode) => (
-            <Button
-              key={mode.id}
-              type="button"
-              variant={mode.id === activeModeId ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveMode(mode.id as ExplorationModeId)}
-              title={t.modes[mode.id].description}
-              className={cn(
-                "h-9 max-w-full rounded-md px-3",
-                mode.id === activeModeId ? "shadow-soft" : "bg-white/[0.58]"
-              )}
-            >
-              <span className="truncate">{t.modes[mode.id].label}</span>
-            </Button>
-          ))}
+          {explorationModes.map((mode) => {
+            const ModeIcon = modeIcons[mode.id as ExplorationModeId];
+
+            return (
+              <Button
+                key={mode.id}
+                type="button"
+                variant={mode.id === activeModeId ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveMode(mode.id as ExplorationModeId)}
+                title={t.modes[mode.id].description}
+                className={cn(
+                  "h-9 max-w-full rounded-md px-3",
+                  mode.id === activeModeId ? "shadow-soft" : "bg-white/[0.58]"
+                )}
+              >
+                <ModeIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{t.modes[mode.id].label}</span>
+              </Button>
+            );
+          })}
         </div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="mb-3 flex items-center justify-between px-1 text-xs font-medium text-muted-foreground">
-          <span>
+          <span className="inline-flex items-center gap-1.5">
+            <Eye className="h-3.5 w-3.5" />
             {visiblePois.length} {t.app.visible}
           </span>
-          <span>
+          <span className="inline-flex items-center gap-1.5">
+            <Bookmark className="h-3.5 w-3.5" />
             {favorites.length} {t.app.saved}
           </span>
         </div>
@@ -154,15 +191,17 @@ export function ExplorerSidebar() {
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">
                       {t.poi[poi.id]?.description ?? poi.description}
                     </p>
-                    <div className="mt-2.5 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <div className="mt-2.5 flex items-center gap-2.5 text-xs font-medium text-muted-foreground">
                       <span className="inline-flex items-center gap-1 text-foreground">
                         <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                         {poi.rating.toFixed(1)}
                       </span>
-                      <span>
-                        {t.app.photo} {poi.photoScore}
+                      <span className="inline-flex items-center gap-1">
+                        <Camera className="h-3.5 w-3.5" />
+                        {poi.photoScore}
                       </span>
-                      <span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
                         {poi.durationMinutes}
                         {t.app.minutesShort}
                       </span>

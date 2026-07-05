@@ -1,6 +1,8 @@
 import type { Poi } from "@/entities/poi/model/types";
 import type { ExplorationMode } from "@/features/exploration-mode/model/types";
 
+export const zoomedInOnlyThreshold = 12;
+
 const zoomThreshold = (zoom: number) => {
   if (zoom < 10) {
     return 92;
@@ -37,7 +39,9 @@ export function getVisiblePois(
         poi.tags.some((tag) => tag.includes(normalizedQuery)) ||
         getSearchText(poi).includes(normalizedQuery);
 
-      return matchesSearch && (score >= threshold || poi.mustVisit || matchesMode);
+      const visibleAtZoom = poi.visibilityMode !== "zoomed-in" || zoom > zoomedInOnlyThreshold;
+
+      return visibleAtZoom && matchesSearch && (score >= threshold || poi.mustVisit || matchesMode);
     })
     .sort((a, b) => b.score - a.score)
     .map(({ poi }) => poi);

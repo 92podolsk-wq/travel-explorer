@@ -7,4 +7,5 @@ export type Region = {
   center: Coordinates;
   defaultZoom: number;
   bounds: [[number, number], [number, number]];
+  timezoneOffsetHours: number;
 };

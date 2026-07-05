@@ -12,5 +12,6 @@ export const kyotoRegion: Region = {
   bounds: [
     [135.56, 34.86],
     [135.91, 35.16]
-  ]
+  ],
+  timezoneOffsetHours: 9
 };

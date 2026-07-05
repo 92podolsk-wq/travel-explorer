@@ -11,8 +11,15 @@ export const kyotoPois: Poi[] = [
     photos: [
       {
         id: "fushimi-main",
-        url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=82",
-        alt: "Vermilion torii gates at Fushimi Inari"
+        url: "/photos/fushimi-inari/1.jpg",
+        alt: "Vermilion torii gates at Fushimi Inari",
+        author: "Paul Vlaar"
+      },
+      {
+        id: "fushimi-senbon-torii",
+        url: "/photos/fushimi-inari/2.jpg",
+        alt: "Senbon Torii pathway at Fushimi Inari Taisha",
+        author: "Yanajin33"
       }
     ],
     categories: ["shrine", "nature"],
@@ -23,7 +30,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Sunrise", "Blue hour"],
     difficulty: "active",
     durationMinutes: 150,
-    importance: 100
+    importance: 100,
+    visibilityMode: "default"
   },
   {
     id: "kiyomizu-dera",
@@ -47,7 +55,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Opening", "Late afternoon"],
     difficulty: "moderate",
     durationMinutes: 120,
-    importance: 98
+    importance: 98,
+    visibilityMode: "default"
   },
   {
     id: "arashiyama-bamboo",
@@ -72,7 +81,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Early morning"],
     difficulty: "easy",
     durationMinutes: 90,
-    importance: 95
+    importance: 95,
+    visibilityMode: "default"
   },
   {
     id: "gion",
@@ -96,7 +106,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Dusk", "Night"],
     difficulty: "easy",
     durationMinutes: 120,
-    importance: 94
+    importance: 94,
+    visibilityMode: "default"
   },
   {
     id: "philosophers-path",
@@ -120,7 +131,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Morning"],
     difficulty: "easy",
     durationMinutes: 75,
-    importance: 86
+    importance: 86,
+    visibilityMode: "default"
   },
   {
     id: "kinkaku-ji",
@@ -144,7 +156,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Opening", "Cloudy midday"],
     difficulty: "easy",
     durationMinutes: 60,
-    importance: 92
+    importance: 92,
+    visibilityMode: "default"
   },
   {
     id: "daigo-ji",
@@ -168,7 +181,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Morning"],
     difficulty: "moderate",
     durationMinutes: 150,
-    importance: 80
+    importance: 80,
+    visibilityMode: "default"
   },
   {
     id: "kurama-kibune",
@@ -192,7 +206,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Morning", "After rain"],
     difficulty: "active",
     durationMinutes: 210,
-    importance: 78
+    importance: 78,
+    visibilityMode: "default"
   },
   {
     id: "nishiki-market",
@@ -216,7 +231,8 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Late morning"],
     difficulty: "easy",
     durationMinutes: 60,
-    importance: 74
+    importance: 74,
+    visibilityMode: "default"
   },
   {
     id: "shugakuin",
@@ -240,6 +256,7 @@ export const kyotoPois: Poi[] = [
     bestTime: ["Morning"],
     difficulty: "moderate",
     durationMinutes: 120,
-    importance: 70
+    importance: 70,
+    visibilityMode: "default"
   }
 ];

@@ -25,6 +25,8 @@ export type PoiTag =
 
 export type Difficulty = "easy" | "moderate" | "active";
 
+export type PoiVisibilityMode = "default" | "zoomed-in";
+
 export type Photo = {
   id: string;
   url: string;
@@ -53,4 +55,7 @@ export type Poi = {
   difficulty: Difficulty;
   durationMinutes: number;
   importance: number;
+  visibilityMode: PoiVisibilityMode;
 };
+
+export type PoiInput = Omit<Poi, "id"> & { id?: string };

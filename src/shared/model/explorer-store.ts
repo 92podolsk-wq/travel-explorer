@@ -13,12 +13,16 @@ type ExplorerState = {
   favorites: string[];
   language: Language;
   zoom: number;
+  isDetailsOpen: boolean;
   selectPoi: (poiId: string) => void;
+  selectPoiFromMap: (poiId: string) => void;
   setActiveMode: (modeId: ExplorationModeId) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
   toggleFavorite: (poiId: string) => void;
   setZoom: (zoom: number) => void;
+  setDetailsOpen: (open: boolean) => void;
+  setPois: (pois: Poi[]) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
@@ -29,7 +33,9 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   favorites: [],
   language: "en",
   zoom: 11,
+  isDetailsOpen: false,
   selectPoi: (poiId) => set({ selectedPoiId: poiId }),
+  selectPoiFromMap: (poiId) => set({ selectedPoiId: poiId, isDetailsOpen: true }),
   setActiveMode: (modeId) => set({ activeModeId: modeId }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
@@ -39,5 +45,13 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
         ? state.favorites.filter((id) => id !== poiId)
         : [...state.favorites, poiId]
     })),
-  setZoom: (zoom) => set({ zoom })
+  setZoom: (zoom) => set({ zoom }),
+  setDetailsOpen: (open) => set({ isDetailsOpen: open }),
+  setPois: (pois) =>
+    set((state) => ({
+      pois,
+      selectedPoiId: pois.some((poi) => poi.id === state.selectedPoiId)
+        ? state.selectedPoiId
+        : (pois[0]?.id ?? "")
+    }))
 }));

@@ -1,0 +1,419 @@
+[
+  {
+    "name": "Fushimi Inari Taisha",
+    "description": "A mountain shrine route lined with thousands of vermilion gates, strongest at sunrise and after dark.",
+    "coordinates": {
+      "lat": 34.9671,
+      "lng": 135.7727
+    },
+    "rating": 4.9,
+    "photos": [
+      {
+        "id": "/photos/fushimi-inari/1.jpg-0",
+        "url": "/photos/fushimi-inari/1.jpg",
+        "alt": "Vermilion torii gates at Fushimi Inari",
+        "author": "Paul Vlaar"
+      },
+      {
+        "id": "/photos/fushimi-inari/2.jpg-1",
+        "url": "/photos/fushimi-inari/2.jpg",
+        "alt": "Senbon Torii pathway at Fushimi Inari Taisha",
+        "author": "Yanajin33"
+      }
+    ],
+    "categories": [
+      "shrine",
+      "nature"
+    ],
+    "tags": [
+      "must-visit",
+      "photographer",
+      "autumn",
+      "sunrise",
+      "night",
+      "first-visit"
+    ],
+    "seasons": [
+      "spring",
+      "autumn",
+      "winter"
+    ],
+    "photoScore": 98,
+    "mustVisit": true,
+    "visibilityMode": "zoomed-in",
+    "bestTime": [
+      "Sunrise",
+      "Blue hour"
+    ],
+    "difficulty": "active",
+    "durationMinutes": 150,
+    "importance": 100,
+    "id": "fushimi-inari"
+  },
+  {
+    "name": "Kiyomizu-dera",
+    "description": "A hillside temple with broad city views, wooden architecture, and atmospheric approach streets.",
+    "coordinates": {
+      "lat": 34.9949,
+      "lng": 135.785
+    },
+    "rating": 4.8,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3ddwa",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3ddwabw6ffsySQDg27x3eURAGrVp3yhsatGIYV6fFgHN7nrYzd_GrZTA&s=10",
+        "alt": "Kiyomizu-dera temple in Kyoto"
+      }
+    ],
+    "categories": [
+      "temple",
+      "viewpoint",
+      "street"
+    ],
+    "tags": [
+      "must-visit",
+      "photographer",
+      "first-visit",
+      "sakura",
+      "autumn"
+    ],
+    "seasons": [
+      "spring",
+      "autumn"
+    ],
+    "photoScore": 94,
+    "mustVisit": true,
+    "bestTime": [
+      "Opening",
+      "Late afternoon"
+    ],
+    "difficulty": "moderate",
+    "durationMinutes": 120,
+    "importance": 98,
+    "id": "kiyomizu-dera",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Arashiyama Bamboo Grove",
+    "description": "A compact bamboo corridor near river views, temples, and quieter northern walking routes.",
+    "coordinates": {
+      "lat": 35.017,
+      "lng": 135.6719
+    },
+    "rating": 4.6,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSjgze",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSjgzeUTfwnO24SOq2JJs_a6hvYXaadh7KiFCkOlB6a6u9JwrOcr6XgFSo&s=10",
+        "alt": "Bamboo grove in Arashiyama"
+      }
+    ],
+    "categories": [
+      "nature",
+      "street"
+    ],
+    "tags": [
+      "must-visit",
+      "photographer",
+      "first-visit",
+      "nature",
+      "rain"
+    ],
+    "seasons": [
+      "all year"
+    ],
+    "photoScore": 91,
+    "mustVisit": true,
+    "bestTime": [
+      "Early morning"
+    ],
+    "difficulty": "easy",
+    "durationMinutes": 90,
+    "importance": 95,
+    "id": "arashiyama-bamboo",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Gion",
+    "description": "Kyoto's historic entertainment district with preserved streets, lanterns, tea houses, and evening atmosphere.",
+    "coordinates": {
+      "lat": 35.0037,
+      "lng": 135.7751
+    },
+    "rating": 4.7,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpyVEX",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpyVEXkbY6reDxd3YuSrifnRAGZ5c-Ka0Fl0G1csW0OlZlfkjdizPTrqs&s=10",
+        "alt": "Traditional street in Gion at dusk"
+      }
+    ],
+    "categories": [
+      "district",
+      "street"
+    ],
+    "tags": [
+      "must-visit",
+      "photographer",
+      "first-visit",
+      "night",
+      "rain"
+    ],
+    "seasons": [
+      "all year"
+    ],
+    "photoScore": 92,
+    "mustVisit": true,
+    "bestTime": [
+      "Dusk",
+      "Night"
+    ],
+    "difficulty": "easy",
+    "durationMinutes": 120,
+    "importance": 94,
+    "id": "gion",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Philosopher's Path",
+    "description": "A canal-side walk connecting temples and small cafes, especially strong during cherry blossom season.",
+    "coordinates": {
+      "lat": 35.0268,
+      "lng": 135.7975
+    },
+    "rating": 4.6,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMBk1R",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMBk1RWPS54XX5n3Beevl2OacaKaiQcLm9uwubmi_aMl4dDAWTuw2ouynB&s=10",
+        "alt": "Cherry blossoms over a Kyoto canal"
+      }
+    ],
+    "categories": [
+      "street",
+      "nature"
+    ],
+    "tags": [
+      "photographer",
+      "sakura",
+      "nature",
+      "first-visit",
+      "public-transport"
+    ],
+    "seasons": [
+      "spring"
+    ],
+    "photoScore": 89,
+    "mustVisit": false,
+    "bestTime": [
+      "Morning"
+    ],
+    "difficulty": "easy",
+    "durationMinutes": 75,
+    "importance": 86,
+    "id": "philosophers-path",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Kinkaku-ji",
+    "description": "The Golden Pavilion reflected in a pond, concise but iconic and visually clean in winter light.",
+    "coordinates": {
+      "lat": 35.0394,
+      "lng": 135.7292
+    },
+    "rating": 4.7,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMcmES",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMcmES47k6h-V1_fi2Dnkw1lzKhQLVIbNmF0HMVkjPALP7qXh_q86Isfo&s=10",
+        "alt": "Kinkaku-ji Golden Pavilion"
+      }
+    ],
+    "categories": [
+      "temple",
+      "garden"
+    ],
+    "tags": [
+      "must-visit",
+      "first-visit",
+      "photographer",
+      "autumn"
+    ],
+    "seasons": [
+      "autumn",
+      "winter"
+    ],
+    "photoScore": 88,
+    "mustVisit": true,
+    "bestTime": [
+      "Opening",
+      "Cloudy midday"
+    ],
+    "difficulty": "easy",
+    "durationMinutes": 60,
+    "importance": 92,
+    "id": "kinkaku-ji",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Daigo-ji",
+    "description": "A spacious temple complex with exceptional sakura, autumn color, and a quieter feeling than central Kyoto.",
+    "coordinates": {
+      "lat": 34.951,
+      "lng": 135.8195
+    },
+    "rating": 4.6,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa1hj9",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa1hj9Q6uiyo5uiYUaoZh3baY8cYpd_OgoOcqc01L0wbOD5E7jP9xgl0gy&s=10",
+        "alt": "Kyoto temple garden in spring"
+      }
+    ],
+    "categories": [
+      "temple",
+      "garden"
+    ],
+    "tags": [
+      "sakura",
+      "autumn",
+      "hidden-gem",
+      "photographer",
+      "public-transport"
+    ],
+    "seasons": [
+      "spring",
+      "autumn"
+    ],
+    "photoScore": 86,
+    "mustVisit": false,
+    "bestTime": [
+      "Morning"
+    ],
+    "difficulty": "moderate",
+    "durationMinutes": 150,
+    "importance": 80,
+    "id": "daigo-ji",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Kurama to Kibune",
+    "description": "A forested temple-to-village walk north of Kyoto, ideal when the city center feels too dense.",
+    "coordinates": {
+      "lat": 35.1217,
+      "lng": 135.7707
+    },
+    "rating": 4.7,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIlO5W",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIlO5W9e7mGmuS40WjOO2yRMpOTPkoVJKnBPTEDaAN-h67wZJ-apA9ojT-&s=10",
+        "alt": "Mossy forest path near Kyoto"
+      }
+    ],
+    "categories": [
+      "nature",
+      "temple"
+    ],
+    "tags": [
+      "nature",
+      "hidden-gem",
+      "light-trekking",
+      "autumn",
+      "photographer"
+    ],
+    "seasons": [
+      "summer",
+      "autumn"
+    ],
+    "photoScore": 87,
+    "mustVisit": false,
+    "bestTime": [
+      "Morning",
+      "After rain"
+    ],
+    "difficulty": "active",
+    "durationMinutes": 210,
+    "importance": 78,
+    "id": "kurama-kibune",
+    "visibilityMode": "default"
+  },
+  {
+    "name": "Nishiki Market",
+    "description": "A narrow food market that works well as a central reset between temple-heavy exploration blocks.",
+    "coordinates": {
+      "lat": 35.005,
+      "lng": 135.7647
+    },
+    "rating": 4.4,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFU96Q",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFU96QP_gv5Aikg5FxB9qeiCwtWvBaPAJYKUn65B9RiWjtd-2L5UR3fFo&s=10",
+        "alt": "Japanese market food stall"
+      }
+    ],
+    "categories": [
+      "market",
+      "street"
+    ],
+    "tags": [
+      "first-visit",
+      "rain",
+      "public-transport"
+    ],
+    "seasons": [
+      "all year"
+    ],
+    "photoScore": 72,
+    "mustVisit": false,
+    "visibilityMode": "zoomed-in",
+    "bestTime": [
+      "Late morning"
+    ],
+    "difficulty": "easy",
+    "durationMinutes": 60,
+    "importance": 74,
+    "id": "nishiki-market"
+  },
+  {
+    "name": "Shugakuin Imperial Villa",
+    "description": "Elegant villa gardens with layered views across northeast Kyoto, best for slow visual exploration.",
+    "coordinates": {
+      "lat": 35.0514,
+      "lng": 135.7973
+    },
+    "rating": 4.6,
+    "photos": [
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZgQMM",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZgQMMQ9t8nus9XUBhr8kyHuwUv5CfF3pWJA_qp-YasRHzwxinDhC-Hp4&s=10",
+        "alt": "Japanese garden and pond"
+      }
+    ],
+    "categories": [
+      "garden",
+      "viewpoint"
+    ],
+    "tags": [
+      "hidden-gem",
+      "autumn",
+      "photographer",
+      "nature"
+    ],
+    "seasons": [
+      "autumn",
+      "spring"
+    ],
+    "photoScore": 84,
+    "mustVisit": false,
+    "bestTime": [
+      "Morning"
+    ],
+    "difficulty": "moderate",
+    "durationMinutes": 120,
+    "importance": 70,
+    "id": "shugakuin",
+    "visibilityMode": "default"
+  }
+]

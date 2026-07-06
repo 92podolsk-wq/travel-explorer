@@ -68,6 +68,11 @@ function formatUtcHourInTimeZone(utcHour: number, timeZoneOffsetHours: number) {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
+export function getLocalTimeNow(date: Date, timeZoneOffsetHours: number): string {
+  const utcHour = date.getUTCHours() + date.getUTCMinutes() / 60;
+  return formatUtcHourInTimeZone(utcHour, timeZoneOffsetHours);
+}
+
 export function getSunTimes(
   date: Date,
   latitude: number,

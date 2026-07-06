@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Plus, Star, Trash2 } from "lucide-react";
-import { poiCategories, poiDifficulties, poiTags } from "@/entities/poi/model/constants";
-import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode } from "@/entities/poi/model/types";
+import { poiCategories, poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
+import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -13,6 +13,7 @@ type PhotoFormState = {
   url: string;
   alt: string;
   author: string;
+  season: Season | "";
 };
 
 type FormState = {
@@ -54,7 +55,7 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       tags: [],
       seasons: "all year",
       bestTime: "Morning",
-      photos: [{ url: "", alt: "", author: "" }]
+      photos: [{ url: "", alt: "", author: "", season: "" }]
     };
   }
 
@@ -75,7 +76,10 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     tags: poi.tags,
     seasons: poi.seasons.join(", "),
     bestTime: poi.bestTime.join(", "),
-    photos: poi.photos.length > 0 ? poi.photos.map((p) => ({ url: p.url, alt: p.alt, author: p.author ?? "" })) : [{ url: "", alt: "", author: "" }]
+    photos:
+      poi.photos.length > 0
+        ? poi.photos.map((p) => ({ url: p.url, alt: p.alt, author: p.author ?? "", season: p.season ?? "" }))
+        : [{ url: "", alt: "", author: "", season: "" }]
   };
 }
 
@@ -102,7 +106,8 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
       id: `${photo.url}-${index}`.slice(0, 60),
       url: photo.url.trim(),
       alt: photo.alt.trim() || form.name,
-      ...(photo.author.trim() ? { author: photo.author.trim() } : {})
+      ...(photo.author.trim() ? { author: photo.author.trim() } : {}),
+      ...(photo.season ? { season: photo.season } : {})
     }));
 
   if (photos.length === 0) return { error: "Add at least one photo URL." };
@@ -386,8 +391,19 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
                   value={photo.author}
                   onChange={(e) => updatePhoto(index, { author: e.target.value })}
                   placeholder="Author (optional)"
-                  className="col-span-2"
                 />
+                <select
+                  className={selectClass}
+                  value={photo.season}
+                  onChange={(e) => updatePhoto(index, { season: e.target.value as Season | "" })}
+                >
+                  <option value="">Any season</option>
+                  {seasons.map((season) => (
+                    <option key={season} value={season}>
+                      {season}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="button"
@@ -416,7 +432,7 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
           ))}
           <button
             type="button"
-            onClick={() => setForm((p) => ({ ...p, photos: [...p.photos, { url: "", alt: "", author: "" }] }))}
+            onClick={() => setForm((p) => ({ ...p, photos: [...p.photos, { url: "", alt: "", author: "", season: "" }] }))}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
           >
             <Plus className="h-3.5 w-3.5" />

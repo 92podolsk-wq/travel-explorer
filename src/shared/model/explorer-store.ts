@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
-import type { Poi } from "@/entities/poi/model/types";
+import type { Poi, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
 import { defaultExplorationMode } from "@/features/exploration-mode/model/modes";
@@ -27,6 +27,7 @@ type ExplorerState = {
   language: Language;
   zoom: number;
   isDetailsOpen: boolean;
+  selectedSeasons: Season[];
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
@@ -43,6 +44,7 @@ type ExplorerState = {
   setDetailsOpen: (open: boolean) => void;
   setPois: (pois: Poi[]) => void;
   setRegions: (regions: Region[]) => void;
+  toggleSeason: (season: Season) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
@@ -61,6 +63,7 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   language: "en",
   zoom: 11,
   isDetailsOpen: false,
+  selectedSeasons: [],
   selectPoi: (poiId) => set({ selectedPoiId: poiId }),
   selectPoiFromMap: (poiId) => set({ selectedPoiId: poiId, isDetailsOpen: true }),
   setActiveRegion: (regionId) =>
@@ -110,5 +113,11 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
       activeRegionId: regions.some((region) => region.id === state.activeRegionId)
         ? state.activeRegionId
         : (regions[0]?.id ?? state.activeRegionId)
+    })),
+  toggleSeason: (season) =>
+    set((state) => ({
+      selectedSeasons: state.selectedSeasons.includes(season)
+        ? state.selectedSeasons.filter((s) => s !== season)
+        : [...state.selectedSeasons, season]
     }))
 }));

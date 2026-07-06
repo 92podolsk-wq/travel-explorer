@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { seasons } from "@/entities/poi/model/constants";
 import { categoryIcons } from "@/entities/poi/ui/category-icon";
 import { difficultyIcons } from "@/entities/poi/ui/difficulty-icon";
+import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -20,6 +22,8 @@ export function PoiDetails() {
   const language = useExplorerStore((state) => state.language);
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const toggleVisited = useExplorerStore((state) => state.toggleVisited);
+  const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
+  const toggleSeason = useExplorerStore((state) => state.toggleSeason);
   const isDetailsOpen = useExplorerStore((state) => state.isDetailsOpen);
   const setDetailsOpen = useExplorerStore((state) => state.setDetailsOpen);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
@@ -33,6 +37,10 @@ export function PoiDetails() {
     }
   }, [isDetailsOpen, selectedPoi, markPoiViewed]);
 
+  useEffect(() => {
+    setActivePhotoIndex(0);
+  }, [selectedPoiId, selectedSeasons]);
+
   if (!selectedPoi) {
     return null;
   }
@@ -42,7 +50,17 @@ export function PoiDetails() {
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
-  const activePhoto = selectedPoi.photos[activePhotoIndex] ?? selectedPoi.photos[0];
+
+  const seasonFilteredPhotos =
+    selectedSeasons.length === 0
+      ? selectedPoi.photos
+      : selectedPoi.photos.filter((photo) => !photo.season || selectedSeasons.includes(photo.season));
+  const displayPhotos = seasonFilteredPhotos.length > 0 ? seasonFilteredPhotos : selectedPoi.photos;
+  const hasSeasonSpecificMatch =
+    selectedSeasons.length > 0 &&
+    selectedPoi.photos.some((photo) => photo.season && selectedSeasons.includes(photo.season));
+  const showSeasonFallbackHint = selectedSeasons.length > 0 && !hasSeasonSpecificMatch;
+  const activePhoto = displayPhotos[activePhotoIndex] ?? displayPhotos[0];
 
   return (
     <div className="absolute right-5 top-5 z-10 hidden h-[calc(100dvh-2.5rem)] w-[400px] lg:block">
@@ -86,9 +104,9 @@ export function PoiDetails() {
                 © {activePhoto.author}
               </span>
             )}
-            {selectedPoi.photos.length > 1 && (
+            {displayPhotos.length > 1 && (
               <div className="absolute left-4 top-14 flex gap-1.5">
-                {selectedPoi.photos.map((photo, index) => (
+                {displayPhotos.map((photo, index) => (
                   <button
                     key={photo.id}
                     type="button"
@@ -136,6 +154,37 @@ export function PoiDetails() {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="shrink-0 px-5">
+            <div className="flex gap-1.5">
+              {seasons.map((season) => {
+                const SeasonIcon = seasonIcons[season];
+                const isActive = selectedSeasons.includes(season);
+
+                return (
+                  <button
+                    key={season}
+                    type="button"
+                    onClick={() => toggleSeason(season)}
+                    aria-pressed={isActive}
+                    title={t.season[season]}
+                    className={cn(
+                      "flex h-7 flex-1 items-center justify-center gap-1 rounded border transition",
+                      isActive
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <SeasonIcon className="h-3 w-3" />
+                    <span className="text-[10px] font-medium">{t.season[season]}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {showSeasonFallbackHint && (
+              <p className="mt-1.5 text-[11px] text-muted-foreground">{t.app.noSeasonPhotoHint}</p>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-2">

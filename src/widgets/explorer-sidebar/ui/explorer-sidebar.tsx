@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Globe, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { seasons } from "@/entities/poi/model/constants";
+import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
+import { SeasonWeatherStrip } from "./season-weather-strip";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
 import { modeIcons } from "@/features/exploration-mode/ui/mode-icon";
@@ -12,6 +15,7 @@ import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
 import { getSunTimes } from "@/shared/lib/sun-times";
+import { LiveWeatherChips } from "./live-weather-chips";
 import { Button } from "@/shared/ui/button";
 import { FlagIcon } from "@/shared/ui/flag-icon";
 import { HankoSeal } from "@/shared/ui/hanko-seal";
@@ -49,6 +53,8 @@ export function ExplorerSidebar() {
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
   const setLanguage = useExplorerStore((state) => state.setLanguage);
   const selectPoi = useExplorerStore((state) => state.selectPoi);
+  const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
+  const toggleSeason = useExplorerStore((state) => state.toggleSeason);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
 
@@ -92,7 +98,7 @@ export function ExplorerSidebar() {
       className="absolute left-5 top-5 z-10 flex h-[calc(100dvh-2.5rem)] w-[min(370px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.82] shadow-panel backdrop-blur-xl"
     >
       <div className="border-b border-white/70 p-5">
-        <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="mb-3 flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-1.5">
               <TravelKittenLogo />
@@ -123,17 +129,6 @@ export function ExplorerSidebar() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-white/70 px-2.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
-              <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
-                <Sunrise className="h-3.5 w-3.5 text-amber-500" />
-                {sunTimes.sunrise ?? "—"}
-              </span>
-              <span className="h-3 w-px bg-border" />
-              <span className="inline-flex items-center gap-1" title={t.app.sunset}>
-                <Sunset className="h-3.5 w-3.5 text-amber-500" />
-                {sunTimes.sunset ?? "—"}
-              </span>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -183,6 +178,28 @@ export function ExplorerSidebar() {
           </div>
         </div>
 
+        <div className="mb-3 flex flex-wrap items-center gap-1">
+          <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white/70 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+            <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
+              <Sunrise className="h-3 w-3 text-amber-500" />
+              {sunTimes.sunrise ?? "—"}
+            </span>
+            <span className="h-3 w-px bg-border" />
+            <span className="inline-flex items-center gap-1" title={t.app.sunset}>
+              <Sunset className="h-3 w-3 text-amber-500" />
+              {sunTimes.sunset ?? "—"}
+            </span>
+          </div>
+          <LiveWeatherChips
+            key={activeRegion.id}
+            regionId={activeRegion.id}
+            latitude={activeRegion.center.lat}
+            longitude={activeRegion.center.lng}
+            timeZoneOffsetHours={activeRegion.timezoneOffsetHours}
+            tomorrowLabel={t.app.tomorrow}
+          />
+        </div>
+
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -219,6 +236,42 @@ export function ExplorerSidebar() {
             );
           })}
         </div>
+      </div>
+
+      <div className="border-b border-white/70 p-4 pt-3">
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          {t.app.seasonFilter}
+        </p>
+        <div className="flex gap-2">
+          {seasons.map((season) => {
+            const SeasonIcon = seasonIcons[season];
+            const isActive = selectedSeasons.includes(season);
+
+            return (
+              <button
+                key={season}
+                type="button"
+                onClick={() => toggleSeason(season)}
+                aria-pressed={isActive}
+                title={t.season[season]}
+                className={cn(
+                  "flex flex-1 flex-col items-center gap-1 rounded-md border py-1.5 transition",
+                  isActive
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-white/[0.58] text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <SeasonIcon className="h-4 w-4" />
+                <span className="text-[11px] font-medium">{t.season[season]}</span>
+              </button>
+            );
+          })}
+        </div>
+        <SeasonWeatherStrip
+          regionId={activeRegion.id}
+          selectedSeasons={selectedSeasons}
+          language={language}
+        />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">

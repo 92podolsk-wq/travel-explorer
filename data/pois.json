@@ -1,5 +1,6 @@
 [
   {
+    "regionId": "kyoto",
     "name": "Fushimi Inari Taisha",
     "description": "A mountain shrine route lined with thousands of vermilion gates, strongest at sunrise and after dark.",
     "coordinates": {
@@ -19,6 +20,21 @@
         "url": "/photos/fushimi-inari/2.jpg",
         "alt": "Senbon Torii pathway at Fushimi Inari Taisha",
         "author": "Yanajin33"
+      },
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbc0Vn",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQbc0Vnj1RH1MeTnQZiY7FRvLZwfzyL8PPJ8Jcwr2bvdcL7gvAJqbwtTb8&s=10",
+        "alt": "Fushimi Inari Taisha"
+      },
+      {
+        "id": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSDJNl",
+        "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSDJNlF-FFDSWpg69BJ--OejxdySPOS0AUHV9Idg4BaDgOJ2Gkz_ZvNDo&s=10",
+        "alt": "Fushimi Inari Taisha"
+      },
+      {
+        "id": "https://media-cdn.tripadvisor.com/media/photo-p/10/ef/06/49/",
+        "url": "https://media-cdn.tripadvisor.com/media/photo-p/10/ef/06/49/fushimi-inari-taisha.jpg",
+        "alt": "Fushimi Inari Taisha"
       }
     ],
     "categories": [
@@ -48,8 +64,7 @@
     "difficulty": "active",
     "durationMinutes": 150,
     "importance": 100,
-    "id": "fushimi-inari",
-    "regionId": "kyoto"
+    "id": "fushimi-inari"
   },
   {
     "name": "Kiyomizu-dera",
@@ -174,9 +189,9 @@
     "difficulty": "easy",
     "durationMinutes": 120,
     "importance": 94,
-    "id": "gion",
     "visibilityMode": "default",
-    "regionId": "kyoto"
+    "regionId": "kyoto",
+    "id": "gion"
   },
   {
     "name": "Philosopher's Path",

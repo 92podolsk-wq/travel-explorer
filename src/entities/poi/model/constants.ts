@@ -1,4 +1,4 @@
-import type { Difficulty, PoiCategory, PoiTag } from "./types";
+import type { Difficulty, PoiCategory, PoiTag, Season } from "./types";
 
 export const poiCategories: PoiCategory[] = [
   "temple",
@@ -28,3 +28,5 @@ export const poiTags: PoiTag[] = [
 ];
 
 export const poiDifficulties: Difficulty[] = ["easy", "moderate", "active"];
+
+export const seasons: Season[] = ["spring", "summer", "autumn", "winter"];

@@ -1,4 +1,4 @@
-import type { Difficulty, Poi, PoiCategory, PoiTag } from "@/entities/poi/model/types";
+import type { Difficulty, Poi, PoiCategory, PoiTag, Season } from "@/entities/poi/model/types";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
 import type { Language } from "./types";
 
@@ -46,12 +46,16 @@ type TranslationDictionary = {
     hideVisitedHint: string;
     showVisitedHint: string;
     kyotoGreeting: string;
+    seasonFilter: string;
+    noSeasonPhotoHint: string;
+    tomorrow: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
   tag: Record<PoiTag, string>;
   difficulty: Record<Difficulty, string>;
+  season: Record<Season, string>;
 };
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -88,7 +92,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Show saved places on the map",
       hideVisitedHint: "Hide visited places from the map",
       showVisitedHint: "Show visited places on the map",
-      kyotoGreeting: "Konnichiwa!"
+      kyotoGreeting: "Konnichiwa!",
+      seasonFilter: "Season",
+      noSeasonPhotoHint: "No photo for this season — showing the default one",
+      tomorrow: "Tomorrow"
     },
     modes: {
       photographer: {
@@ -197,6 +204,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       easy: "easy",
       moderate: "moderate",
       active: "active"
+    },
+    season: {
+      spring: "Spring",
+      summer: "Summer",
+      autumn: "Autumn",
+      winter: "Winter"
     }
   },
   ru: {
@@ -232,7 +245,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Показать сохранённые места на карте",
       hideVisitedHint: "Скрыть посещённые места с карты",
       showVisitedHint: "Показать посещённые места на карте",
-      kyotoGreeting: "Коничива!"
+      kyotoGreeting: "Коничива!",
+      seasonFilter: "Сезон",
+      noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
+      tomorrow: "Завтра"
     },
     modes: {
       photographer: {
@@ -341,6 +357,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       easy: "легко",
       moderate: "средне",
       active: "активно"
+    },
+    season: {
+      spring: "Весна",
+      summer: "Лето",
+      autumn: "Осень",
+      winter: "Зима"
     }
   },
   ja: {
@@ -376,7 +398,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "保存した場所を地図に表示",
       hideVisitedHint: "訪問済みの場所を地図から隠す",
       showVisitedHint: "訪問済みの場所を地図に表示",
-      kyotoGreeting: "こんにちは！"
+      kyotoGreeting: "こんにちは！",
+      seasonFilter: "季節",
+      noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
+      tomorrow: "明日"
     },
     modes: {
       photographer: {
@@ -485,6 +510,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       easy: "簡単",
       moderate: "普通",
       active: "上級"
+    },
+    season: {
+      spring: "春",
+      summer: "夏",
+      autumn: "秋",
+      winter: "冬"
     }
   }
 };

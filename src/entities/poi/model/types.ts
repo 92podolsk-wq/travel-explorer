@@ -27,11 +27,14 @@ export type Difficulty = "easy" | "moderate" | "active";
 
 export type PoiVisibilityMode = "default" | "zoomed-in";
 
+export type Season = "spring" | "summer" | "autumn" | "winter";
+
 export type Photo = {
   id: string;
   url: string;
   alt: string;
   author?: string;
+  season?: Season;
 };
 
 export type Coordinates = {

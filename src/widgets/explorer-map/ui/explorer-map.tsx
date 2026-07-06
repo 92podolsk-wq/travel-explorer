@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
-import { kyotoRegion } from "@/entities/region/model/kyoto";
+import { findRegionById } from "@/entities/region/model/regions";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
@@ -242,9 +242,11 @@ export function ExplorerMap() {
   const [isMapReady, setIsMapReady] = useState(false);
 
   const pois = useExplorerStore((state) => state.pois);
+  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
+  const regions = useExplorerStore((state) => state.regions);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
@@ -258,17 +260,27 @@ export function ExplorerMap() {
     [activeModeId]
   );
 
+  const activeRegion = useMemo(
+    () => findRegionById(regions, activeRegionId),
+    [regions, activeRegionId]
+  );
+
+  const regionPois = useMemo(
+    () => pois.filter((poi) => poi.regionId === activeRegionId),
+    [pois, activeRegionId]
+  );
+
   const visiblePois = useMemo(
     () =>
       getVisiblePois(
-        pois,
+        regionPois,
         activeMode,
         zoom,
         searchQuery,
         (poi) => getLocalizedPoiSearchText(poi, language),
         { viewedPoiIds, hideViewed: hideViewedOnMap }
       ),
-    [activeMode, language, pois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap]
+    [activeMode, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap]
   );
 
   const poiCollection = useMemo(
@@ -290,12 +302,15 @@ export function ExplorerMap() {
         return;
       }
 
+      const initialState = useExplorerStore.getState();
+      const initialRegion = findRegionById(initialState.regions, initialState.activeRegionId);
+
       const map = new maplibre.Map({
         container: containerRef.current,
         style: baseMapStyleUrl,
-        center: [kyotoRegion.center.lng, kyotoRegion.center.lat],
-        zoom: kyotoRegion.defaultZoom,
-        maxBounds: kyotoRegion.bounds,
+        center: [initialRegion.center.lng, initialRegion.center.lat],
+        zoom: initialRegion.defaultZoom,
+        maxBounds: initialRegion.bounds,
         attributionControl: {
           compact: true
         }
@@ -352,6 +367,17 @@ export function ExplorerMap() {
       return;
     }
 
+    map.setMaxBounds(undefined);
+    map.setMaxBounds(activeRegion.bounds);
+  }, [isMapReady, activeRegion]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isMapReady) {
+      return;
+    }
+
     setPoiSourceData(map, poiCollection);
   }, [isMapReady, poiCollection]);
 
@@ -366,7 +392,7 @@ export function ExplorerMap() {
   }, [isMapReady, language]);
 
   useEffect(() => {
-    const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
+    const selectedPoi = regionPois.find((poi) => poi.id === selectedPoiId);
     const map = mapRef.current;
 
     if (!selectedPoi || !map) {
@@ -378,7 +404,7 @@ export function ExplorerMap() {
       duration: 650,
       zoom: Math.max(map.getZoom(), 12)
     });
-  }, [pois, selectedPoiId]);
+  }, [regionPois, selectedPoiId]);
 
   return (
     <div className="absolute inset-0">

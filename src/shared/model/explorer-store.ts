@@ -1,12 +1,20 @@
 import { create } from "zustand";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
 import type { Poi } from "@/entities/poi/model/types";
+import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
+import type { Region } from "@/entities/region/model/types";
 import { defaultExplorationMode } from "@/features/exploration-mode/model/modes";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
 import type { Language } from "@/shared/i18n/types";
 
+function firstPoiIdForRegion(pois: Poi[], regionId: string) {
+  return pois.find((poi) => poi.regionId === regionId)?.id ?? pois[0]?.id ?? "";
+}
+
 type ExplorerState = {
   pois: Poi[];
+  regions: Region[];
+  activeRegionId: string;
   selectedPoiId: string;
   activeModeId: ExplorationModeId;
   searchQuery: string;
@@ -21,6 +29,7 @@ type ExplorerState = {
   isDetailsOpen: boolean;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
+  setActiveRegion: (regionId: string) => void;
   setActiveMode: (modeId: ExplorationModeId) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
@@ -33,11 +42,14 @@ type ExplorerState = {
   setZoom: (zoom: number) => void;
   setDetailsOpen: (open: boolean) => void;
   setPois: (pois: Poi[]) => void;
+  setRegions: (regions: Region[]) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
   pois: kyotoPois,
-  selectedPoiId: kyotoPois[0]?.id ?? "",
+  regions: seedRegions,
+  activeRegionId: defaultRegion.id,
+  selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
   activeModeId: defaultExplorationMode.id,
   searchQuery: "",
   favorites: [],
@@ -51,6 +63,16 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   isDetailsOpen: false,
   selectPoi: (poiId) => set({ selectedPoiId: poiId }),
   selectPoiFromMap: (poiId) => set({ selectedPoiId: poiId, isDetailsOpen: true }),
+  setActiveRegion: (regionId) =>
+    set((state) => {
+      const region = findRegionById(state.regions, regionId);
+      return {
+        activeRegionId: regionId,
+        zoom: region.defaultZoom,
+        searchQuery: "",
+        selectedPoiId: firstPoiIdForRegion(state.pois, regionId)
+      };
+    }),
   setActiveMode: (modeId) => set({ activeModeId: modeId }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
@@ -80,6 +102,13 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
       pois,
       selectedPoiId: pois.some((poi) => poi.id === state.selectedPoiId)
         ? state.selectedPoiId
-        : (pois[0]?.id ?? "")
+        : firstPoiIdForRegion(pois, state.activeRegionId)
+    })),
+  setRegions: (regions) =>
+    set((state) => ({
+      regions,
+      activeRegionId: regions.some((region) => region.id === state.activeRegionId)
+        ? state.activeRegionId
+        : (regions[0]?.id ?? state.activeRegionId)
     }))
 }));

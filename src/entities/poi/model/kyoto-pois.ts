@@ -31,7 +31,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "active",
     durationMinutes: 150,
     importance: 100,
-    visibilityMode: "default"
+    visibilityMode: "zoomed-in",
+    regionId: "kyoto"
   },
   {
     id: "kiyomizu-dera",
@@ -56,7 +57,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "moderate",
     durationMinutes: 120,
     importance: 98,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "arashiyama-bamboo",
@@ -82,7 +84,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "easy",
     durationMinutes: 90,
     importance: 95,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "gion",
@@ -107,7 +110,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "easy",
     durationMinutes: 120,
     importance: 94,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "philosophers-path",
@@ -132,7 +136,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "easy",
     durationMinutes: 75,
     importance: 86,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "kinkaku-ji",
@@ -157,7 +162,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "easy",
     durationMinutes: 60,
     importance: 92,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "daigo-ji",
@@ -182,7 +188,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "moderate",
     durationMinutes: 150,
     importance: 80,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "kurama-kibune",
@@ -207,7 +214,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "active",
     durationMinutes: 210,
     importance: 78,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "nishiki-market",
@@ -232,7 +240,8 @@ export const kyotoPois: Poi[] = [
     difficulty: "easy",
     durationMinutes: 60,
     importance: 74,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
   },
   {
     id: "shugakuin",
@@ -257,6 +266,263 @@ export const kyotoPois: Poi[] = [
     difficulty: "moderate",
     durationMinutes: 120,
     importance: 70,
-    visibilityMode: "default"
+    visibilityMode: "default",
+    regionId: "kyoto"
+  },
+  {
+    id: "osaka-castle",
+    regionId: "osaka",
+    name: "Osaka Castle",
+    coordinates: {
+      lat: 34.6873,
+      lng: 135.5262
+    },
+    description: "A rebuilt castle tower rising over stone ramparts and a moat, with expansive park grounds especially vivid during cherry blossom season.",
+    rating: 4.6,
+    photos: [
+      {
+        id: "osaka-castle-main",
+        url: "/photos/osaka/osaka-castle/1.jpg",
+        alt: "Osaka Castle tower over stone ramparts"
+      }
+    ],
+    categories: ["museum", "garden"],
+    tags: ["must-visit", "first-visit", "sakura", "photographer"],
+    seasons: ["spring", "autumn"],
+    photoScore: 90,
+    mustVisit: true,
+    visibilityMode: "default",
+    bestTime: ["Morning", "Cloudy midday"],
+    difficulty: "easy",
+    durationMinutes: 120,
+    importance: 96
+  },
+  {
+    id: "dotonbori",
+    regionId: "osaka",
+    name: "Dotonbori",
+    coordinates: {
+      lat: 34.6687,
+      lng: 135.5013
+    },
+    description: "A neon-lit canal district packed with oversized signage, street food stalls, and constant evening energy.",
+    rating: 4.5,
+    photos: [
+      {
+        id: "dotonbori-main",
+        url: "/photos/osaka/dotonbori/1.jpg",
+        alt: "Dotonbori canal at night with neon signs",
+        author: "Martin Falbisoner"
+      }
+    ],
+    categories: ["district", "street"],
+    tags: ["must-visit", "photographer", "night", "first-visit"],
+    seasons: ["all year"],
+    photoScore: 93,
+    mustVisit: true,
+    visibilityMode: "default",
+    bestTime: ["Dusk", "Night"],
+    difficulty: "easy",
+    durationMinutes: 90,
+    importance: 95
+  },
+  {
+    id: "shinsekai",
+    regionId: "osaka",
+    name: "Shinsekai",
+    coordinates: {
+      lat: 34.6523,
+      lng: 135.5062
+    },
+    description: "A retro entertainment quarter beneath Tsutenkaku Tower, known for lantern-lined alleys and old-school kushikatsu shops.",
+    rating: 4.3,
+    photos: [
+      {
+        id: "shinsekai-main",
+        url: "/photos/osaka/shinsekai/1.jpg",
+        alt: "Retro street in Shinsekai beneath Tsutenkaku Tower"
+      }
+    ],
+    categories: ["district", "street"],
+    tags: ["photographer", "night", "hidden-gem"],
+    seasons: ["all year"],
+    photoScore: 85,
+    mustVisit: false,
+    visibilityMode: "default",
+    bestTime: ["Dusk"],
+    difficulty: "easy",
+    durationMinutes: 75,
+    importance: 78
+  },
+  {
+    id: "osaka-aquarium",
+    regionId: "osaka",
+    name: "Osaka Aquarium Kaiyukan",
+    coordinates: {
+      lat: 34.6547,
+      lng: 135.429
+    },
+    description: "A vast tank-based aquarium built around a central Pacific Ocean tank, home to whale sharks and manta rays.",
+    rating: 4.6,
+    photos: [
+      {
+        id: "osaka-aquarium-main",
+        url: "/photos/osaka/osaka-aquarium/1.jpg",
+        alt: "Interior of Osaka Aquarium Kaiyukan",
+        author: "Sakai Yayoi"
+      }
+    ],
+    categories: ["museum"],
+    tags: ["first-visit", "must-visit", "public-transport"],
+    seasons: ["all year"],
+    photoScore: 82,
+    mustVisit: true,
+    visibilityMode: "default",
+    bestTime: ["Opening", "Late afternoon"],
+    difficulty: "easy",
+    durationMinutes: 150,
+    importance: 88
+  },
+  {
+    id: "shitennoji",
+    regionId: "osaka",
+    name: "Shitennoji Temple",
+    coordinates: {
+      lat: 34.6534,
+      lng: 135.5163
+    },
+    description: "One of Japan's oldest Buddhist temples, with a symmetrical five-story pagoda and a quiet turtle pond garden.",
+    rating: 4.4,
+    photos: [
+      {
+        id: "shitennoji-main",
+        url: "/photos/osaka/shitennoji/1.jpg",
+        alt: "Shitennoji temple pagoda in Osaka",
+        author: "名古屋太郎"
+      }
+    ],
+    categories: ["temple", "garden"],
+    tags: ["hidden-gem", "first-visit", "photographer"],
+    seasons: ["spring", "autumn"],
+    photoScore: 84,
+    mustVisit: false,
+    visibilityMode: "default",
+    bestTime: ["Morning"],
+    difficulty: "easy",
+    durationMinutes: 90,
+    importance: 76
+  },
+  {
+    id: "umeda-sky-building",
+    regionId: "osaka",
+    name: "Umeda Sky Building",
+    coordinates: {
+      lat: 34.7054,
+      lng: 135.4903
+    },
+    description: "A twin-tower skyscraper joined by a floating open-air observatory with wide sunset views over the city.",
+    rating: 4.5,
+    photos: [
+      {
+        id: "umeda-sky-building-main",
+        url: "/photos/osaka/umeda-sky-building/1.jpg",
+        alt: "Umeda Sky Building twin towers"
+      }
+    ],
+    categories: ["viewpoint"],
+    tags: ["photographer", "sunrise", "night", "must-visit"],
+    seasons: ["all year"],
+    photoScore: 91,
+    mustVisit: true,
+    visibilityMode: "default",
+    bestTime: ["Dusk", "Night"],
+    difficulty: "easy",
+    durationMinutes: 60,
+    importance: 87
+  },
+  {
+    id: "kuromon-market",
+    regionId: "osaka",
+    name: "Kuromon Ichiba Market",
+    coordinates: {
+      lat: 34.6656,
+      lng: 135.5062
+    },
+    description: "A narrow covered market famous for fresh seafood, street-grilled skewers, and a steady stream of walking snacks.",
+    rating: 4.4,
+    photos: [
+      {
+        id: "kuromon-market-main",
+        url: "/photos/osaka/kuromon-market/1.jpg",
+        alt: "Kuromon Ichiba Market food stalls"
+      }
+    ],
+    categories: ["market", "street"],
+    tags: ["first-visit", "rain", "public-transport"],
+    seasons: ["all year"],
+    photoScore: 74,
+    mustVisit: false,
+    visibilityMode: "default",
+    bestTime: ["Late morning"],
+    difficulty: "easy",
+    durationMinutes: 60,
+    importance: 72
+  },
+  {
+    id: "sumiyoshi-taisha",
+    regionId: "osaka",
+    name: "Sumiyoshi Taisha",
+    coordinates: {
+      lat: 34.6125,
+      lng: 135.4933
+    },
+    description: "A grand Shinto shrine complex with a distinctive arched drum bridge and unusually styled straight-line main halls.",
+    rating: 4.5,
+    photos: [
+      {
+        id: "sumiyoshi-taisha-main",
+        url: "/photos/osaka/sumiyoshi-taisha/1.jpg",
+        alt: "Sumiyoshi Taisha shrine grounds",
+        author: "Saigen Jiro"
+      }
+    ],
+    categories: ["shrine", "garden"],
+    tags: ["hidden-gem", "photographer", "public-transport"],
+    seasons: ["all year"],
+    photoScore: 86,
+    mustVisit: false,
+    visibilityMode: "default",
+    bestTime: ["Morning"],
+    difficulty: "easy",
+    durationMinutes: 75,
+    importance: 74
+  },
+  {
+    id: "namba-yasaka",
+    regionId: "osaka",
+    name: "Namba Yasaka Shrine",
+    coordinates: {
+      lat: 34.6626,
+      lng: 135.5
+    },
+    description: "A compact shrine built around a giant lion-head stage said to devour misfortune, a striking and unusual photo subject.",
+    rating: 4.3,
+    photos: [
+      {
+        id: "namba-yasaka-main",
+        url: "/photos/osaka/namba-yasaka/1.jpg",
+        alt: "Namba Yasaka Shrine lion-head stage"
+      }
+    ],
+    categories: ["shrine"],
+    tags: ["photographer", "hidden-gem"],
+    seasons: ["all year"],
+    photoScore: 88,
+    mustVisit: false,
+    visibilityMode: "default",
+    bestTime: ["Morning", "Late afternoon"],
+    difficulty: "easy",
+    durationMinutes: 30,
+    importance: 70
   }
 ];

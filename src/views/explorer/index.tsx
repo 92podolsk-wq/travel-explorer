@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { Poi } from "@/entities/poi/model/types";
+import type { Region } from "@/entities/region/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
@@ -10,12 +11,15 @@ import { PoiDetails } from "@/widgets/poi-details/ui/poi-details";
 
 type ExplorerPageProps = {
   initialPois: Poi[];
+  initialRegions: Region[];
 };
 
-export function ExplorerPage({ initialPois }: ExplorerPageProps) {
+export function ExplorerPage({ initialPois, initialRegions }: ExplorerPageProps) {
   const setPois = useExplorerStore((state) => state.setPois);
+  const setRegions = useExplorerStore((state) => state.setRegions);
 
   useEffect(() => {
+    setRegions(initialRegions);
     setPois(initialPois);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

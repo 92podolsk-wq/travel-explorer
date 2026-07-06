@@ -23,7 +23,7 @@ export function FavoritesPanel() {
       return;
     }
 
-    const kml = buildFavoritesKml(optimizedFavoritePois, `Travel Explorer — ${t.app.regionName}`);
+    const kml = buildFavoritesKml(optimizedFavoritePois, "Travel Explorer");
     downloadTextFile("travel-explorer-favorites.kml", kml, "application/vnd.google-earth.kml+xml");
   };
 

@@ -14,7 +14,6 @@ type PoiCopy = {
 
 type TranslationDictionary = {
   app: {
-    regionName: string;
     searchAria: string;
     searchPlaceholder: string;
     visible: string;
@@ -30,6 +29,7 @@ type TranslationDictionary = {
     signals: string;
     minutesShort: string;
     language: string;
+    region: string;
     hideDetails: string;
     showDetails: string;
     sunrise: string;
@@ -45,6 +45,7 @@ type TranslationDictionary = {
     showFavoritesHint: string;
     hideVisitedHint: string;
     showVisitedHint: string;
+    kyotoGreeting: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
@@ -56,7 +57,6 @@ type TranslationDictionary = {
 export const translations: Record<Language, TranslationDictionary> = {
   en: {
     app: {
-      regionName: "Kyoto",
       searchAria: "Search places",
       searchPlaceholder: "Search Kyoto",
       visible: "visible",
@@ -72,6 +72,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       signals: "Signals",
       minutesShort: "m",
       language: "Language",
+      region: "Region",
       hideDetails: "Hide details",
       showDetails: "Show details",
       sunrise: "Sunrise",
@@ -86,7 +87,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideFavoritesHint: "Hide saved places from the map",
       showFavoritesHint: "Show saved places on the map",
       hideVisitedHint: "Hide visited places from the map",
-      showVisitedHint: "Show visited places on the map"
+      showVisitedHint: "Show visited places on the map",
+      kyotoGreeting: "Konnichiwa!"
     },
     modes: {
       photographer: {
@@ -199,7 +201,6 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
   ru: {
     app: {
-      regionName: "Киото",
       searchAria: "Поиск мест",
       searchPlaceholder: "Поиск по Киото",
       visible: "видно",
@@ -215,6 +216,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       signals: "Признаки",
       minutesShort: "мин",
       language: "Язык",
+      region: "Регион",
       hideDetails: "Скрыть панель",
       showDetails: "Показать панель",
       sunrise: "Восход",
@@ -229,7 +231,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideFavoritesHint: "Скрыть сохранённые места с карты",
       showFavoritesHint: "Показать сохранённые места на карте",
       hideVisitedHint: "Скрыть посещённые места с карты",
-      showVisitedHint: "Показать посещённые места на карте"
+      showVisitedHint: "Показать посещённые места на карте",
+      kyotoGreeting: "Коничива!"
     },
     modes: {
       photographer: {
@@ -342,7 +345,6 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
   ja: {
     app: {
-      regionName: "京都",
       searchAria: "場所を検索",
       searchPlaceholder: "京都を検索",
       visible: "件表示中",
@@ -358,6 +360,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       signals: "特徴",
       minutesShort: "分",
       language: "言語",
+      region: "地域",
       hideDetails: "パネルを閉じる",
       showDetails: "パネルを開く",
       sunrise: "日の出",
@@ -372,7 +375,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideFavoritesHint: "保存した場所を地図から隠す",
       showFavoritesHint: "保存した場所を地図に表示",
       hideVisitedHint: "訪問済みの場所を地図から隠す",
-      showVisitedHint: "訪問済みの場所を地図に表示"
+      showVisitedHint: "訪問済みの場所を地図に表示",
+      kyotoGreeting: "こんにちは！"
     },
     modes: {
       photographer: {

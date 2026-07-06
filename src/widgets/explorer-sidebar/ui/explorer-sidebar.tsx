@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Globe, Search, Star, Sunrise, Sunset } from "lucide-react";
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Globe, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { kyotoRegion } from "@/entities/region/model/kyoto";
+import { findRegionById } from "@/entities/region/model/regions";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
 import { modeIcons } from "@/features/exploration-mode/ui/mode-icon";
@@ -28,6 +28,9 @@ const languageOptions: Array<{ language: Language; label: string }> = [
 
 export function ExplorerSidebar() {
   const pois = useExplorerStore((state) => state.pois);
+  const regions = useExplorerStore((state) => state.regions);
+  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
+  const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
@@ -47,11 +50,15 @@ export function ExplorerSidebar() {
   const setLanguage = useExplorerStore((state) => state.setLanguage);
   const selectPoi = useExplorerStore((state) => state.selectPoi);
   const t = getTranslations(language);
+  const [isGreetingVisible, setIsGreetingVisible] = useState(false);
+
+  const activeRegion = findRegionById(regions, activeRegionId);
+  const regionPois = pois.filter((poi) => poi.regionId === activeRegionId);
 
   const activeMode =
     explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0];
   const visiblePois = getVisiblePois(
-    pois,
+    regionPois,
     activeMode,
     zoom,
     searchQuery,
@@ -70,11 +77,11 @@ export function ExplorerSidebar() {
     () =>
       getSunTimes(
         new Date(),
-        kyotoRegion.center.lat,
-        kyotoRegion.center.lng,
-        kyotoRegion.timezoneOffsetHours
+        activeRegion.center.lat,
+        activeRegion.center.lng,
+        activeRegion.timezoneOffsetHours
       ),
-    []
+    [activeRegion]
   );
 
   return (
@@ -93,9 +100,29 @@ export function ExplorerSidebar() {
                 Travel Explorer
               </p>
             </div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-3xl font-semibold tracking-normal">{t.app.regionName}</h1>
-              <HankoSeal character="京" />
+            <div
+              className="relative flex w-fit items-center gap-2.5"
+              onMouseEnter={() => setIsGreetingVisible(true)}
+              onMouseLeave={() => setIsGreetingVisible(false)}
+            >
+              <h1 className="cursor-default text-3xl font-semibold tracking-normal">
+                {activeRegion.nameByLanguage[language]}
+              </h1>
+              <HankoSeal character={activeRegion.sealCharacter} />
+              <AnimatePresence>
+                {isGreetingVisible && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.85 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                    className="absolute -top-10 left-0 z-30 whitespace-nowrap rounded-full bg-[#a3312c] px-3.5 py-1.5 text-sm font-semibold text-white shadow-panel"
+                  >
+                    {t.app.kyotoGreeting}
+                    <span className="absolute -bottom-1 left-6 h-2.5 w-2.5 rotate-45 bg-[#a3312c]" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-white/70 px-2.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
               <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
@@ -109,27 +136,50 @@ export function ExplorerSidebar() {
               </span>
             </div>
           </div>
-          <div
-            aria-label={t.app.language}
-            className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
-          >
-            <Globe className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-            {languageOptions.map((option) => (
-              <button
-                key={option.language}
-                type="button"
-                onClick={() => setLanguage(option.language)}
-                className={cn(
-                  "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
-                  language === option.language
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <FlagIcon language={option.language} />
-                {option.label}
-              </button>
-            ))}
+          <div className="flex flex-col items-end gap-1.5">
+            <div
+              aria-label={t.app.region}
+              className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
+            >
+              <MapPin className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              {regions.map((region) => (
+                <button
+                  key={region.id}
+                  type="button"
+                  onClick={() => setActiveRegion(region.id)}
+                  className={cn(
+                    "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
+                    activeRegionId === region.id
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {region.nameByLanguage[language]}
+                </button>
+              ))}
+            </div>
+            <div
+              aria-label={t.app.language}
+              className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
+            >
+              <Globe className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+              {languageOptions.map((option) => (
+                <button
+                  key={option.language}
+                  type="button"
+                  onClick={() => setLanguage(option.language)}
+                  className={cn(
+                    "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
+                    language === option.language
+                      ? "bg-white text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <FlagIcon language={option.language} />
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

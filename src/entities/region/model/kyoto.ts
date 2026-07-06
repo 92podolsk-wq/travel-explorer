@@ -13,5 +13,11 @@ export const kyotoRegion: Region = {
     [135.56, 34.86],
     [135.91, 35.16]
   ],
-  timezoneOffsetHours: 9
+  timezoneOffsetHours: 9,
+  nameByLanguage: {
+    en: "Kyoto",
+    ru: "Киото",
+    ja: "京都"
+  },
+  sealCharacter: "京"
 };

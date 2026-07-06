@@ -41,6 +41,7 @@ export type Coordinates = {
 
 export type Poi = {
   id: string;
+  regionId: string;
   name: string;
   coordinates: Coordinates;
   description: string;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Star, Trash2 } from "lucide-react";
 import { poiCategories, poiDifficulties, poiTags } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode } from "@/entities/poi/model/types";
+import type { Region } from "@/entities/region/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
@@ -15,6 +16,7 @@ type PhotoFormState = {
 };
 
 type FormState = {
+  regionId: string;
   name: string;
   description: string;
   lat: string;
@@ -33,9 +35,10 @@ type FormState = {
   photos: PhotoFormState[];
 };
 
-function toFormState(poi?: Poi): FormState {
+function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
   if (!poi) {
     return {
+      regionId: defaultRegionId,
       name: "",
       description: "",
       lat: "",
@@ -56,6 +59,7 @@ function toFormState(poi?: Poi): FormState {
   }
 
   return {
+    regionId: poi.regionId,
     name: poi.name,
     description: poi.description,
     lat: String(poi.coordinates.lat),
@@ -104,6 +108,7 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
   if (photos.length === 0) return { error: "Add at least one photo URL." };
 
   return {
+    regionId: form.regionId,
     name: form.name.trim(),
     description: form.description.trim(),
     coordinates: { lat, lng },
@@ -135,12 +140,13 @@ const chipClass = (active: boolean) =>
 
 type PoiFormProps = {
   poi?: Poi;
+  regions: Region[];
   onCancel: () => void;
   onSubmit: (input: PoiInput) => Promise<void> | void;
 };
 
-export function PoiForm({ poi, onCancel, onSubmit }: PoiFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(poi));
+export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
+  const [form, setForm] = useState<FormState>(() => toFormState(poi, regions[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -188,6 +194,21 @@ export function PoiForm({ poi, onCancel, onSubmit }: PoiFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-border bg-white p-5 shadow-sm">
+      <div>
+        <label className={fieldLabel}>Region</label>
+        <select
+          className={selectClass}
+          value={form.regionId}
+          onChange={(e) => setForm((p) => ({ ...p, regionId: e.target.value }))}
+        >
+          {regions.map((region) => (
+            <option key={region.id} value={region.id}>
+              {region.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div>
         <label className={fieldLabel}>Name</label>
         <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nanzen-ji" />

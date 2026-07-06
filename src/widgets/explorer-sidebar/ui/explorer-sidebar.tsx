@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bookmark, Camera, Clock, Eye, Globe, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Globe, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { kyotoRegion } from "@/entities/region/model/kyoto";
@@ -13,6 +13,8 @@ import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/transl
 import type { Language } from "@/shared/i18n/types";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { Button } from "@/shared/ui/button";
+import { FlagIcon } from "@/shared/ui/flag-icon";
+import { HankoSeal } from "@/shared/ui/hanko-seal";
 import { Input } from "@/shared/ui/input";
 import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -20,7 +22,8 @@ import { cn } from "@/shared/lib/cn";
 
 const languageOptions: Array<{ language: Language; label: string }> = [
   { language: "en", label: "EN" },
-  { language: "ru", label: "RU" }
+  { language: "ru", label: "RU" },
+  { language: "ja", label: "JA" }
 ];
 
 export function ExplorerSidebar() {
@@ -29,6 +32,14 @@ export function ExplorerSidebar() {
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
+  const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
+  const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
+  const hideViewedOnMap = useExplorerStore((state) => state.hideViewedOnMap);
+  const toggleHideViewedOnMap = useExplorerStore((state) => state.toggleHideViewedOnMap);
+  const hideFavoritesOnMap = useExplorerStore((state) => state.hideFavoritesOnMap);
+  const toggleHideFavoritesOnMap = useExplorerStore((state) => state.toggleHideFavoritesOnMap);
+  const hideVisitedOnMap = useExplorerStore((state) => state.hideVisitedOnMap);
+  const toggleHideVisitedOnMap = useExplorerStore((state) => state.toggleHideVisitedOnMap);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
   const setActiveMode = useExplorerStore((state) => state.setActiveMode);
@@ -39,8 +50,20 @@ export function ExplorerSidebar() {
 
   const activeMode =
     explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0];
-  const visiblePois = getVisiblePois(pois, activeMode, zoom, searchQuery, (poi) =>
-    getLocalizedPoiSearchText(poi, language)
+  const visiblePois = getVisiblePois(
+    pois,
+    activeMode,
+    zoom,
+    searchQuery,
+    (poi) => getLocalizedPoiSearchText(poi, language),
+    {
+      viewedPoiIds,
+      hideViewed: hideViewedOnMap,
+      favoritePoiIds: favorites,
+      hideFavorites: hideFavoritesOnMap,
+      visitedPoiIds,
+      hideVisited: hideVisitedOnMap
+    }
   );
 
   const sunTimes = useMemo(
@@ -70,17 +93,18 @@ export function ExplorerSidebar() {
                 Travel Explorer
               </p>
             </div>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <h1 className="text-3xl font-semibold tracking-normal">{t.app.regionName}</h1>
-              <MapPin className="mt-1 h-5 w-5 text-primary" />
+              <HankoSeal character="京" />
             </div>
-            <div className="mt-1.5 flex items-center gap-3 text-xs font-medium text-muted-foreground">
+            <div className="mt-2 inline-flex items-center gap-2 rounded-md border border-border bg-white/70 px-2.5 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
               <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
                 <Sunrise className="h-3.5 w-3.5 text-amber-500" />
                 {sunTimes.sunrise ?? "—"}
               </span>
+              <span className="h-3 w-px bg-border" />
               <span className="inline-flex items-center gap-1" title={t.app.sunset}>
-                <Sunset className="h-3.5 w-3.5 text-amber-600" />
+                <Sunset className="h-3.5 w-3.5 text-amber-500" />
                 {sunTimes.sunset ?? "—"}
               </span>
             </div>
@@ -96,12 +120,13 @@ export function ExplorerSidebar() {
                 type="button"
                 onClick={() => setLanguage(option.language)}
                 className={cn(
-                  "h-8 rounded px-2.5 text-xs font-semibold transition",
+                  "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
                   language === option.language
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
+                <FlagIcon language={option.language} />
                 {option.label}
               </button>
             ))}
@@ -147,7 +172,7 @@ export function ExplorerSidebar() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
-        <div className="mb-3 flex items-center justify-between px-1 text-xs font-medium text-muted-foreground">
+        <div className="mb-3 flex items-center gap-3 px-1 text-xs font-medium text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Eye className="h-3.5 w-3.5" />
             {visiblePois.length} {t.app.visible}
@@ -156,6 +181,50 @@ export function ExplorerSidebar() {
             <Bookmark className="h-3.5 w-3.5" />
             {favorites.length} {t.app.saved}
           </span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={toggleHideViewedOnMap}
+              aria-pressed={hideViewedOnMap}
+              title={hideViewedOnMap ? t.app.showViewedHint : t.app.hideViewedHint}
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded border transition",
+                hideViewedOnMap
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {hideViewedOnMap ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={toggleHideFavoritesOnMap}
+              aria-pressed={hideFavoritesOnMap}
+              title={hideFavoritesOnMap ? t.app.showFavoritesHint : t.app.hideFavoritesHint}
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded border transition",
+                hideFavoritesOnMap
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Bookmark className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={toggleHideVisitedOnMap}
+              aria-pressed={hideVisitedOnMap}
+              title={hideVisitedOnMap ? t.app.showVisitedHint : t.app.hideVisitedHint}
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded border transition",
+                hideVisitedOnMap
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -198,7 +267,7 @@ export function ExplorerSidebar() {
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Camera className="h-3.5 w-3.5" />
-                        {poi.photoScore}
+                        {poi.photos.length}
                       </span>
                       <span className="inline-flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />

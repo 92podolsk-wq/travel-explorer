@@ -8,6 +8,7 @@ import { kyotoRegion } from "@/entities/region/model/kyoto";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
+import type { Language } from "@/shared/i18n/types";
 import { baseMapStyleUrl } from "@/shared/map/base-map-style";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -23,6 +24,7 @@ type PoiFeatureProperties = {
   name: string;
   selected: boolean;
   mustVisit: boolean;
+  viewed: boolean;
   category: PoiCategory;
 };
 
@@ -34,7 +36,11 @@ const emptyPoiCollection: PoiFeatureCollection = {
   features: []
 };
 
-function createPoiCollection(pois: Poi[], selectedPoiId: string): PoiFeatureCollection {
+function createPoiCollection(
+  pois: Poi[],
+  selectedPoiId: string,
+  viewedPoiIds: string[]
+): PoiFeatureCollection {
   return {
     type: "FeatureCollection",
     features: pois.map(
@@ -50,6 +56,7 @@ function createPoiCollection(pois: Poi[], selectedPoiId: string): PoiFeatureColl
           name: poi.name,
           selected: poi.id === selectedPoiId,
           mustVisit: poi.mustVisit,
+          viewed: viewedPoiIds.includes(poi.id),
           category: poi.categories[0] ?? "district"
         }
       })
@@ -111,6 +118,8 @@ async function addPoiLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "selected"], true],
         "#287f72",
+        ["==", ["get", "viewed"], true],
+        "#b0b0a8",
         categoryColorMatchExpression
       ],
       "circle-stroke-color": [
@@ -125,7 +134,14 @@ async function addPoiLayers(map: MapLibreMap) {
         4.5,
         3
       ],
-      "circle-opacity": 1
+      "circle-opacity": [
+        "case",
+        ["==", ["get", "selected"], true],
+        1,
+        ["==", ["get", "viewed"], true],
+        0.55,
+        1
+      ]
     }
   });
 
@@ -138,6 +154,16 @@ async function addPoiLayers(map: MapLibreMap) {
       "icon-size": ["case", ["==", ["get", "selected"], true], 0.95, 0.72],
       "icon-allow-overlap": true,
       "icon-ignore-placement": true
+    },
+    paint: {
+      "icon-opacity": [
+        "case",
+        ["==", ["get", "selected"], true],
+        1,
+        ["==", ["get", "viewed"], true],
+        0.6,
+        1
+      ]
     }
   });
 
@@ -155,10 +181,35 @@ async function addPoiLayers(map: MapLibreMap) {
       "text-ignore-placement": false
     },
     paint: {
-      "text-color": "#23313d",
+      "text-color": ["case", ["==", ["get", "viewed"], true], "#9a9a92", "#23313d"],
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.6
     }
+  });
+}
+
+const languageToBasemapNameField: Record<Language, string> = {
+  en: "name:en",
+  ru: "name:ru",
+  ja: "name:ja"
+};
+
+function applyBasemapLanguage(map: MapLibreMap, language: Language) {
+  const nameField = languageToBasemapNameField[language];
+  const layers = map.getStyle()?.layers ?? [];
+
+  layers.forEach((layer) => {
+    if (layer.type !== "symbol" || layer.source === poiSourceId) {
+      return;
+    }
+
+    const layout = "layout" in layer ? layer.layout : undefined;
+
+    if (!layout || !("text-field" in layout)) {
+      return;
+    }
+
+    map.setLayoutProperty(layer.id, "text-field", ["coalesce", ["get", nameField], ["get", "name"]]);
   });
 }
 
@@ -196,6 +247,8 @@ export function ExplorerMap() {
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
+  const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
+  const hideViewedOnMap = useExplorerStore((state) => state.hideViewedOnMap);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const setZoom = useExplorerStore((state) => state.setZoom);
   const t = getTranslations(language);
@@ -207,15 +260,20 @@ export function ExplorerMap() {
 
   const visiblePois = useMemo(
     () =>
-      getVisiblePois(pois, activeMode, zoom, searchQuery, (poi) =>
-        getLocalizedPoiSearchText(poi, language)
+      getVisiblePois(
+        pois,
+        activeMode,
+        zoom,
+        searchQuery,
+        (poi) => getLocalizedPoiSearchText(poi, language),
+        { viewedPoiIds, hideViewed: hideViewedOnMap }
       ),
-    [activeMode, language, pois, searchQuery, zoom]
+    [activeMode, language, pois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap]
   );
 
   const poiCollection = useMemo(
-    () => createPoiCollection(visiblePois, selectedPoiId),
-    [selectedPoiId, visiblePois]
+    () => createPoiCollection(visiblePois, selectedPoiId, viewedPoiIds),
+    [selectedPoiId, visiblePois, viewedPoiIds]
   );
 
   useEffect(() => {
@@ -296,6 +354,16 @@ export function ExplorerMap() {
 
     setPoiSourceData(map, poiCollection);
   }, [isMapReady, poiCollection]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    applyBasemapLanguage(map, language);
+  }, [isMapReady, language]);
 
   useEffect(() => {
     const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);

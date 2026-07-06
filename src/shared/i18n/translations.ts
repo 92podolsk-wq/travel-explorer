@@ -38,6 +38,13 @@ type TranslationDictionary = {
     exportKmlHint: string;
     openInMaps: string;
     openInMapsHint: string;
+    hideViewedHint: string;
+    showViewedHint: string;
+    visited: string;
+    hideFavoritesHint: string;
+    showFavoritesHint: string;
+    hideVisitedHint: string;
+    showVisitedHint: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
@@ -72,7 +79,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       exportKml: "KML",
       exportKmlHint: "Download saved places to open in Google My Maps",
       openInMaps: "Maps",
-      openInMapsHint: "Open saved places as an optimized route in Google Maps"
+      openInMapsHint: "Open saved places as an optimized route in Google Maps",
+      hideViewedHint: "Hide viewed places from the map",
+      showViewedHint: "Show viewed places on the map",
+      visited: "Visited",
+      hideFavoritesHint: "Hide saved places from the map",
+      showFavoritesHint: "Show saved places on the map",
+      hideVisitedHint: "Hide visited places from the map",
+      showVisitedHint: "Show visited places on the map"
     },
     modes: {
       photographer: {
@@ -208,7 +222,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       exportKml: "KML",
       exportKmlHint: "Скачать сохранённые места для открытия в Google Мои карты",
       openInMaps: "Maps",
-      openInMapsHint: "Открыть сохранённые места оптимизированным маршрутом в Google Maps"
+      openInMapsHint: "Открыть сохранённые места оптимизированным маршрутом в Google Maps",
+      hideViewedHint: "Скрыть просмотренные места с карты",
+      showViewedHint: "Показать просмотренные места на карте",
+      visited: "Посещено",
+      hideFavoritesHint: "Скрыть сохранённые места с карты",
+      showFavoritesHint: "Показать сохранённые места на карте",
+      hideVisitedHint: "Скрыть посещённые места с карты",
+      showVisitedHint: "Показать посещённые места на карте"
     },
     modes: {
       photographer: {
@@ -317,6 +338,149 @@ export const translations: Record<Language, TranslationDictionary> = {
       easy: "легко",
       moderate: "средне",
       active: "активно"
+    }
+  },
+  ja: {
+    app: {
+      regionName: "京都",
+      searchAria: "場所を検索",
+      searchPlaceholder: "京都を検索",
+      visible: "件表示中",
+      saved: "件保存済み",
+      places: "件",
+      save: "保存",
+      mustVisit: "必見",
+      photo: "写真",
+      best: "おすすめ",
+      duration: "所要時間",
+      effort: "難易度",
+      bestTime: "おすすめの時間",
+      signals: "特徴",
+      minutesShort: "分",
+      language: "言語",
+      hideDetails: "パネルを閉じる",
+      showDetails: "パネルを開く",
+      sunrise: "日の出",
+      sunset: "日の入り",
+      exportKml: "KML",
+      exportKmlHint: "Googleマイマップで開くために保存した場所をダウンロード",
+      openInMaps: "マップ",
+      openInMapsHint: "保存した場所を最適化されたルートとしてGoogleマップで開く",
+      hideViewedHint: "閲覧済みの場所を地図から隠す",
+      showViewedHint: "閲覧済みの場所を地図に表示",
+      visited: "訪問済み",
+      hideFavoritesHint: "保存した場所を地図から隠す",
+      showFavoritesHint: "保存した場所を地図に表示",
+      hideVisitedHint: "訪問済みの場所を地図から隠す",
+      showVisitedHint: "訪問済みの場所を地図に表示"
+    },
+    modes: {
+      photographer: {
+        label: "フォトグラファー",
+        description: "写真スコア、光、眺望、雰囲気。"
+      },
+      "first-visit": {
+        label: "初めての訪問",
+        description: "計画価値の高い京都の定番スポット。"
+      },
+      nature: {
+        label: "自然",
+        description: "庭園、川、山、穏やかな散策日和。"
+      },
+      autumn: {
+        label: "秋",
+        description: "色彩、質感、季節の深み。"
+      },
+      sakura: {
+        label: "桜",
+        description: "春の桜の名所と運河沿いの散策。"
+      },
+      "hidden-gems": {
+        label: "隠れた名所",
+        description: "人が少なく発見価値の高い場所。"
+      }
+    },
+    poi: {
+      "fushimi-inari": {
+        description:
+          "何千もの朱色の鳥居が連なる山の神社ルート。日の出と夜が特に美しい。",
+        bestTime: ["日の出", "ブルーアワー"]
+      },
+      "kiyomizu-dera": {
+        description:
+          "市内を一望できる高台の寺院。木造建築と趣のある参道が魅力。",
+        bestTime: ["開門直後", "夕方遅く"]
+      },
+      "arashiyama-bamboo": {
+        description:
+          "川沿いの眺めや寺院、静かな北部の散策路に近いコンパクトな竹林の小道。",
+        bestTime: ["早朝"]
+      },
+      gion: {
+        description:
+          "保存された町並み、提灯、茶屋、夜の雰囲気が漂う京都の歴史ある花街。",
+        bestTime: ["夕暮れ", "夜"]
+      },
+      "philosophers-path": {
+        description:
+          "寺院と小さなカフェをつなぐ運河沿いの散策路。桜の季節に特に美しい。",
+        bestTime: ["朝"]
+      },
+      "kinkaku-ji": {
+        description:
+          "池に映る金閣。簡潔ながら象徴的で、冬の光の中では特に美しく見える。",
+        bestTime: ["開門直後", "曇りの昼"]
+      },
+      "daigo-ji": {
+        description:
+          "見事な桜と紅葉を誇る広大な寺院群。中心部より落ち着いた雰囲気。",
+        bestTime: ["朝"]
+      },
+      "kurama-kibune": {
+        description:
+          "京都中心部が混み合いすぎていると感じたときに最適な、鞍馬から貴船へ抜ける森の道。",
+        bestTime: ["朝", "雨上がり"]
+      },
+      "nishiki-market": {
+        description:
+          "寺院巡りの合間の休憩に最適な、細長い食の市場。",
+        bestTime: ["午前遅く"]
+      },
+      shugakuin: {
+        description:
+          "京都北東部を見渡す層状の眺めが魅力の優雅な離宮庭園。ゆっくり鑑賞するのに最適。",
+        bestTime: ["朝"]
+      }
+    },
+    category: {
+      temple: "寺",
+      shrine: "神社",
+      garden: "庭園",
+      street: "通り",
+      district: "地区",
+      nature: "自然",
+      viewpoint: "展望",
+      market: "市場",
+      museum: "博物館"
+    },
+    tag: {
+      "must-visit": "必見",
+      photographer: "写真向き",
+      "first-visit": "初回向け",
+      nature: "自然",
+      autumn: "紅葉",
+      sakura: "桜",
+      "hidden-gem": "穴場",
+      sunrise: "日の出",
+      night: "夜",
+      rain: "雨天",
+      "public-transport": "公共交通",
+      "light-trekking": "軽い山歩き"
+    },
+    difficulty: {
+      easy: "簡単",
+      moderate: "普通",
+      active: "上級"
     }
   }
 };

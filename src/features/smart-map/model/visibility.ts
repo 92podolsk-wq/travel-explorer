@@ -15,12 +15,29 @@ const zoomThreshold = (zoom: number) => {
   return 0;
 };
 
+type VisibilityOptions = {
+  viewedPoiIds?: string[];
+  hideViewed?: boolean;
+  favoritePoiIds?: string[];
+  hideFavorites?: boolean;
+  visitedPoiIds?: string[];
+  hideVisited?: boolean;
+};
+
 export function getVisiblePois(
   pois: Poi[],
   mode: ExplorationMode,
   zoom: number,
   query: string,
-  getSearchText: (poi: Poi) => string = () => ""
+  getSearchText: (poi: Poi) => string = () => "",
+  {
+    viewedPoiIds = [],
+    hideViewed = false,
+    favoritePoiIds = [],
+    hideFavorites = false,
+    visitedPoiIds = [],
+    hideVisited = false
+  }: VisibilityOptions = {}
 ) {
   const normalizedQuery = query.trim().toLowerCase();
   const threshold = zoomThreshold(zoom);
@@ -40,8 +57,18 @@ export function getVisiblePois(
         getSearchText(poi).includes(normalizedQuery);
 
       const visibleAtZoom = poi.visibilityMode !== "zoomed-in" || zoom > zoomedInOnlyThreshold;
+      const visibleWhenViewed = !hideViewed || !viewedPoiIds.includes(poi.id);
+      const visibleWhenFavorite = !hideFavorites || !favoritePoiIds.includes(poi.id);
+      const visibleWhenVisited = !hideVisited || !visitedPoiIds.includes(poi.id);
 
-      return visibleAtZoom && matchesSearch && (score >= threshold || poi.mustVisit || matchesMode);
+      return (
+        visibleAtZoom &&
+        visibleWhenViewed &&
+        visibleWhenFavorite &&
+        visibleWhenVisited &&
+        matchesSearch &&
+        (score >= threshold || poi.mustVisit || matchesMode)
+      );
     })
     .sort((a, b) => b.score - a.score)
     .map(({ poi }) => poi);

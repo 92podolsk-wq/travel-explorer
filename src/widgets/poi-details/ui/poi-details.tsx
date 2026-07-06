@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Camera, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { categoryIcons } from "@/entities/poi/ui/category-icon";
@@ -16,19 +16,29 @@ export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const favorites = useExplorerStore((state) => state.favorites);
+  const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const language = useExplorerStore((state) => state.language);
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
+  const toggleVisited = useExplorerStore((state) => state.toggleVisited);
   const isDetailsOpen = useExplorerStore((state) => state.isDetailsOpen);
   const setDetailsOpen = useExplorerStore((state) => state.setDetailsOpen);
+  const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
   const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
   const t = getTranslations(language);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  useEffect(() => {
+    if (isDetailsOpen && selectedPoi) {
+      markPoiViewed(selectedPoi.id);
+    }
+  }, [isDetailsOpen, selectedPoi, markPoiViewed]);
 
   if (!selectedPoi) {
     return null;
   }
 
   const isFavorite = favorites.includes(selectedPoi.id);
+  const isVisited = visitedPoiIds.includes(selectedPoi.id);
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
@@ -111,7 +121,7 @@ export function PoiDetails() {
               )}
               <Badge className="gap-1 border-white/70 bg-white/[0.88] text-foreground">
                 <Camera className="h-3 w-3" />
-                {t.app.photo} {selectedPoi.photoScore}
+                {t.app.photo} {selectedPoi.photos.length}
               </Badge>
             </div>
             <div className="absolute bottom-5 left-5 right-5 text-white">
@@ -138,6 +148,15 @@ export function PoiDetails() {
               >
                 <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
                 {t.app.save}
+              </Button>
+              <Button
+                type="button"
+                variant={isVisited ? "default" : "outline"}
+                onClick={() => toggleVisited(selectedPoi.id)}
+                className="h-11 flex-1"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {t.app.visited}
               </Button>
             </div>
 

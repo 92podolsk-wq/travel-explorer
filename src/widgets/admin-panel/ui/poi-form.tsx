@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Star, Trash2 } from "lucide-react";
 import { poiCategories, poiDifficulties, poiTags } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode } from "@/entities/poi/model/types";
 import { Button } from "@/shared/ui/button";
@@ -152,6 +152,20 @@ export function PoiForm({ poi, onCancel, onSubmit }: PoiFormProps) {
       ...prev,
       photos: prev.photos.map((photo, i) => (i === index ? { ...photo, ...patch } : photo))
     }));
+  };
+
+  const setMainPhoto = (index: number) => {
+    setForm((prev) => {
+      if (index === 0) {
+        return prev;
+      }
+
+      const photos = [...prev.photos];
+      const [selected] = photos.splice(index, 1);
+      photos.unshift(selected);
+
+      return { ...prev, photos };
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -320,18 +334,25 @@ export function PoiForm({ poi, onCancel, onSubmit }: PoiFormProps) {
         <div className="space-y-2">
           {form.photos.map((photo, index) => (
             <div key={index} className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-2.5">
-              {photo.url.trim() ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photo.url}
-                  alt=""
-                  className="h-16 w-16 shrink-0 rounded-md border border-border bg-white object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">
-                  Preview
-                </div>
-              )}
+              <div className="relative h-16 w-16 shrink-0">
+                {photo.url.trim() ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={photo.url}
+                    alt=""
+                    className="h-16 w-16 rounded-md border border-border bg-white object-cover"
+                  />
+                ) : (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">
+                    Preview
+                  </div>
+                )}
+                {index === 0 && (
+                  <span className="absolute -left-1 -top-1 rounded bg-amber-400 px-1 text-[9px] font-semibold uppercase text-amber-950 shadow-sm">
+                    Main
+                  </span>
+                )}
+              </div>
               <div className="grid flex-1 grid-cols-3 gap-2">
                 <Input
                   value={photo.url}
@@ -347,6 +368,21 @@ export function PoiForm({ poi, onCancel, onSubmit }: PoiFormProps) {
                   className="col-span-2"
                 />
               </div>
+              <button
+                type="button"
+                aria-label={index === 0 ? "Main photo" : "Set as main photo"}
+                title={index === 0 ? "Main photo" : "Set as main photo"}
+                disabled={index === 0}
+                onClick={() => setMainPhoto(index)}
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition",
+                  index === 0
+                    ? "cursor-default border-amber-300 bg-amber-50 text-amber-500"
+                    : "border-border text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <Star className={cn("h-4 w-4", index === 0 && "fill-current")} />
+              </button>
               <button
                 type="button"
                 aria-label="Remove photo"

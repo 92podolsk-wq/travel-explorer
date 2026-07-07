@@ -332,7 +332,7 @@ export function ExplorerMap() {
         map.getCanvas().style.cursor = "";
       };
 
-      map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-left");
+      map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-right");
       map.on("zoom", () => setZoom(map.getZoom()));
       map.on("load", () => {
         hideBasemapPoiLayers(map);

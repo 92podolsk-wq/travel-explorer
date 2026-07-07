@@ -13,7 +13,13 @@ export async function GET() {
   const poiState = await getUserPoiState(user.id);
 
   return NextResponse.json({
-    user: { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt.toISOString() },
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarId: user.avatarId,
+      createdAt: user.createdAt.toISOString()
+    },
     ...poiState
   } satisfies AuthMeResponse);
 }

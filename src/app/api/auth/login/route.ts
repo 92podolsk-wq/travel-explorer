@@ -17,6 +17,12 @@ export async function POST(request: Request) {
   await createUserSession(existing.id);
 
   return NextResponse.json({
-    user: { id: existing.id, email: existing.email, name: existing.name, createdAt: existing.createdAt.toISOString() }
+    user: {
+      id: existing.id,
+      email: existing.email,
+      name: existing.name,
+      avatarId: existing.avatarId,
+      createdAt: existing.createdAt.toISOString()
+    }
   });
 }

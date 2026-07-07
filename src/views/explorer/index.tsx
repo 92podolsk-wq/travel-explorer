@@ -5,8 +5,8 @@ import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
-import type { AuthMeResponse } from "@/entities/user/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
 import { FavoritesPanel } from "@/widgets/favorites-panel/ui/favorites-panel";
@@ -25,28 +25,14 @@ export function ExplorerPage({ initialPois, initialRegions, initialCountries, in
   const setRegions = useExplorerStore((state) => state.setRegions);
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
-  const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
+
+  useHydrateAuth();
 
   useEffect(() => {
     setCountries(initialCountries);
     setAreas(initialAreas);
     setRegions(initialRegions);
     setPois(initialPois);
-
-    (async () => {
-      const res = await fetch("/api/auth/me");
-      const data = (await res.json()) as AuthMeResponse;
-      hydrateAuth(
-        data.user,
-        data.user
-          ? {
-              favoritePoiIds: data.favoritePoiIds ?? [],
-              viewedPoiIds: data.viewedPoiIds ?? [],
-              visitedPoiIds: data.visitedPoiIds ?? []
-            }
-          : undefined
-      );
-    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

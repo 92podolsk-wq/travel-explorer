@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, User as UserIcon } from "lucide-react";
+import { ChevronDown, LogOut } from "lucide-react";
 import type { AuthMeResponse } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 
 type FormMode = "login" | "register";
 
@@ -94,7 +95,7 @@ export function AuthMenu() {
           aria-expanded={isUserMenuOpen}
           className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted/60"
         >
-          <UserIcon className="h-4 w-4 text-primary" aria-hidden="true" />
+          <ProfileAvatar avatarId={currentUser.avatarId} className="h-6 w-6" />
           {currentUser.name || currentUser.email}
           <ChevronDown
             className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`}

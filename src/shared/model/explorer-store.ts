@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { seedAreas } from "@/entities/area/model/areas";
 import type { Area } from "@/entities/area/model/types";
 import { seedCountries } from "@/entities/country/model/countries";
@@ -59,7 +60,9 @@ type ExplorerState = {
   toggleSeason: (season: Season) => void;
 };
 
-export const useExplorerStore = create<ExplorerState>((set, get) => ({
+export const useExplorerStore = create<ExplorerState>()(
+  persist(
+    (set, get) => ({
   pois: kyotoPois,
   regions: seedRegions,
   countries: seedCountries,
@@ -162,4 +165,10 @@ export const useExplorerStore = create<ExplorerState>((set, get) => ({
     })),
   setCountries: (countries) => set({ countries }),
   setAreas: (areas) => set({ areas })
-}));
+    }),
+    {
+      name: "travel-explorer-settings",
+      partialize: (state) => ({ language: state.language })
+    }
+  )
+);

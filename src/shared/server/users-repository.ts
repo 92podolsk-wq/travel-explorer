@@ -8,6 +8,7 @@ function toUser(row: UserRow): User {
     id: row.id,
     email: row.email,
     name: row.name,
+    avatarId: row.avatarId,
     createdAt: row.createdAt.toISOString()
   };
 }
@@ -23,5 +24,10 @@ export async function findUserById(id: string): Promise<User | null> {
 
 export async function createUser(email: string, passwordHash: string, name: string | null): Promise<User> {
   const row = await prisma.user.create({ data: { email, passwordHash, name } });
+  return toUser(row);
+}
+
+export async function updateUserAvatar(userId: string, avatarId: string): Promise<User> {
+  const row = await prisma.user.update({ where: { id: userId }, data: { avatarId } });
   return toUser(row);
 }

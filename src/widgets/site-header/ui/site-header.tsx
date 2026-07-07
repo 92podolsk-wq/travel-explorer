@@ -6,18 +6,11 @@ import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { AuthMenu } from "@/features/auth/ui/auth-menu";
+import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
-import type { Language } from "@/shared/i18n/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
-import { FlagIcon } from "@/shared/ui/flag-icon";
 import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { cn } from "@/shared/lib/cn";
-
-const languageOptions: Array<{ language: Language; label: string }> = [
-  { language: "en", label: "EN" },
-  { language: "ru", label: "RU" },
-  { language: "ja", label: "JA" }
-];
 
 type CountryGroup = {
   country: Country;
@@ -31,7 +24,6 @@ export function SiteHeader() {
   const activeRegionId = useExplorerStore((state) => state.activeRegionId);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const language = useExplorerStore((state) => state.language);
-  const setLanguage = useExplorerStore((state) => state.setLanguage);
   const t = getTranslations(language);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -164,24 +156,7 @@ export function SiteHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 rounded-md border border-border bg-muted/60 p-0.5" aria-label={t.app.language}>
-          {languageOptions.map((option) => (
-            <button
-              key={option.language}
-              type="button"
-              onClick={() => setLanguage(option.language)}
-              className={cn(
-                "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
-                language === option.language
-                  ? "bg-white text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <FlagIcon language={option.language} />
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <LanguageSwitcher />
         <AuthMenu />
       </div>
     </header>

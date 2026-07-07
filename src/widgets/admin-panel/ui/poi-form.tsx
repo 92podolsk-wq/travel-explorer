@@ -22,6 +22,9 @@ type PhotoFormState = {
 type FormState = {
   regionId: string;
   name: string;
+  nameEn: string;
+  nameRu: string;
+  nameJa: string;
   description: string;
   lat: string;
   lng: string;
@@ -44,6 +47,9 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     return {
       regionId: defaultRegionId,
       name: "",
+      nameEn: "",
+      nameRu: "",
+      nameJa: "",
       description: "",
       lat: "",
       lng: "",
@@ -65,6 +71,9 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
   return {
     regionId: poi.regionId,
     name: poi.name,
+    nameEn: poi.nameByLanguage.en,
+    nameRu: poi.nameByLanguage.ru,
+    nameJa: poi.nameByLanguage.ja,
     description: poi.description,
     lat: String(poi.coordinates.lat),
     lng: String(poi.coordinates.lng),
@@ -115,9 +124,16 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
 
   if (photos.length === 0) return { error: "Добавьте хотя бы одну ссылку на фото." };
 
+  const name = form.name.trim();
+
   return {
     regionId: form.regionId,
-    name: form.name.trim(),
+    name,
+    nameByLanguage: {
+      en: form.nameEn.trim() || name,
+      ru: form.nameRu.trim() || name,
+      ja: form.nameJa.trim() || name
+    },
     description: form.description.trim(),
     coordinates: { lat, lng },
     rating: Number(form.rating) || 0,
@@ -149,12 +165,13 @@ const chipClass = (active: boolean) =>
 type PoiFormProps = {
   poi?: Poi;
   regions: Region[];
+  defaultRegionId?: string;
   onCancel: () => void;
   onSubmit: (input: PoiInput) => Promise<void> | void;
 };
 
-export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(poi, regions[0]?.id ?? ""));
+export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
+  const [form, setForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -201,10 +218,10 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-border bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <label className={fieldLabel} title="К какому региону (городу) относится это место — определяет, на карте какого региона оно появится.">
-          Регион
+        <label className={fieldLabel} title="К какому городу относится эта локация — определяет, на карте какого города она появится.">
+          Город
         </label>
         <select
           className={selectClass}
@@ -220,10 +237,24 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
       </div>
 
       <div>
-        <label className={fieldLabel} title="Название места — показывается на карте, в списке слева и в карточке места. Не переводится на другие языки сайта.">
+        <label className={fieldLabel} title="Базовое название места — используется как запасной вариант, если для какого-то языка не задано отдельное название ниже.">
           Название
         </label>
         <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nanzen-ji" />
+      </div>
+
+      <div>
+        <label
+          className={fieldLabel}
+          title="Название места на разных языках сайта — именно эти значения показываются на карте, в списке и в карточке места в зависимости от выбранного языка интерфейса."
+        >
+          Названия по языкам
+        </label>
+        <div className="grid grid-cols-3 gap-3">
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Nanzen-ji" />
+          <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Нандзэн-дзи" />
+          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 南禅寺" />
+        </div>
       </div>
 
       <div>

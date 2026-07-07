@@ -47,6 +47,7 @@ export function PoiDetails() {
 
   const isFavorite = favorites.includes(selectedPoi.id);
   const isVisited = visitedPoiIds.includes(selectedPoi.id);
+  const poiName = selectedPoi.nameByLanguage[language] ?? selectedPoi.name;
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
@@ -93,7 +94,7 @@ export function PoiDetails() {
             <Image
               key={activePhoto?.id}
               src={activePhoto?.url}
-              alt={activePhoto?.alt ?? selectedPoi.name}
+              alt={activePhoto?.alt ?? poiName}
               width={760}
               height={448}
               className="h-full w-full object-cover"
@@ -143,7 +144,7 @@ export function PoiDetails() {
               </Badge>
             </div>
             <div className="absolute bottom-5 left-5 right-5 text-white">
-              <h2 className="text-3xl font-semibold tracking-normal">{selectedPoi.name}</h2>
+              <h2 className="text-3xl font-semibold tracking-normal">{poiName}</h2>
               <div className="mt-2 flex items-center gap-3 text-sm font-medium">
                 <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
                   <Star className="h-4 w-4 fill-white" />

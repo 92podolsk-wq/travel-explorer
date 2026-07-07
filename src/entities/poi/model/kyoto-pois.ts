@@ -4,6 +4,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "fushimi-inari",
     name: "Fushimi Inari Taisha",
+    nameByLanguage: { en: "Fushimi Inari Taisha", ru: "Фусими Инари Тайся", ja: "伏見稲荷大社" },
     coordinates: { lat: 34.9671, lng: 135.7727 },
     description:
       "A mountain shrine route lined with thousands of vermilion gates, strongest at sunrise and after dark.",
@@ -37,6 +38,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "kiyomizu-dera",
     name: "Kiyomizu-dera",
+    nameByLanguage: { en: "Kiyomizu-dera", ru: "Киёмидзу-дэра", ja: "清水寺" },
     coordinates: { lat: 34.9949, lng: 135.785 },
     description:
       "A hillside temple with broad city views, wooden architecture, and atmospheric approach streets.",
@@ -63,6 +65,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "arashiyama-bamboo",
     name: "Arashiyama Bamboo Grove",
+    nameByLanguage: { en: "Arashiyama Bamboo Grove", ru: "Бамбуковая роща Арасияма", ja: "嵐山竹林の道" },
     coordinates: { lat: 35.017,
       lng: 135.6719 },
     description:
@@ -90,6 +93,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "gion",
     name: "Gion",
+    nameByLanguage: { en: "Gion", ru: "Гион", ja: "祇園" },
     coordinates: { lat: 35.0037, lng: 135.7751 },
     description:
       "Kyoto's historic entertainment district with preserved streets, lanterns, tea houses, and evening atmosphere.",
@@ -116,6 +120,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "philosophers-path",
     name: "Philosopher's Path",
+    nameByLanguage: { en: "Philosopher's Path", ru: "Тропа философа", ja: "哲学の道" },
     coordinates: { lat: 35.0268, lng: 135.7975 },
     description:
       "A canal-side walk connecting temples and small cafes, especially strong during cherry blossom season.",
@@ -142,6 +147,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "kinkaku-ji",
     name: "Kinkaku-ji",
+    nameByLanguage: { en: "Kinkaku-ji", ru: "Кинкаку-дзи", ja: "金閣寺" },
     coordinates: { lat: 35.0394, lng: 135.7292 },
     description:
       "The Golden Pavilion reflected in a pond, concise but iconic and visually clean in winter light.",
@@ -168,6 +174,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "daigo-ji",
     name: "Daigo-ji",
+    nameByLanguage: { en: "Daigo-ji", ru: "Дайго-дзи", ja: "醍醐寺" },
     coordinates: { lat: 34.951, lng: 135.8195 },
     description:
       "A spacious temple complex with exceptional sakura, autumn color, and a quieter feeling than central Kyoto.",
@@ -194,6 +201,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "kurama-kibune",
     name: "Kurama to Kibune",
+    nameByLanguage: { en: "Kurama to Kibune", ru: "Курама — Кибунэ", ja: "鞍馬〜貴船" },
     coordinates: { lat: 35.1217, lng: 135.7707 },
     description:
       "A forested temple-to-village walk north of Kyoto, ideal when the city center feels too dense.",
@@ -220,6 +228,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "nishiki-market",
     name: "Nishiki Market",
+    nameByLanguage: { en: "Nishiki Market", ru: "Рынок Нисики", ja: "錦市場" },
     coordinates: { lat: 35.005, lng: 135.7647 },
     description:
       "A narrow food market that works well as a central reset between temple-heavy exploration blocks.",
@@ -246,6 +255,7 @@ export const kyotoPois: Poi[] = [
   {
     id: "shugakuin",
     name: "Shugakuin Imperial Villa",
+    nameByLanguage: { en: "Shugakuin Imperial Villa", ru: "Императорская вилла Сюгакуин", ja: "修学院離宮" },
     coordinates: { lat: 35.0514, lng: 135.7973 },
     description:
       "Elegant villa gardens with layered views across northeast Kyoto, best for slow visual exploration.",
@@ -273,6 +283,7 @@ export const kyotoPois: Poi[] = [
     id: "osaka-castle",
     regionId: "osaka",
     name: "Osaka Castle",
+    nameByLanguage: { en: "Osaka Castle", ru: "Замок Осака", ja: "大阪城" },
     coordinates: {
       lat: 34.6873,
       lng: 135.5262
@@ -301,6 +312,7 @@ export const kyotoPois: Poi[] = [
     id: "dotonbori",
     regionId: "osaka",
     name: "Dotonbori",
+    nameByLanguage: { en: "Dotonbori", ru: "Дотонбори", ja: "道頓堀" },
     coordinates: {
       lat: 34.6687,
       lng: 135.5013
@@ -330,6 +342,7 @@ export const kyotoPois: Poi[] = [
     id: "shinsekai",
     regionId: "osaka",
     name: "Shinsekai",
+    nameByLanguage: { en: "Shinsekai", ru: "Синсэкай", ja: "新世界" },
     coordinates: {
       lat: 34.6523,
       lng: 135.5062
@@ -358,6 +371,7 @@ export const kyotoPois: Poi[] = [
     id: "osaka-aquarium",
     regionId: "osaka",
     name: "Osaka Aquarium Kaiyukan",
+    nameByLanguage: { en: "Osaka Aquarium Kaiyukan", ru: "Аквариум Кайюкан", ja: "海遊館" },
     coordinates: {
       lat: 34.6547,
       lng: 135.429
@@ -387,6 +401,7 @@ export const kyotoPois: Poi[] = [
     id: "shitennoji",
     regionId: "osaka",
     name: "Shitennoji Temple",
+    nameByLanguage: { en: "Shitennoji Temple", ru: "Храм Ситэнно-дзи", ja: "四天王寺" },
     coordinates: {
       lat: 34.6534,
       lng: 135.5163
@@ -416,6 +431,7 @@ export const kyotoPois: Poi[] = [
     id: "umeda-sky-building",
     regionId: "osaka",
     name: "Umeda Sky Building",
+    nameByLanguage: { en: "Umeda Sky Building", ru: "Небоскрёб Умэда Скай Билдинг", ja: "梅田スカイビル" },
     coordinates: {
       lat: 34.7054,
       lng: 135.4903
@@ -444,6 +460,7 @@ export const kyotoPois: Poi[] = [
     id: "kuromon-market",
     regionId: "osaka",
     name: "Kuromon Ichiba Market",
+    nameByLanguage: { en: "Kuromon Ichiba Market", ru: "Рынок Куромон Итиба", ja: "黒門市場" },
     coordinates: {
       lat: 34.6656,
       lng: 135.5062
@@ -472,6 +489,7 @@ export const kyotoPois: Poi[] = [
     id: "sumiyoshi-taisha",
     regionId: "osaka",
     name: "Sumiyoshi Taisha",
+    nameByLanguage: { en: "Sumiyoshi Taisha", ru: "Сумиёси Тайся", ja: "住吉大社" },
     coordinates: {
       lat: 34.6125,
       lng: 135.4933
@@ -501,6 +519,7 @@ export const kyotoPois: Poi[] = [
     id: "namba-yasaka",
     regionId: "osaka",
     name: "Namba Yasaka Shrine",
+    nameByLanguage: { en: "Namba Yasaka Shrine", ru: "Святилище Намба Ясака", ja: "難波八阪神社" },
     coordinates: {
       lat: 34.6626,
       lng: 135.5

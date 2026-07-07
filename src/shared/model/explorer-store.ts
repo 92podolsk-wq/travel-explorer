@@ -1,4 +1,8 @@
 import { create } from "zustand";
+import { seedAreas } from "@/entities/area/model/areas";
+import type { Area } from "@/entities/area/model/types";
+import { seedCountries } from "@/entities/country/model/countries";
+import type { Country } from "@/entities/country/model/types";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
 import type { Poi, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
@@ -14,6 +18,8 @@ function firstPoiIdForRegion(pois: Poi[], regionId: string) {
 type ExplorerState = {
   pois: Poi[];
   regions: Region[];
+  countries: Country[];
+  areas: Area[];
   activeRegionId: string;
   selectedPoiId: string;
   activeModeId: ExplorationModeId;
@@ -44,12 +50,16 @@ type ExplorerState = {
   setDetailsOpen: (open: boolean) => void;
   setPois: (pois: Poi[]) => void;
   setRegions: (regions: Region[]) => void;
+  setCountries: (countries: Country[]) => void;
+  setAreas: (areas: Area[]) => void;
   toggleSeason: (season: Season) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>((set) => ({
   pois: kyotoPois,
   regions: seedRegions,
+  countries: seedCountries,
+  areas: seedAreas,
   activeRegionId: defaultRegion.id,
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
   activeModeId: defaultExplorationMode.id,
@@ -119,5 +129,7 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
       selectedSeasons: state.selectedSeasons.includes(season)
         ? state.selectedSeasons.filter((s) => s !== season)
         : [...state.selectedSeasons, season]
-    }))
+    })),
+  setCountries: (countries) => set({ countries }),
+  setAreas: (areas) => set({ areas })
 }));

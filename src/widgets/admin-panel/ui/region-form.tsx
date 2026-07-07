@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import type { Area } from "@/entities/area/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
 type FormState = {
   name: string;
-  country: string;
-  area: string;
+  areaId: string;
   lat: string;
   lng: string;
   defaultZoom: string;
@@ -23,12 +23,11 @@ type FormState = {
   sealCharacter: string;
 };
 
-function toFormState(region?: Region): FormState {
+function toFormState(region: Region | undefined, defaultAreaId: string): FormState {
   if (!region) {
     return {
       name: "",
-      country: "Japan",
-      area: "",
+      areaId: defaultAreaId,
       lat: "",
       lng: "",
       defaultZoom: "12",
@@ -46,8 +45,7 @@ function toFormState(region?: Region): FormState {
 
   return {
     name: region.name,
-    country: region.country,
-    area: region.area,
+    areaId: region.areaId,
     lat: String(region.center.lat),
     lng: String(region.center.lng),
     defaultZoom: String(region.defaultZoom),
@@ -65,8 +63,7 @@ function toFormState(region?: Region): FormState {
 
 function toRegionInput(form: FormState): RegionInput | { error: string } {
   if (!form.name.trim()) return { error: "Укажите название." };
-  if (!form.country.trim()) return { error: "Укажите страну." };
-  if (!form.area.trim()) return { error: "Укажите регион/область." };
+  if (!form.areaId) return { error: "Выберите регион/область." };
 
   const lat = Number(form.lat);
   const lng = Number(form.lng);
@@ -85,8 +82,7 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
 
   return {
     name,
-    country: form.country.trim(),
-    area: form.area.trim(),
+    areaId: form.areaId,
     center: { lat, lng },
     defaultZoom,
     bounds: [
@@ -104,15 +100,18 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
 }
 
 const fieldLabel = "mb-1.5 block cursor-help text-xs font-semibold uppercase tracking-wide text-muted-foreground";
+const selectClass =
+  "h-11 w-full rounded-md border border-border bg-white/[0.78] px-3 text-sm text-foreground shadow-sm outline-none transition focus:border-primary/30 focus:ring-2 focus:ring-ring/25";
 
 type RegionFormProps = {
   region?: Region;
+  areas: Area[];
   onCancel: () => void;
   onSubmit: (input: RegionInput) => Promise<void> | void;
 };
 
-export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(region));
+export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProps) {
+  const [form, setForm] = useState<FormState>(() => toFormState(region, areas[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -135,12 +134,12 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-border bg-white p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label
             className={fieldLabel}
-            title="Базовое название региона — используется как запасной вариант, если для какого-то языка не задано отдельное название ниже."
+            title="Базовое название города — используется как запасной вариант, если для какого-то языка не задано отдельное название ниже."
           >
             Название
           </label>
@@ -149,27 +148,28 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
         <div>
           <label
             className={fieldLabel}
-            title="Страна — используется для группировки в выпадающем меню выбора локации (кнопка «Город, Область, Страна» в шапке сайта)."
+            title="Регион/область, к которой относится город — определяет группировку в меню выбора локации в шапке сайта."
           >
-            Страна
+            Регион
           </label>
-          <Input value={form.country} onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))} placeholder="Japan" />
-        </div>
-        <div>
-          <label
-            className={fieldLabel}
-            title="Область/регион страны (например, Kansai) — средний уровень группировки в том же меню выбора локации в шапке сайта."
+          <select
+            className={selectClass}
+            value={form.areaId}
+            onChange={(e) => setForm((p) => ({ ...p, areaId: e.target.value }))}
           >
-            Область
-          </label>
-          <Input value={form.area} onChange={(e) => setForm((p) => ({ ...p, area: e.target.value }))} placeholder="Kansai" />
+            {areas.map((area) => (
+              <option key={area.id} value={area.id}>
+                {area.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       <div>
         <label
           className={fieldLabel}
-          title="Название региона на разных языках сайта — именно эти значения показываются в заголовке и в меню выбора локации в зависимости от выбранного языка интерфейса."
+          title="Название города на разных языках сайта — именно эти значения показываются в заголовке и в меню выбора локации в зависимости от выбранного языка интерфейса."
         >
           Названия по языкам
         </label>
@@ -184,7 +184,7 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
         <div>
           <label
             className={fieldLabel}
-            title="Географический центр региона — используется для расчёта времени восхода/заката, прогноза погоды и как точка, куда карта перемещается при выборе этого региона."
+            title="Географический центр города — используется для расчёта времени восхода/заката, прогноза погоды и как точка, куда карта перемещается при выборе этого города."
           >
             Широта центра
           </label>
@@ -193,14 +193,14 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
         <div>
           <label
             className={fieldLabel}
-            title="Географический центр региона — используется для расчёта времени восхода/заката, прогноза погоды и как точка, куда карта перемещается при выборе этого региона."
+            title="Географический центр города — используется для расчёта времени восхода/заката, прогноза погоды и как точка, куда карта перемещается при выборе этого города."
           >
             Долгота центра
           </label>
           <Input type="number" step="0.0001" value={form.lng} onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))} placeholder="139.6503" />
         </div>
         <div>
-          <label className={fieldLabel} title="Масштаб карты, который устанавливается по умолчанию при открытии этого региона.">
+          <label className={fieldLabel} title="Масштаб карты, который устанавливается по умолчанию при открытии этого города.">
             Масштаб по умолчанию
           </label>
           <Input type="number" step="1" value={form.defaultZoom} onChange={(e) => setForm((p) => ({ ...p, defaultZoom: e.target.value }))} />
@@ -210,7 +210,7 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
       <div>
         <label
           className={fieldLabel}
-          title="Границы области, за пределы которых нельзя увести карту при просмотре этого региона (юго-западный и северо-восточный углы)."
+          title="Границы области, за пределы которых нельзя увести карту при просмотре этого города (юго-западный и северо-восточный углы)."
         >
           Границы карты (юго-запад и северо-восток)
         </label>
@@ -226,7 +226,7 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
         <div>
           <label
             className={fieldLabel}
-            title="Часовой пояс региона (смещение от UTC в часах) — используется для расчёта местного времени, восхода/заката и прогноза погоды."
+            title="Часовой пояс города (смещение от UTC в часах) — используется для расчёта местного времени, восхода/заката и прогноза погоды."
           >
             Часовой пояс (часы от UTC)
           </label>
@@ -235,7 +235,7 @@ export function RegionForm({ region, onCancel, onSubmit }: RegionFormProps) {
         <div>
           <label
             className={fieldLabel}
-            title="Иероглиф на красной печати (ханко), которая показывается рядом с названием региона в боковой панели."
+            title="Иероглиф на красной печати (ханко), которая показывается рядом с названием города в боковой панели."
           >
             Символ печати
           </label>

@@ -537,6 +537,7 @@ export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
 
   return [
     poi.name,
+    poi.nameByLanguage[language],
     poi.description,
     poiCopy?.description,
     dictionary.difficulty[poi.difficulty],

@@ -294,14 +294,14 @@ export function ExplorerSidebar() {
                 <div className="flex gap-3">
                   <Image
                     src={poi.photos[0]?.url}
-                    alt={poi.photos[0]?.alt ?? poi.name}
+                    alt={poi.photos[0]?.alt ?? poi.nameByLanguage[language] ?? poi.name}
                     width={64}
                     height={64}
                     className="h-[72px] w-[72px] rounded-md object-cover"
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <h2 className="truncate text-[15px] font-semibold">{poi.name}</h2>
+                      <h2 className="truncate text-[15px] font-semibold">{poi.nameByLanguage[language] ?? poi.name}</h2>
                       {isFavorite && <Star className="h-4 w-4 shrink-0 fill-primary text-primary" />}
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">

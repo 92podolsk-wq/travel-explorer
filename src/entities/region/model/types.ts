@@ -4,8 +4,7 @@ import type { Language } from "@/shared/i18n/types";
 export type Region = {
   id: string;
   name: string;
-  country: string;
-  area: string;
+  areaId: string;
   center: Coordinates;
   defaultZoom: number;
   bounds: [[number, number], [number, number]];

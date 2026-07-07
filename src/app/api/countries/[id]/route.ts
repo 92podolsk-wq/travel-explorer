@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import type { RegionInput } from "@/entities/region/model/types";
+import type { CountryInput } from "@/entities/country/model/types";
 import { isAdminAuthenticated } from "@/shared/server/admin-auth";
-import { deleteRegion, updateRegion } from "@/shared/server/regions-repository";
+import { deleteCountry, updateCountry } from "@/shared/server/countries-repository";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -11,8 +11,8 @@ export async function PUT(request: Request, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const input = (await request.json()) as RegionInput;
-  const updated = updateRegion(id, input);
+  const input = (await request.json()) as CountryInput;
+  const updated = updateCountry(id, input);
 
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -27,7 +27,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const result = deleteRegion(id);
+  const result = deleteCountry(id);
 
   if (!result.success) {
     if (result.reason === "not-found") {
@@ -35,7 +35,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     }
 
     return NextResponse.json(
-      { error: `Не удалось удалить: за этим городом закреплено локаций — ${result.placeCount}.` },
+      { error: `Не удалось удалить: за этой страной закреплено регионов — ${result.areaCount}.` },
       { status: 409 }
     );
   }

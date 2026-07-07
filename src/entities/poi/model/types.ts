@@ -1,3 +1,5 @@
+import type { Language } from "@/shared/i18n/types";
+
 export type PoiCategory =
   | "temple"
   | "shrine"
@@ -46,6 +48,7 @@ export type Poi = {
   id: string;
   regionId: string;
   name: string;
+  nameByLanguage: Record<Language, string>;
   coordinates: Coordinates;
   description: string;
   rating: number;

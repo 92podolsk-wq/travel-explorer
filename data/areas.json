@@ -1,0 +1,12 @@
+[
+  {
+    "id": "kansai",
+    "countryId": "japan",
+    "name": "Kansai",
+    "nameByLanguage": {
+      "en": "Kansai",
+      "ru": "Кансай",
+      "ja": "関西"
+    }
+  }
+]

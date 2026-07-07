@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Check, ChevronDown, MapPin } from "lucide-react";
+import type { Area } from "@/entities/area/model/types";
+import type { Country } from "@/entities/country/model/types";
+import type { Region } from "@/entities/region/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -15,8 +18,15 @@ const languageOptions: Array<{ language: Language; label: string }> = [
   { language: "ja", label: "JA" }
 ];
 
+type CountryGroup = {
+  country: Country;
+  areaGroups: Array<{ area: Area; regions: Region[] }>;
+};
+
 export function SiteHeader() {
   const regions = useExplorerStore((state) => state.regions);
+  const areas = useExplorerStore((state) => state.areas);
+  const countries = useExplorerStore((state) => state.countries);
   const activeRegionId = useExplorerStore((state) => state.activeRegionId);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const language = useExplorerStore((state) => state.language);
@@ -25,17 +35,25 @@ export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
+  const activeArea = activeRegion ? areas.find((area) => area.id === activeRegion.areaId) : undefined;
+  const activeCountry = activeArea ? countries.find((country) => country.id === activeArea.countryId) : undefined;
 
-  const countryGroups: Array<{ country: string; areaGroups: Array<{ area: string; regions: typeof regions }> }> = [];
+  const countryGroups: CountryGroup[] = [];
   for (const region of regions) {
-    let countryGroup = countryGroups.find((group) => group.country === region.country);
+    const area = areas.find((a) => a.id === region.areaId);
+    const country = area ? countries.find((c) => c.id === area.countryId) : undefined;
+    if (!area || !country) {
+      continue;
+    }
+
+    let countryGroup = countryGroups.find((group) => group.country.id === country.id);
     if (!countryGroup) {
-      countryGroup = { country: region.country, areaGroups: [] };
+      countryGroup = { country, areaGroups: [] };
       countryGroups.push(countryGroup);
     }
-    let areaGroup = countryGroup.areaGroups.find((group) => group.area === region.area);
+    let areaGroup = countryGroup.areaGroups.find((group) => group.area.id === area.id);
     if (!areaGroup) {
-      areaGroup = { area: region.area, regions: [] };
+      areaGroup = { area, regions: [] };
       countryGroup.areaGroups.push(areaGroup);
     }
     areaGroup.regions.push(region);
@@ -65,7 +83,9 @@ export function SiteHeader() {
           className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60"
         >
           <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-          {activeRegion.nameByLanguage[language]}, {activeRegion.area}, {activeRegion.country}
+          {activeRegion.nameByLanguage[language]}
+          {activeArea ? `, ${activeArea.nameByLanguage[language]}` : ""}
+          {activeCountry ? `, ${activeCountry.nameByLanguage[language]}` : ""}
           <ChevronDown
             className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
             aria-hidden="true"
@@ -82,25 +102,25 @@ export function SiteHeader() {
             />
             <div className="absolute left-1/2 top-full z-40 mt-2 flex -translate-x-1/2 gap-8 rounded-lg border border-border bg-white p-4 shadow-panel">
               {countryGroups.map((countryGroup) => (
-                <div key={countryGroup.country} className="flex gap-8">
+                <div key={countryGroup.country.id} className="flex gap-8">
                   <div>
                     <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                       {t.app.country}
                     </p>
                     <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
                       <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                      {countryGroup.country}
+                      {countryGroup.country.nameByLanguage[language]}
                     </p>
                   </div>
                   {countryGroup.areaGroups.map((areaGroup) => (
-                    <div key={areaGroup.area} className="flex gap-8">
+                    <div key={areaGroup.area.id} className="flex gap-8">
                       <div>
                         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                           {t.app.area}
                         </p>
                         <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
                           <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                          {areaGroup.area}
+                          {areaGroup.area.nameByLanguage[language]}
                         </p>
                       </div>
                       <div>

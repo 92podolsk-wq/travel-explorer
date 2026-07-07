@@ -3,8 +3,7 @@ import type { Region } from "./types";
 export const kyotoRegion: Region = {
   id: "kyoto",
   name: "Kyoto",
-  country: "Japan",
-  area: "Kansai",
+  areaId: "kansai",
   center: {
     lat: 35.0116,
     lng: 135.7681

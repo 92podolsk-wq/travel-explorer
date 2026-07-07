@@ -12,6 +12,7 @@ type LiveWeatherChipsProps = {
   latitude: number;
   longitude: number;
   timeZoneOffsetHours: number;
+  nowLabel: string;
   tomorrowLabel: string;
 };
 
@@ -20,6 +21,7 @@ export function LiveWeatherChips({
   latitude,
   longitude,
   timeZoneOffsetHours,
+  nowLabel,
   tomorrowLabel
 }: LiveWeatherChipsProps) {
   const [weather, setWeather] = useState<WeatherResponse | null>(null);
@@ -62,12 +64,13 @@ export function LiveWeatherChips({
 
   return (
     <>
-      <div className="inline-flex items-center gap-1 rounded-md border border-border bg-white/70 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+      <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-white/70 px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+        <span>{nowLabel}</span>
         <span>{localTime}</span>
         <NowIcon className="h-3 w-3 text-sky-700" />
         <span className="font-semibold text-foreground">{Math.round(weather.now.tempC)}°</span>
       </div>
-      <div className="inline-flex items-center gap-1 rounded-md border border-border bg-white/70 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+      <div className="inline-flex items-center gap-0.5 rounded-md border border-border bg-white/70 px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
         <span>{tomorrowLabel}</span>
         <TomorrowIcon className="h-3 w-3 text-sky-700" />
         <span className="font-semibold text-foreground">{Math.round(weather.tomorrow.tempC)}°</span>

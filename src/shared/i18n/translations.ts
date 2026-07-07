@@ -30,6 +30,9 @@ type TranslationDictionary = {
     minutesShort: string;
     language: string;
     region: string;
+    country: string;
+    area: string;
+    city: string;
     hideDetails: string;
     showDetails: string;
     sunrise: string;
@@ -49,6 +52,7 @@ type TranslationDictionary = {
     seasonFilter: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
+    now: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
@@ -77,6 +81,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "m",
       language: "Language",
       region: "Region",
+      country: "Country",
+      area: "Area",
+      city: "City",
       hideDetails: "Hide details",
       showDetails: "Show details",
       sunrise: "Sunrise",
@@ -95,7 +102,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Konnichiwa!",
       seasonFilter: "Season",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
-      tomorrow: "Tomorrow"
+      tomorrow: "Tomorrow",
+      now: "Now"
     },
     modes: {
       photographer: {
@@ -117,10 +125,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       sakura: {
         label: "Sakura",
         description: "Spring blossom anchors and canal walks."
-      },
-      "hidden-gems": {
-        label: "Hidden Gems",
-        description: "Lower-density places with high discovery value."
       }
     },
     poi: {
@@ -230,6 +234,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "мин",
       language: "Язык",
       region: "Регион",
+      country: "Страна",
+      area: "Регион",
+      city: "Город",
       hideDetails: "Скрыть панель",
       showDetails: "Показать панель",
       sunrise: "Восход",
@@ -248,7 +255,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Коничива!",
       seasonFilter: "Сезон",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
-      tomorrow: "Завтра"
+      tomorrow: "Завтра",
+      now: "Сейчас"
     },
     modes: {
       photographer: {
@@ -270,10 +278,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       sakura: {
         label: "Сакура",
         description: "Весенние точки цветения и прогулки вдоль каналов."
-      },
-      "hidden-gems": {
-        label: "Скрытые места",
-        description: "Менее людные места с высоким ощущением открытия."
       }
     },
     poi: {
@@ -383,6 +387,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "分",
       language: "言語",
       region: "地域",
+      country: "国",
+      area: "地方",
+      city: "都市",
       hideDetails: "パネルを閉じる",
       showDetails: "パネルを開く",
       sunrise: "日の出",
@@ -401,7 +408,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "こんにちは！",
       seasonFilter: "季節",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
-      tomorrow: "明日"
+      tomorrow: "明日",
+      now: "現在"
     },
     modes: {
       photographer: {
@@ -423,10 +431,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       sakura: {
         label: "桜",
         description: "春の桜の名所と運河沿いの散策。"
-      },
-      "hidden-gems": {
-        label: "隠れた名所",
-        description: "人が少なく発見価値の高い場所。"
       }
     },
     poi: {

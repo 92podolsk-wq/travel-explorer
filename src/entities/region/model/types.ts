@@ -5,6 +5,7 @@ export type Region = {
   id: string;
   name: string;
   country: string;
+  area: string;
   center: Coordinates;
   defaultZoom: number;
   bounds: [[number, number], [number, number]];

@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { LogOut, MapPin, Pencil, Plus, Trash2 } from "lucide-react";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
+import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
+
+const t = getTranslations("ru");
 
 type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" };
 
@@ -68,7 +71,7 @@ export function AdminPanel() {
     });
 
     if (!res.ok) {
-      setLoginError("Incorrect password.");
+      setLoginError("Неверный пароль.");
       return;
     }
 
@@ -91,7 +94,7 @@ export function AdminPanel() {
     });
 
     if (!res.ok) {
-      setPlacesError("Could not create the place.");
+      setPlacesError("Не удалось создать место.");
       return;
     }
 
@@ -108,7 +111,7 @@ export function AdminPanel() {
     });
 
     if (!res.ok) {
-      setPlacesError("Could not save changes.");
+      setPlacesError("Не удалось сохранить изменения.");
       return;
     }
 
@@ -117,7 +120,7 @@ export function AdminPanel() {
   };
 
   const handleDeletePlace = async (poi: Poi) => {
-    if (!window.confirm(`Delete "${poi.name}"? This can't be undone.`)) {
+    if (!window.confirm(`Удалить «${poi.name}»? Это действие нельзя отменить.`)) {
       return;
     }
 
@@ -125,7 +128,7 @@ export function AdminPanel() {
     const res = await fetch(`/api/pois/${poi.id}`, { method: "DELETE" });
 
     if (!res.ok) {
-      setPlacesError("Could not delete the place.");
+      setPlacesError("Не удалось удалить место.");
       return;
     }
 
@@ -141,7 +144,7 @@ export function AdminPanel() {
     });
 
     if (!res.ok) {
-      setRegionsError("Could not create the region.");
+      setRegionsError("Не удалось создать регион.");
       return;
     }
 
@@ -158,7 +161,7 @@ export function AdminPanel() {
     });
 
     if (!res.ok) {
-      setRegionsError("Could not save changes.");
+      setRegionsError("Не удалось сохранить изменения.");
       return;
     }
 
@@ -167,7 +170,7 @@ export function AdminPanel() {
   };
 
   const handleDeleteRegion = async (region: Region) => {
-    if (!window.confirm(`Delete "${region.name}"? This can't be undone.`)) {
+    if (!window.confirm(`Удалить «${region.name}»? Это действие нельзя отменить.`)) {
       return;
     }
 
@@ -176,7 +179,7 @@ export function AdminPanel() {
 
     if (!res.ok) {
       const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setRegionsError(data?.error ?? "Could not delete the region.");
+      setRegionsError(data?.error ?? "Не удалось удалить регион.");
       return;
     }
 
@@ -190,19 +193,19 @@ export function AdminPanel() {
   if (authView.mode === "login") {
     return (
       <div className="mx-auto mt-24 max-w-sm rounded-lg border border-border bg-white p-6 shadow-sm">
-        <h1 className="mb-1 text-lg font-semibold">Travel Explorer admin</h1>
-        <p className="mb-5 text-sm text-muted-foreground">Enter the admin password to manage places.</p>
+        <h1 className="mb-1 text-lg font-semibold">Админ-панель Travel Explorer</h1>
+        <p className="mb-5 text-sm text-muted-foreground">Введите пароль администратора для управления местами.</p>
         <form onSubmit={handleLogin} className="space-y-3">
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
+            placeholder="Пароль"
             autoFocus
           />
           {loginError && <p className="text-sm font-medium text-red-600">{loginError}</p>}
           <Button type="submit" className="w-full">
-            Log in
+            Войти
           </Button>
         </form>
       </div>
@@ -213,14 +216,14 @@ export function AdminPanel() {
     <div className="mx-auto max-w-3xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Travel Explorer admin</h1>
+          <h1 className="text-2xl font-semibold">Админ-панель Travel Explorer</h1>
           <p className="text-sm text-muted-foreground">
-            {pois.length} places · {regions.length} regions
+            Мест: {pois.length} · Регионов: {regions.length}
           </p>
         </div>
         <Button type="button" variant="outline" onClick={handleLogout} className="gap-1.5">
           <LogOut className="h-4 w-4" />
-          Log out
+          Выйти
         </Button>
       </div>
 
@@ -233,7 +236,7 @@ export function AdminPanel() {
             activeTab === "places" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           )}
         >
-          Places
+          Места
         </button>
         <button
           type="button"
@@ -243,7 +246,7 @@ export function AdminPanel() {
             activeTab === "regions" ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
           )}
         >
-          Regions
+          Регионы
         </button>
       </div>
 
@@ -255,7 +258,7 @@ export function AdminPanel() {
             <>
               <Button type="button" onClick={() => setPlacesView({ mode: "create" })} className="mb-5 gap-1.5">
                 <Plus className="h-4 w-4" />
-                Add place
+                Добавить место
               </Button>
 
               <div className="space-y-2">
@@ -274,7 +277,7 @@ export function AdminPanel() {
                         />
                       ) : (
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">
-                          No photo
+                          Нет фото
                         </div>
                       )}
                       <div className="min-w-0">
@@ -285,11 +288,14 @@ export function AdminPanel() {
                           </span>
                         </div>
                         <p className="truncate text-xs text-muted-foreground">
-                          {poi.categories.join(", ")} · {poi.rating.toFixed(1)}★
+                          {poi.categories.map((category) => t.category[category]).join(", ")} · {poi.rating.toFixed(1)}★
                         </p>
                         {poi.visibilityMode === "zoomed-in" && (
-                          <span className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                            Zoomed-in only
+                          <span
+                            className="mt-1 inline-block rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+                            title="Место показывается на карте только при масштабе больше 12"
+                          >
+                            Только при увеличении
                           </span>
                         )}
                       </div>
@@ -297,7 +303,7 @@ export function AdminPanel() {
                     <div className="flex shrink-0 gap-2">
                       <button
                         type="button"
-                        aria-label={`Edit ${poi.name}`}
+                        aria-label={`Редактировать ${poi.name}`}
                         onClick={() => setPlacesView({ mode: "edit", poi })}
                         className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted"
                       >
@@ -305,7 +311,7 @@ export function AdminPanel() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`Delete ${poi.name}`}
+                        aria-label={`Удалить ${poi.name}`}
                         onClick={() => handleDeletePlace(poi)}
                         className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
                       >
@@ -341,7 +347,7 @@ export function AdminPanel() {
             <>
               <Button type="button" onClick={() => setRegionsView({ mode: "create" })} className="mb-5 gap-1.5">
                 <Plus className="h-4 w-4" />
-                Add region
+                Добавить регион
               </Button>
 
               <div className="space-y-2">
@@ -359,14 +365,14 @@ export function AdminPanel() {
                           {region.name} <span className="text-muted-foreground">({region.sealCharacter})</span>
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {region.country} · zoom {region.defaultZoom} · UTC+{region.timezoneOffsetHours}
+                          {region.country} · масштаб {region.defaultZoom} · UTC+{region.timezoneOffsetHours}
                         </p>
                       </div>
                     </div>
                     <div className="flex shrink-0 gap-2">
                       <button
                         type="button"
-                        aria-label={`Edit ${region.name}`}
+                        aria-label={`Редактировать ${region.name}`}
                         onClick={() => setRegionsView({ mode: "edit", region })}
                         className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted"
                       >
@@ -374,7 +380,7 @@ export function AdminPanel() {
                       </button>
                       <button
                         type="button"
-                        aria-label={`Delete ${region.name}`}
+                        aria-label={`Удалить ${region.name}`}
                         onClick={() => handleDeleteRegion(region)}
                         className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-red-50 hover:text-red-600"
                       >

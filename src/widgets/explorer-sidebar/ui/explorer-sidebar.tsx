@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Globe, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -13,28 +13,19 @@ import type { ExplorationModeId } from "@/features/exploration-mode/model/types"
 import { modeIcons } from "@/features/exploration-mode/ui/mode-icon";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
-import type { Language } from "@/shared/i18n/types";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { Button } from "@/shared/ui/button";
-import { FlagIcon } from "@/shared/ui/flag-icon";
 import { HankoSeal } from "@/shared/ui/hanko-seal";
+import { SeigaihaWatermark } from "@/shared/ui/seigaiha-watermark";
 import { Input } from "@/shared/ui/input";
-import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
-
-const languageOptions: Array<{ language: Language; label: string }> = [
-  { language: "en", label: "EN" },
-  { language: "ru", label: "RU" },
-  { language: "ja", label: "JA" }
-];
 
 export function ExplorerSidebar() {
   const pois = useExplorerStore((state) => state.pois);
   const regions = useExplorerStore((state) => state.regions);
   const activeRegionId = useExplorerStore((state) => state.activeRegionId);
-  const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
@@ -51,7 +42,6 @@ export function ExplorerSidebar() {
   const zoom = useExplorerStore((state) => state.zoom);
   const setActiveMode = useExplorerStore((state) => state.setActiveMode);
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
-  const setLanguage = useExplorerStore((state) => state.setLanguage);
   const selectPoi = useExplorerStore((state) => state.selectPoi);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
   const toggleSeason = useExplorerStore((state) => state.toggleSeason);
@@ -95,97 +85,45 @@ export function ExplorerSidebar() {
       initial={{ opacity: 0, x: -18 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="absolute left-5 top-5 z-10 flex h-[calc(100dvh-2.5rem)] w-[min(370px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.82] shadow-panel backdrop-blur-xl"
+      className="absolute left-5 top-5 z-10 flex h-[calc(100%-2.5rem)] w-[min(370px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.82] shadow-panel backdrop-blur-xl"
     >
-      <div className="border-b border-white/70 p-5">
-        <div className="mb-3 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <TravelKittenLogo />
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Travel Explorer
-              </p>
-            </div>
-            <div
-              className="relative flex w-fit items-center gap-2.5"
-              onMouseEnter={() => setIsGreetingVisible(true)}
-              onMouseLeave={() => setIsGreetingVisible(false)}
-            >
-              <h1 className="cursor-default text-3xl font-semibold tracking-normal">
-                {activeRegion.nameByLanguage[language]}
-              </h1>
-              <HankoSeal character={activeRegion.sealCharacter} />
-              <AnimatePresence>
-                {isGreetingVisible && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.85 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 6, scale: 0.85 }}
-                    transition={{ type: "spring", stiffness: 420, damping: 22 }}
-                    className="absolute -top-10 left-0 z-30 whitespace-nowrap rounded-full bg-[#a3312c] px-3.5 py-1.5 text-sm font-semibold text-white shadow-panel"
-                  >
-                    {t.app.kyotoGreeting}
-                    <span className="absolute -bottom-1 left-6 h-2.5 w-2.5 rotate-45 bg-[#a3312c]" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <div
-              aria-label={t.app.region}
-              className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
-            >
-              <MapPin className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              {regions.map((region) => (
-                <button
-                  key={region.id}
-                  type="button"
-                  onClick={() => setActiveRegion(region.id)}
-                  className={cn(
-                    "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
-                    activeRegionId === region.id
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {region.nameByLanguage[language]}
-                </button>
-              ))}
-            </div>
-            <div
-              aria-label={t.app.language}
-              className="flex items-center gap-1 rounded-md border border-white/70 bg-muted/75 p-0.5 shadow-sm"
-            >
-              <Globe className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-              {languageOptions.map((option) => (
-                <button
-                  key={option.language}
-                  type="button"
-                  onClick={() => setLanguage(option.language)}
-                  className={cn(
-                    "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
-                    language === option.language
-                      ? "bg-white text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <FlagIcon language={option.language} />
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      <div className="relative overflow-hidden border-b border-white/70 p-5">
+        <SeigaihaWatermark className="-top-8 -right-8" />
+        <div
+          className="relative mb-3 flex w-fit items-center gap-2.5"
+          onMouseEnter={() => setIsGreetingVisible(true)}
+          onMouseLeave={() => setIsGreetingVisible(false)}
+        >
+          <h1 className="cursor-default text-3xl font-semibold tracking-normal">
+            {activeRegion.nameByLanguage[language]}
+          </h1>
+          <HankoSeal character={activeRegion.sealCharacter} />
+          <AnimatePresence>
+            {isGreetingVisible && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.85 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.85 }}
+                transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                className="absolute left-0 top-full z-30 mt-2 whitespace-nowrap rounded-full bg-[#a3312c] px-3.5 py-1.5 text-sm font-semibold text-white shadow-panel"
+              >
+                {t.app.kyotoGreeting}
+                <span className="absolute -top-1 left-6 h-2.5 w-2.5 rotate-45 bg-[#a3312c]" />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
+        <div className="mb-3 h-[3px] w-11 rounded-full bg-[#a3312c]" />
+
         <div className="mb-3 flex flex-wrap items-center gap-1">
-          <div className="inline-flex items-center gap-1.5 rounded-md border border-border bg-white/70 px-2 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-            <span className="inline-flex items-center gap-1" title={t.app.sunrise}>
+          <div className="inline-flex items-center gap-1 rounded-md border border-border bg-white/70 px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+            <span className="inline-flex items-center gap-0.5" title={t.app.sunrise}>
               <Sunrise className="h-3 w-3 text-amber-500" />
               {sunTimes.sunrise ?? "—"}
             </span>
             <span className="h-3 w-px bg-border" />
-            <span className="inline-flex items-center gap-1" title={t.app.sunset}>
+            <span className="inline-flex items-center gap-0.5" title={t.app.sunset}>
               <Sunset className="h-3 w-3 text-amber-500" />
               {sunTimes.sunset ?? "—"}
             </span>
@@ -196,6 +134,7 @@ export function ExplorerSidebar() {
             latitude={activeRegion.center.lat}
             longitude={activeRegion.center.lng}
             timeZoneOffsetHours={activeRegion.timezoneOffsetHours}
+            nowLabel={t.app.now}
             tomorrowLabel={t.app.tomorrow}
           />
         </div>
@@ -216,6 +155,9 @@ export function ExplorerSidebar() {
         <div className="flex flex-wrap gap-2">
           {explorationModes.map((mode) => {
             const ModeIcon = modeIcons[mode.id as ExplorationModeId];
+            const matchCount = regionPois.filter((poi) =>
+              poi.tags.some((tag) => mode.tags.includes(tag))
+            ).length;
 
             return (
               <Button
@@ -231,7 +173,9 @@ export function ExplorerSidebar() {
                 )}
               >
                 <ModeIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{t.modes[mode.id].label}</span>
+                <span className="truncate">
+                  {t.modes[mode.id].label} ({matchCount})
+                </span>
               </Button>
             );
           })}

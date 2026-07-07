@@ -39,13 +39,6 @@ export const explorationModes: ExplorationMode[] = [
     description: "Spring blossom anchors and canal walks.",
     tags: ["sakura", "photographer"],
     score: (poi) => poi.photoScore + tagBonus(poi, ["sakura"])
-  },
-  {
-    id: "hidden-gems",
-    label: "Hidden Gems",
-    description: "Lower-density places with high discovery value.",
-    tags: ["hidden-gem", "nature", "public-transport"],
-    score: (poi) => poi.photoScore + tagBonus(poi, ["hidden-gem"]) - (poi.mustVisit ? 12 : 0)
   }
 ];
 

@@ -5,9 +5,12 @@ import { Plus, Star, Trash2 } from "lucide-react";
 import { poiCategories, poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
+import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+
+const t = getTranslations("ru");
 
 type PhotoFormState = {
   url: string;
@@ -91,14 +94,14 @@ function splitList(value: string) {
 }
 
 function toPoiInput(form: FormState): PoiInput | { error: string } {
-  if (!form.name.trim()) return { error: "Name is required." };
-  if (!form.description.trim()) return { error: "Description is required." };
+  if (!form.name.trim()) return { error: "Укажите название." };
+  if (!form.description.trim()) return { error: "Укажите описание." };
 
   const lat = Number(form.lat);
   const lng = Number(form.lng);
-  if (Number.isNaN(lat) || Number.isNaN(lng)) return { error: "Coordinates must be valid numbers." };
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return { error: "Координаты должны быть числами." };
 
-  if (form.categories.length === 0) return { error: "Pick at least one category." };
+  if (form.categories.length === 0) return { error: "Выберите хотя бы одну категорию." };
 
   const photos = form.photos
     .filter((photo) => photo.url.trim())
@@ -110,7 +113,7 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
       ...(photo.season ? { season: photo.season } : {})
     }));
 
-  if (photos.length === 0) return { error: "Add at least one photo URL." };
+  if (photos.length === 0) return { error: "Добавьте хотя бы одну ссылку на фото." };
 
   return {
     regionId: form.regionId,
@@ -132,7 +135,7 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
   };
 }
 
-const fieldLabel = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground";
+const fieldLabel = "mb-1.5 block cursor-help text-xs font-semibold uppercase tracking-wide text-muted-foreground";
 const textareaClass =
   "w-full rounded-md border border-border bg-white/[0.78] px-3 py-2 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-ring/25";
 const selectClass =
@@ -200,7 +203,9 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5 rounded-lg border border-border bg-white p-5 shadow-sm">
       <div>
-        <label className={fieldLabel}>Region</label>
+        <label className={fieldLabel} title="К какому региону (городу) относится это место — определяет, на карте какого региона оно появится.">
+          Регион
+        </label>
         <select
           className={selectClass}
           value={form.regionId}
@@ -215,24 +220,30 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
       </div>
 
       <div>
-        <label className={fieldLabel}>Name</label>
+        <label className={fieldLabel} title="Название места — показывается на карте, в списке слева и в карточке места. Не переводится на другие языки сайта.">
+          Название
+        </label>
         <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nanzen-ji" />
       </div>
 
       <div>
-        <label className={fieldLabel}>Description</label>
+        <label className={fieldLabel} title="Краткое описание места — показывается в боковой панели и в карточке места.">
+          Описание
+        </label>
         <textarea
           className={textareaClass}
           rows={3}
           value={form.description}
           onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-          placeholder="A short description shown in the sidebar and details panel."
+          placeholder="Короткое описание, показывается в боковой панели и на карточке места."
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={fieldLabel}>Latitude</label>
+          <label className={fieldLabel} title="Географическая широта — определяет положение метки места на карте.">
+            Широта
+          </label>
           <Input
             type="number"
             step="0.0001"
@@ -242,7 +253,9 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
           />
         </div>
         <div>
-          <label className={fieldLabel}>Longitude</label>
+          <label className={fieldLabel} title="Географическая долгота — определяет положение метки места на карте.">
+            Долгота
+          </label>
           <Input
             type="number"
             step="0.0001"
@@ -255,26 +268,42 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
 
       <div className="grid grid-cols-4 gap-3">
         <div>
-          <label className={fieldLabel}>Rating</label>
+          <label className={fieldLabel} title="Оценка места от 0 до 5 — показывается звёздочкой в карточке и в списке мест.">
+            Рейтинг
+          </label>
           <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm((p) => ({ ...p, rating: e.target.value }))} />
         </div>
         <div>
-          <label className={fieldLabel}>Photo score</label>
+          <label
+            className={fieldLabel}
+            title="Внутренняя оценка (0–100) для сортировки мест в режимах «Фотограф», «Природа», «Осень» и «Сакура». Не влияет на число отображаемых фото."
+          >
+            Оценка фото
+          </label>
           <Input type="number" min="0" max="100" value={form.photoScore} onChange={(e) => setForm((p) => ({ ...p, photoScore: e.target.value }))} />
         </div>
         <div>
-          <label className={fieldLabel}>Importance</label>
+          <label
+            className={fieldLabel}
+            title="Показатель важности (0–100) — определяет сортировку мест в режиме «Первое посещение»: чем выше значение, тем выше место в списке."
+          >
+            Важность
+          </label>
           <Input type="number" min="0" max="100" value={form.importance} onChange={(e) => setForm((p) => ({ ...p, importance: e.target.value }))} />
         </div>
         <div>
-          <label className={fieldLabel}>Duration (min)</label>
+          <label className={fieldLabel} title="Примерное время посещения в минутах — показывается в карточке места как метрика «Время».">
+            Длительность (мин)
+          </label>
           <Input type="number" min="0" value={form.durationMinutes} onChange={(e) => setForm((p) => ({ ...p, durationMinutes: e.target.value }))} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={fieldLabel}>Difficulty</label>
+          <label className={fieldLabel} title="Физическая сложность посещения — отображается значком и текстом в карточке места.">
+            Сложность
+          </label>
           <select
             className={selectClass}
             value={form.difficulty}
@@ -282,38 +311,48 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
           >
             {poiDifficulties.map((difficulty) => (
               <option key={difficulty} value={difficulty}>
-                {difficulty}
+                {t.difficulty[difficulty]}
               </option>
             ))}
           </select>
         </div>
         <div className="flex items-end pb-2.5">
-          <label className="inline-flex items-center gap-2 text-sm font-medium">
+          <label
+            className="inline-flex cursor-help items-center gap-2 text-sm font-medium"
+            title="Показывает бейдж «Обязательно», добавляет бонус к очкам в режиме «Первое посещение» и гарантирует, что место всегда отображается на карте вне зависимости от порога плотности."
+          >
             <input
               type="checkbox"
               checked={form.mustVisit}
               onChange={(e) => setForm((p) => ({ ...p, mustVisit: e.target.checked }))}
               className="h-4 w-4 rounded border-border"
             />
-            Must visit
+            Обязательно к посещению
           </label>
         </div>
       </div>
 
       <div>
-        <label className={fieldLabel}>Map visibility</label>
+        <label
+          className={fieldLabel}
+          title="Определяет, при каком масштабе карты место видно."
+        >
+          Видимость на карте
+        </label>
         <select
           className={selectClass}
           value={form.visibilityMode}
           onChange={(e) => setForm((p) => ({ ...p, visibilityMode: e.target.value as PoiVisibilityMode }))}
         >
-          <option value="default">Show by default (visible at any zoom)</option>
-          <option value="zoomed-in">Show only when zoomed in (zoom above 12)</option>
+          <option value="default">Показывать всегда (видно при любом масштабе)</option>
+          <option value="zoomed-in">Показывать только при приближении (масштаб больше 12)</option>
         </select>
       </div>
 
       <div>
-        <label className={fieldLabel}>Categories</label>
+        <label className={fieldLabel} title="Тип места — определяет иконку маркера на карте и бейджи категории в карточке места. Можно выбрать несколько.">
+          Категории
+        </label>
         <div className="flex flex-wrap gap-2">
           {poiCategories.map((category) => (
             <button
@@ -322,14 +361,19 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
               className={chipClass(form.categories.includes(category))}
               onClick={() => setForm((p) => ({ ...p, categories: toggleListValue(p.categories, category) }))}
             >
-              {category}
+              {t.category[category]}
             </button>
           ))}
         </div>
       </div>
 
       <div>
-        <label className={fieldLabel}>Tags</label>
+        <label
+          className={fieldLabel}
+          title="Дополнительные метки — влияют на то, в какие режимы (Фотограф, Природа, Осень, Сакура, Первое посещение) попадает место, участвуют в поиске и показываются как бейджи в карточке."
+        >
+          Теги
+        </label>
         <div className="flex flex-wrap gap-2">
           {poiTags.map((tag) => (
             <button
@@ -338,7 +382,7 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
               className={chipClass(form.tags.includes(tag))}
               onClick={() => setForm((p) => ({ ...p, tags: toggleListValue(p.tags, tag) }))}
             >
-              {tag}
+              {t.tag[tag]}
             </button>
           ))}
         </div>
@@ -346,17 +390,29 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className={fieldLabel}>Seasons (comma separated)</label>
-          <Input value={form.seasons} onChange={(e) => setForm((p) => ({ ...p, seasons: e.target.value }))} placeholder="spring, autumn" />
+          <label
+            className={fieldLabel}
+            title="Сезоны, характерные для места. Сейчас это поле не используется в интерфейсе сайта (фильтр сезонов слева работает по фото, см. ниже) — оставлено для будущего использования."
+          >
+            Сезоны (через запятую)
+          </label>
+          <Input value={form.seasons} onChange={(e) => setForm((p) => ({ ...p, seasons: e.target.value }))} placeholder="весна, осень" />
         </div>
         <div>
-          <label className={fieldLabel}>Best time (comma separated)</label>
-          <Input value={form.bestTime} onChange={(e) => setForm((p) => ({ ...p, bestTime: e.target.value }))} placeholder="Morning, Dusk" />
+          <label
+            className={fieldLabel}
+            title="Лучшее время суток или периода для посещения. Первое значение показывается в карточке как метрика «Лучшее», все значения — в разделе «Лучшее время»."
+          >
+            Лучшее время (через запятую)
+          </label>
+          <Input value={form.bestTime} onChange={(e) => setForm((p) => ({ ...p, bestTime: e.target.value }))} placeholder="Утро, Закат" />
         </div>
       </div>
 
       <div>
-        <label className={fieldLabel}>Photos</label>
+        <label className={fieldLabel} title="Фотографии места. Первая фотография (со звёздочкой) используется как главная в карточке и в списке.">
+          Фотографии
+        </label>
         <div className="space-y-2">
           {form.photos.map((photo, index) => (
             <div key={index} className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-2.5">
@@ -370,12 +426,12 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
                   />
                 ) : (
                   <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">
-                    Preview
+                    Превью
                   </div>
                 )}
                 {index === 0 && (
                   <span className="absolute -left-1 -top-1 rounded bg-amber-400 px-1 text-[9px] font-semibold uppercase text-amber-950 shadow-sm">
-                    Main
+                    Главная
                   </span>
                 )}
               </div>
@@ -383,32 +439,33 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
                 <Input
                   value={photo.url}
                   onChange={(e) => updatePhoto(index, { url: e.target.value })}
-                  placeholder="/photos/place/1.jpg or https://..."
+                  placeholder="/photos/place/1.jpg или https://..."
                   className="col-span-3"
                 />
-                <Input value={photo.alt} onChange={(e) => updatePhoto(index, { alt: e.target.value })} placeholder="Alt text" />
+                <Input value={photo.alt} onChange={(e) => updatePhoto(index, { alt: e.target.value })} placeholder="Альтернативный текст" />
                 <Input
                   value={photo.author}
                   onChange={(e) => updatePhoto(index, { author: e.target.value })}
-                  placeholder="Author (optional)"
+                  placeholder="Автор (необязательно)"
                 />
                 <select
                   className={selectClass}
                   value={photo.season}
                   onChange={(e) => updatePhoto(index, { season: e.target.value as Season | "" })}
+                  title="Если указан сезон, это фото будет показываться в карточке места только когда в фильтре сезонов слева выбран этот сезон (или не выбран ни один)."
                 >
-                  <option value="">Any season</option>
+                  <option value="">Любой сезон</option>
                   {seasons.map((season) => (
                     <option key={season} value={season}>
-                      {season}
+                      {t.season[season]}
                     </option>
                   ))}
                 </select>
               </div>
               <button
                 type="button"
-                aria-label={index === 0 ? "Main photo" : "Set as main photo"}
-                title={index === 0 ? "Main photo" : "Set as main photo"}
+                aria-label={index === 0 ? "Главное фото" : "Сделать главным фото"}
+                title={index === 0 ? "Главное фото" : "Сделать главным фото"}
                 disabled={index === 0}
                 onClick={() => setMainPhoto(index)}
                 className={cn(
@@ -422,7 +479,7 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
               </button>
               <button
                 type="button"
-                aria-label="Remove photo"
+                aria-label="Удалить фото"
                 onClick={() => setForm((p) => ({ ...p, photos: p.photos.filter((_, i) => i !== index) }))}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition hover:bg-muted"
               >
@@ -436,7 +493,7 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
           >
             <Plus className="h-3.5 w-3.5" />
-            Add photo
+            Добавить фото
           </button>
         </div>
       </div>
@@ -445,10 +502,10 @@ export function PoiForm({ poi, regions, onCancel, onSubmit }: PoiFormProps) {
 
       <div className="flex justify-end gap-2 border-t border-border pt-4">
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          Отмена
         </Button>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Saving…" : "Save"}
+          {isSaving ? "Сохранение…" : "Сохранить"}
         </Button>
       </div>
     </form>

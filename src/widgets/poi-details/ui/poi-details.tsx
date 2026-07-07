@@ -63,7 +63,7 @@ export function PoiDetails() {
   const activePhoto = displayPhotos[activePhotoIndex] ?? displayPhotos[0];
 
   return (
-    <div className="absolute right-5 top-5 z-10 hidden h-[calc(100dvh-2.5rem)] w-[400px] lg:block">
+    <div className="absolute right-5 top-5 z-10 hidden h-[calc(100%-2.5rem)] w-[400px] lg:block">
       <motion.button
         type="button"
         aria-label={isDetailsOpen ? t.app.hideDetails : t.app.showDetails}

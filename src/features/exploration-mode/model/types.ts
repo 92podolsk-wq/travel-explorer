@@ -5,8 +5,7 @@ export type ExplorationModeId =
   | "first-visit"
   | "nature"
   | "autumn"
-  | "sakura"
-  | "hidden-gems";
+  | "sakura";
 
 export type ExplorationMode = {
   id: ExplorationModeId;

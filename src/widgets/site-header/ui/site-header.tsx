@@ -1,0 +1,165 @@
+"use client";
+
+import { useState } from "react";
+import { Check, ChevronDown, MapPin } from "lucide-react";
+import { getTranslations } from "@/shared/i18n/translations";
+import type { Language } from "@/shared/i18n/types";
+import { useExplorerStore } from "@/shared/model/explorer-store";
+import { FlagIcon } from "@/shared/ui/flag-icon";
+import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
+import { cn } from "@/shared/lib/cn";
+
+const languageOptions: Array<{ language: Language; label: string }> = [
+  { language: "en", label: "EN" },
+  { language: "ru", label: "RU" },
+  { language: "ja", label: "JA" }
+];
+
+export function SiteHeader() {
+  const regions = useExplorerStore((state) => state.regions);
+  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
+  const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
+  const language = useExplorerStore((state) => state.language);
+  const setLanguage = useExplorerStore((state) => state.setLanguage);
+  const t = getTranslations(language);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
+
+  const countryGroups: Array<{ country: string; areaGroups: Array<{ area: string; regions: typeof regions }> }> = [];
+  for (const region of regions) {
+    let countryGroup = countryGroups.find((group) => group.country === region.country);
+    if (!countryGroup) {
+      countryGroup = { country: region.country, areaGroups: [] };
+      countryGroups.push(countryGroup);
+    }
+    let areaGroup = countryGroup.areaGroups.find((group) => group.area === region.area);
+    if (!areaGroup) {
+      areaGroup = { area: region.area, regions: [] };
+      countryGroup.areaGroups.push(areaGroup);
+    }
+    areaGroup.regions.push(region);
+  }
+
+  if (!activeRegion) {
+    return null;
+  }
+
+  return (
+    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-5">
+      <div className="flex items-center gap-2.5">
+        <TravelKittenLogo className="h-9 w-9" />
+        <div className="leading-tight">
+          <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
+          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Explore Japan
+          </p>
+        </div>
+      </div>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen((value) => !value)}
+          aria-expanded={isMenuOpen}
+          className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60"
+        >
+          <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+          {activeRegion.nameByLanguage[language]}, {activeRegion.area}, {activeRegion.country}
+          <ChevronDown
+            className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
+
+        {isMenuOpen && (
+          <>
+            <button
+              type="button"
+              aria-label="Close menu"
+              className="fixed inset-0 z-30 cursor-default"
+              onClick={() => setIsMenuOpen(false)}
+            />
+            <div className="absolute left-1/2 top-full z-40 mt-2 flex -translate-x-1/2 gap-8 rounded-lg border border-border bg-white p-4 shadow-panel">
+              {countryGroups.map((countryGroup) => (
+                <div key={countryGroup.country} className="flex gap-8">
+                  <div>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                      {t.app.country}
+                    </p>
+                    <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
+                      <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                      {countryGroup.country}
+                    </p>
+                  </div>
+                  {countryGroup.areaGroups.map((areaGroup) => (
+                    <div key={areaGroup.area} className="flex gap-8">
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                          {t.app.area}
+                        </p>
+                        <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
+                          <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                          {areaGroup.area}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                          {t.app.city}
+                        </p>
+                        <div className="flex flex-col gap-0.5">
+                          {areaGroup.regions.map((region) => (
+                            <button
+                              key={region.id}
+                              type="button"
+                              onClick={() => {
+                                setActiveRegion(region.id);
+                                setIsMenuOpen(false);
+                              }}
+                              className={cn(
+                                "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-medium transition",
+                                region.id === activeRegionId
+                                  ? "bg-primary/10 text-primary"
+                                  : "text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              {region.id === activeRegionId ? (
+                                <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                              ) : (
+                                <span className="h-3.5 w-3.5 shrink-0" />
+                              )}
+                              {region.nameByLanguage[language]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="flex items-center gap-1 rounded-md border border-border bg-muted/60 p-0.5" aria-label={t.app.language}>
+        {languageOptions.map((option) => (
+          <button
+            key={option.language}
+            type="button"
+            onClick={() => setLanguage(option.language)}
+            className={cn(
+              "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
+              language === option.language
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FlagIcon language={option.language} />
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </header>
+  );
+}

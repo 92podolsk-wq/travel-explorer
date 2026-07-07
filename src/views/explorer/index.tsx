@@ -8,6 +8,7 @@ import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
 import { FavoritesPanel } from "@/widgets/favorites-panel/ui/favorites-panel";
 import { PoiDetails } from "@/widgets/poi-details/ui/poi-details";
+import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
 type ExplorerPageProps = {
   initialPois: Poi[];
@@ -25,11 +26,14 @@ export function ExplorerPage({ initialPois, initialRegions }: ExplorerPageProps)
   }, []);
 
   return (
-    <main className="relative h-dvh w-full overflow-hidden bg-muted">
-      <ExplorerMap />
-      <ExplorerSidebar />
-      <FavoritesPanel />
-      <PoiDetails />
+    <main className="flex h-dvh w-full flex-col overflow-hidden bg-muted">
+      <SiteHeader />
+      <div className="relative flex-1 overflow-hidden">
+        <ExplorerMap />
+        <ExplorerSidebar />
+        <FavoritesPanel />
+        <PoiDetails />
+      </div>
     </main>
   );
 }

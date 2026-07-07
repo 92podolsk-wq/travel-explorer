@@ -4,6 +4,7 @@ export const osakaRegion: Region = {
   id: "osaka",
   name: "Osaka",
   country: "Japan",
+  area: "Kansai",
   center: {
     lat: 34.6937,
     lng: 135.5023

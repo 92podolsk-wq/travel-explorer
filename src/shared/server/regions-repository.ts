@@ -1,9 +1,6 @@
-import fs from "fs";
-import path from "path";
+import type { Language } from "@/shared/i18n/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
-import { readPois } from "./pois-repository";
-
-const dataFilePath = path.join(process.cwd(), "data", "regions.json");
+import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
   return value
@@ -12,15 +9,6 @@ function slugify(value: string) {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-export function readRegions(): Region[] {
-  const raw = fs.readFileSync(dataFilePath, "utf-8");
-  return JSON.parse(raw) as Region[];
-}
-
-function writeRegions(regions: Region[]) {
-  fs.writeFileSync(dataFilePath, `${JSON.stringify(regions, null, 2)}\n`, "utf-8");
 }
 
 function generateUniqueId(name: string, existingIds: Set<string>) {
@@ -37,31 +25,57 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`;
 }
 
-export function createRegion(input: RegionInput): Region {
-  const regions = readRegions();
-  const existingIds = new Set(regions.map((region) => region.id));
-  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+type RegionRow = Awaited<ReturnType<typeof prisma.region.findFirstOrThrow>>;
 
-  const region: Region = { ...input, id };
-  regions.push(region);
-  writeRegions(regions);
-
-  return region;
+function toRegion(row: RegionRow): Region {
+  return {
+    id: row.id,
+    name: row.name,
+    areaId: row.areaId,
+    center: { lat: row.centerLat, lng: row.centerLng },
+    defaultZoom: row.defaultZoom,
+    bounds: row.bounds as [[number, number], [number, number]],
+    timezoneOffsetHours: row.timezoneOffsetHours,
+    nameByLanguage: row.nameByLanguage as Record<Language, string>,
+    sealCharacter: row.sealCharacter
+  };
 }
 
-export function updateRegion(id: string, input: RegionInput): Region | null {
-  const regions = readRegions();
-  const index = regions.findIndex((region) => region.id === id);
+export async function readRegions(): Promise<Region[]> {
+  const rows = await prisma.region.findMany();
+  return rows.map(toRegion);
+}
 
-  if (index === -1) {
+function toRegionData(input: RegionInput) {
+  return {
+    areaId: input.areaId,
+    name: input.name,
+    nameByLanguage: input.nameByLanguage,
+    centerLat: input.center.lat,
+    centerLng: input.center.lng,
+    defaultZoom: input.defaultZoom,
+    bounds: input.bounds,
+    timezoneOffsetHours: input.timezoneOffsetHours,
+    sealCharacter: input.sealCharacter
+  };
+}
+
+export async function createRegion(input: RegionInput): Promise<Region> {
+  const existingIds = new Set((await prisma.region.findMany({ select: { id: true } })).map((row) => row.id));
+  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+
+  const row = await prisma.region.create({ data: { id, ...toRegionData(input) } });
+  return toRegion(row);
+}
+
+export async function updateRegion(id: string, input: RegionInput): Promise<Region | null> {
+  const existing = await prisma.region.findUnique({ where: { id } });
+  if (!existing) {
     return null;
   }
 
-  const updated: Region = { ...input, id };
-  regions[index] = updated;
-  writeRegions(regions);
-
-  return updated;
+  const row = await prisma.region.update({ where: { id }, data: toRegionData(input) });
+  return toRegion(row);
 }
 
 export type DeleteRegionResult =
@@ -69,19 +83,17 @@ export type DeleteRegionResult =
   | { success: false; reason: "not-found" }
   | { success: false; reason: "in-use"; placeCount: number };
 
-export function deleteRegion(id: string): DeleteRegionResult {
-  const regions = readRegions();
-  const next = regions.filter((region) => region.id !== id);
-
-  if (next.length === regions.length) {
+export async function deleteRegion(id: string): Promise<DeleteRegionResult> {
+  const existing = await prisma.region.findUnique({ where: { id } });
+  if (!existing) {
     return { success: false, reason: "not-found" };
   }
 
-  const placeCount = readPois().filter((poi) => poi.regionId === id).length;
+  const placeCount = await prisma.poi.count({ where: { regionId: id } });
   if (placeCount > 0) {
     return { success: false, reason: "in-use", placeCount };
   }
 
-  writeRegions(next);
+  await prisma.region.delete({ where: { id } });
   return { success: true };
 }

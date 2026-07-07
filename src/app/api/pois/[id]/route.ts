@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
   const { id } = await params;
   const input = (await request.json()) as PoiInput;
-  const updated = updatePoi(id, input);
+  const updated = await updatePoi(id, input);
 
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -27,7 +27,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const removed = deletePoi(id);
+  const removed = await deletePoi(id);
 
   if (!removed) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

@@ -1,8 +1,6 @@
-import fs from "fs";
-import path from "path";
-import type { Poi, PoiInput } from "@/entities/poi/model/types";
-
-const dataFilePath = path.join(process.cwd(), "data", "pois.json");
+import type { Language } from "@/shared/i18n/types";
+import type { Difficulty, Photo, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
+import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
   return value
@@ -11,15 +9,6 @@ function slugify(value: string) {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-export function readPois(): Poi[] {
-  const raw = fs.readFileSync(dataFilePath, "utf-8");
-  return JSON.parse(raw) as Poi[];
-}
-
-function writePois(pois: Poi[]) {
-  fs.writeFileSync(dataFilePath, `${JSON.stringify(pois, null, 2)}\n`, "utf-8");
 }
 
 function generateUniqueId(name: string, existingIds: Set<string>) {
@@ -36,41 +25,131 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`;
 }
 
-export function createPoi(input: PoiInput): Poi {
-  const pois = readPois();
-  const existingIds = new Set(pois.map((poi) => poi.id));
-  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+type PoiRow = Awaited<ReturnType<typeof prisma.poi.findFirstOrThrow<{ include: { photos: true } }>>>;
 
-  const poi: Poi = { ...input, id };
-  pois.push(poi);
-  writePois(pois);
-
-  return poi;
+function toPoi(row: PoiRow): Poi {
+  return {
+    id: row.id,
+    regionId: row.regionId,
+    name: row.name,
+    nameByLanguage: row.nameByLanguage as Record<Language, string>,
+    coordinates: { lat: row.lat, lng: row.lng },
+    description: row.description,
+    rating: row.rating,
+    photos: [...row.photos]
+      .sort((a, b) => a.position - b.position)
+      .map(
+        (photo): Photo => ({
+          id: photo.id,
+          url: photo.url,
+          alt: photo.alt,
+          ...(photo.author ? { author: photo.author } : {}),
+          ...(photo.season ? { season: photo.season as Season } : {})
+        })
+      ),
+    categories: row.categories as PoiCategory[],
+    tags: row.tags as PoiTag[],
+    seasons: row.seasons,
+    photoScore: row.photoScore,
+    mustVisit: row.mustVisit,
+    bestTime: row.bestTime,
+    difficulty: row.difficulty as Difficulty,
+    durationMinutes: row.durationMinutes,
+    importance: row.importance,
+    visibilityMode: row.visibilityMode as PoiVisibilityMode
+  };
 }
 
-export function updatePoi(id: string, input: PoiInput): Poi | null {
-  const pois = readPois();
-  const index = pois.findIndex((poi) => poi.id === id);
+export async function readPois(): Promise<Poi[]> {
+  const rows = await prisma.poi.findMany({ include: { photos: true } });
+  return rows.map(toPoi);
+}
 
-  if (index === -1) {
+async function writePoi(id: string, input: PoiInput) {
+  await prisma.poi.upsert({
+    where: { id },
+    create: {
+      id,
+      regionId: input.regionId,
+      name: input.name,
+      nameByLanguage: input.nameByLanguage,
+      lat: input.coordinates.lat,
+      lng: input.coordinates.lng,
+      description: input.description,
+      rating: input.rating,
+      categories: input.categories,
+      tags: input.tags,
+      seasons: input.seasons,
+      photoScore: input.photoScore,
+      mustVisit: input.mustVisit,
+      bestTime: input.bestTime,
+      difficulty: input.difficulty,
+      durationMinutes: input.durationMinutes,
+      importance: input.importance,
+      visibilityMode: input.visibilityMode
+    },
+    update: {
+      regionId: input.regionId,
+      name: input.name,
+      nameByLanguage: input.nameByLanguage,
+      lat: input.coordinates.lat,
+      lng: input.coordinates.lng,
+      description: input.description,
+      rating: input.rating,
+      categories: input.categories,
+      tags: input.tags,
+      seasons: input.seasons,
+      photoScore: input.photoScore,
+      mustVisit: input.mustVisit,
+      bestTime: input.bestTime,
+      difficulty: input.difficulty,
+      durationMinutes: input.durationMinutes,
+      importance: input.importance,
+      visibilityMode: input.visibilityMode
+    }
+  });
+
+  await prisma.photo.deleteMany({ where: { poiId: id } });
+  await prisma.photo.createMany({
+    data: input.photos.map((photo, index) => ({
+      id: photo.id,
+      poiId: id,
+      url: photo.url,
+      alt: photo.alt,
+      author: photo.author ?? null,
+      season: photo.season ?? null,
+      position: index
+    }))
+  });
+}
+
+export async function createPoi(input: PoiInput): Promise<Poi> {
+  const existingIds = new Set((await prisma.poi.findMany({ select: { id: true } })).map((row) => row.id));
+  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+
+  await writePoi(id, input);
+
+  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: true } });
+  return toPoi(row);
+}
+
+export async function updatePoi(id: string, input: PoiInput): Promise<Poi | null> {
+  const existing = await prisma.poi.findUnique({ where: { id } });
+  if (!existing) {
     return null;
   }
 
-  const updated: Poi = { ...input, id };
-  pois[index] = updated;
-  writePois(pois);
+  await writePoi(id, input);
 
-  return updated;
+  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: true } });
+  return toPoi(row);
 }
 
-export function deletePoi(id: string): boolean {
-  const pois = readPois();
-  const next = pois.filter((poi) => poi.id !== id);
-
-  if (next.length === pois.length) {
+export async function deletePoi(id: string): Promise<boolean> {
+  try {
+    await prisma.poi.delete({ where: { id } });
+    return true;
+  } catch {
     return false;
   }
-
-  writePois(next);
-  return true;
 }

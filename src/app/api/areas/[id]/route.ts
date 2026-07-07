@@ -12,7 +12,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
 
   const { id } = await params;
   const input = (await request.json()) as AreaInput;
-  const updated = updateArea(id, input);
+  const updated = await updateArea(id, input);
 
   if (!updated) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -27,7 +27,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const result = deleteArea(id);
+  const result = await deleteArea(id);
 
   if (!result.success) {
     if (result.reason === "not-found") {

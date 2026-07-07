@@ -4,7 +4,7 @@ import { isAdminAuthenticated } from "@/shared/server/admin-auth";
 import { createArea, readAreas } from "@/shared/server/areas-repository";
 
 export async function GET() {
-  return NextResponse.json(readAreas());
+  return NextResponse.json(await readAreas());
 }
 
 export async function POST(request: Request) {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const input = (await request.json()) as AreaInput;
-  const area = createArea(input);
+  const area = await createArea(input);
 
   return NextResponse.json(area, { status: 201 });
 }

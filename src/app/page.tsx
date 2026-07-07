@@ -4,11 +4,13 @@ import { readCountries } from "@/shared/server/countries-repository";
 import { readPois } from "@/shared/server/pois-repository";
 import { readRegions } from "@/shared/server/regions-repository";
 
-export default function Home() {
-  const pois = readPois();
-  const regions = readRegions();
-  const countries = readCountries();
-  const areas = readAreas();
+export default async function Home() {
+  const [pois, regions, countries, areas] = await Promise.all([
+    readPois(),
+    readRegions(),
+    readCountries(),
+    readAreas()
+  ]);
 
   return (
     <ExplorerPage

@@ -4,7 +4,7 @@ import { isAdminAuthenticated } from "@/shared/server/admin-auth";
 import { createPoi, readPois } from "@/shared/server/pois-repository";
 
 export async function GET() {
-  return NextResponse.json(readPois());
+  return NextResponse.json(await readPois());
 }
 
 export async function POST(request: Request) {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const input = (await request.json()) as PoiInput;
-  const poi = createPoi(input);
+  const poi = await createPoi(input);
 
   return NextResponse.json(poi, { status: 201 });
 }

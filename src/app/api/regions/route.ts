@@ -4,7 +4,7 @@ import { isAdminAuthenticated } from "@/shared/server/admin-auth";
 import { createRegion, readRegions } from "@/shared/server/regions-repository";
 
 export async function GET() {
-  return NextResponse.json(readRegions());
+  return NextResponse.json(await readRegions());
 }
 
 export async function POST(request: Request) {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   const input = (await request.json()) as RegionInput;
-  const region = createRegion(input);
+  const region = await createRegion(input);
 
   return NextResponse.json(region, { status: 201 });
 }

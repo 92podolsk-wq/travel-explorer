@@ -1,9 +1,6 @@
-import fs from "fs";
-import path from "path";
+import type { Language } from "@/shared/i18n/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
-import { readAreas } from "./areas-repository";
-
-const dataFilePath = path.join(process.cwd(), "data", "countries.json");
+import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
   return value
@@ -12,15 +9,6 @@ function slugify(value: string) {
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
-}
-
-export function readCountries(): Country[] {
-  const raw = fs.readFileSync(dataFilePath, "utf-8");
-  return JSON.parse(raw) as Country[];
-}
-
-function writeCountries(countries: Country[]) {
-  fs.writeFileSync(dataFilePath, `${JSON.stringify(countries, null, 2)}\n`, "utf-8");
 }
 
 function generateUniqueId(name: string, existingIds: Set<string>) {
@@ -37,31 +25,37 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`;
 }
 
-export function createCountry(input: CountryInput): Country {
-  const countries = readCountries();
-  const existingIds = new Set(countries.map((country) => country.id));
-  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+type CountryRow = Awaited<ReturnType<typeof prisma.country.findFirstOrThrow>>;
 
-  const country: Country = { ...input, id };
-  countries.push(country);
-  writeCountries(countries);
-
-  return country;
+function toCountry(row: CountryRow): Country {
+  return {
+    id: row.id,
+    name: row.name,
+    nameByLanguage: row.nameByLanguage as Record<Language, string>
+  };
 }
 
-export function updateCountry(id: string, input: CountryInput): Country | null {
-  const countries = readCountries();
-  const index = countries.findIndex((country) => country.id === id);
+export async function readCountries(): Promise<Country[]> {
+  const rows = await prisma.country.findMany();
+  return rows.map(toCountry);
+}
 
-  if (index === -1) {
+export async function createCountry(input: CountryInput): Promise<Country> {
+  const existingIds = new Set((await prisma.country.findMany({ select: { id: true } })).map((row) => row.id));
+  const id = input.id && !existingIds.has(input.id) ? input.id : generateUniqueId(input.name, existingIds);
+
+  const row = await prisma.country.create({ data: { id, name: input.name, nameByLanguage: input.nameByLanguage } });
+  return toCountry(row);
+}
+
+export async function updateCountry(id: string, input: CountryInput): Promise<Country | null> {
+  const existing = await prisma.country.findUnique({ where: { id } });
+  if (!existing) {
     return null;
   }
 
-  const updated: Country = { ...input, id };
-  countries[index] = updated;
-  writeCountries(countries);
-
-  return updated;
+  const row = await prisma.country.update({ where: { id }, data: { name: input.name, nameByLanguage: input.nameByLanguage } });
+  return toCountry(row);
 }
 
 export type DeleteCountryResult =
@@ -69,19 +63,17 @@ export type DeleteCountryResult =
   | { success: false; reason: "not-found" }
   | { success: false; reason: "in-use"; areaCount: number };
 
-export function deleteCountry(id: string): DeleteCountryResult {
-  const countries = readCountries();
-  const next = countries.filter((country) => country.id !== id);
-
-  if (next.length === countries.length) {
+export async function deleteCountry(id: string): Promise<DeleteCountryResult> {
+  const existing = await prisma.country.findUnique({ where: { id } });
+  if (!existing) {
     return { success: false, reason: "not-found" };
   }
 
-  const areaCount = readAreas().filter((area) => area.countryId === id).length;
+  const areaCount = await prisma.area.count({ where: { countryId: id } });
   if (areaCount > 0) {
     return { success: false, reason: "in-use", areaCount };
   }
 
-  writeCountries(next);
+  await prisma.country.delete({ where: { id } });
   return { success: true };
 }

@@ -59,6 +59,9 @@ model Poi {
   importance       Int
   visibilityMode   String
   photos           Photo[]
+  favoritedBy      Favorite[]
+  viewedBy         ViewedPoi[]
+  visitedBy        VisitedPoi[]
 }
 
 model Photo {
@@ -70,4 +73,58 @@ model Photo {
   author   String?
   season   String?
   position Int
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  sessions     Session[]
+  favorites    Favorite[]
+  viewedPois   ViewedPoi[]
+  visitedPois  VisitedPoi[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  tokenHash    String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poiId     String
+  poi       Poi      @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, poiId])
+}
+
+model ViewedPoi {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poiId    String
+  poi      Poi      @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
+
+  @@unique([userId, poiId])
+}
+
+model VisitedPoi {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  poiId     String
+  poi       Poi      @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  visitedAt DateTime @default(now())
+
+  @@unique([userId, poiId])
 }

@@ -5,6 +5,7 @@ import { Check, ChevronDown, MapPin } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { Region } from "@/entities/region/model/types";
+import { AuthMenu } from "@/features/auth/ui/auth-menu";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -162,23 +163,26 @@ export function SiteHeader() {
         )}
       </div>
 
-      <div className="flex items-center gap-1 rounded-md border border-border bg-muted/60 p-0.5" aria-label={t.app.language}>
-        {languageOptions.map((option) => (
-          <button
-            key={option.language}
-            type="button"
-            onClick={() => setLanguage(option.language)}
-            className={cn(
-              "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
-              language === option.language
-                ? "bg-white text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <FlagIcon language={option.language} />
-            {option.label}
-          </button>
-        ))}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 rounded-md border border-border bg-muted/60 p-0.5" aria-label={t.app.language}>
+          {languageOptions.map((option) => (
+            <button
+              key={option.language}
+              type="button"
+              onClick={() => setLanguage(option.language)}
+              className={cn(
+                "flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-semibold transition",
+                language === option.language
+                  ? "bg-white text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <FlagIcon language={option.language} />
+              {option.label}
+            </button>
+          ))}
+        </div>
+        <AuthMenu />
       </div>
     </header>
   );

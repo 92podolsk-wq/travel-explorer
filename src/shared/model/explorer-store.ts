@@ -9,6 +9,7 @@ import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/mo
 import type { Region } from "@/entities/region/model/types";
 import { defaultExplorationMode } from "@/features/exploration-mode/model/modes";
 import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
+import type { User, UserPoiState } from "@/entities/user/model/types";
 import type { Language } from "@/shared/i18n/types";
 
 function firstPoiIdForRegion(pois: Poi[], regionId: string) {
@@ -34,6 +35,9 @@ type ExplorerState = {
   zoom: number;
   isDetailsOpen: boolean;
   selectedSeasons: Season[];
+  currentUser: User | null;
+  authStatus: "loading" | "guest" | "authenticated";
+  hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
@@ -55,7 +59,7 @@ type ExplorerState = {
   toggleSeason: (season: Season) => void;
 };
 
-export const useExplorerStore = create<ExplorerState>((set) => ({
+export const useExplorerStore = create<ExplorerState>((set, get) => ({
   pois: kyotoPois,
   regions: seedRegions,
   countries: seedCountries,
@@ -74,6 +78,20 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   zoom: 11,
   isDetailsOpen: false,
   selectedSeasons: [],
+  currentUser: null,
+  authStatus: "loading",
+  hydrateAuth: (user, poiState) =>
+    set({
+      currentUser: user,
+      authStatus: user ? "authenticated" : "guest",
+      ...(user && poiState
+        ? {
+            favorites: poiState.favoritePoiIds,
+            viewedPoiIds: poiState.viewedPoiIds,
+            visitedPoiIds: poiState.visitedPoiIds
+          }
+        : {})
+    }),
   selectPoi: (poiId) => set({ selectedPoiId: poiId }),
   selectPoiFromMap: (poiId) => set({ selectedPoiId: poiId, isDetailsOpen: true }),
   setActiveRegion: (regionId) =>
@@ -89,22 +107,34 @@ export const useExplorerStore = create<ExplorerState>((set) => ({
   setActiveMode: (modeId) => set({ activeModeId: modeId }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
-  toggleFavorite: (poiId) =>
+  toggleFavorite: (poiId) => {
     set((state) => ({
       favorites: state.favorites.includes(poiId)
         ? state.favorites.filter((id) => id !== poiId)
         : [...state.favorites, poiId]
-    })),
-  toggleVisited: (poiId) =>
+    }));
+    if (get().currentUser) {
+      fetch(`/api/me/favorites/${poiId}`, { method: "POST" }).catch(() => {});
+    }
+  },
+  toggleVisited: (poiId) => {
     set((state) => ({
       visitedPoiIds: state.visitedPoiIds.includes(poiId)
         ? state.visitedPoiIds.filter((id) => id !== poiId)
         : [...state.visitedPoiIds, poiId]
-    })),
-  markPoiViewed: (poiId) =>
+    }));
+    if (get().currentUser) {
+      fetch(`/api/me/visited/${poiId}`, { method: "POST" }).catch(() => {});
+    }
+  },
+  markPoiViewed: (poiId) => {
     set((state) =>
       state.viewedPoiIds.includes(poiId) ? state : { viewedPoiIds: [...state.viewedPoiIds, poiId] }
-    ),
+    );
+    if (get().currentUser) {
+      fetch(`/api/me/viewed/${poiId}`, { method: "POST" }).catch(() => {});
+    }
+  },
   toggleHideViewedOnMap: () => set((state) => ({ hideViewedOnMap: !state.hideViewedOnMap })),
   toggleHideFavoritesOnMap: () => set((state) => ({ hideFavoritesOnMap: !state.hideFavoritesOnMap })),
   toggleHideVisitedOnMap: () => set((state) => ({ hideVisitedOnMap: !state.hideVisitedOnMap })),

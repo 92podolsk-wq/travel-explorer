@@ -60,6 +60,27 @@ type TranslationDictionary = {
   tag: Record<PoiTag, string>;
   difficulty: Record<Difficulty, string>;
   season: Record<Season, string>;
+  auth: {
+    login: string;
+    register: string;
+    logout: string;
+    account: string;
+    email: string;
+    password: string;
+    name: string;
+    loginTitle: string;
+    registerTitle: string;
+    submit: string;
+    switchToRegister: string;
+    switchToLogin: string;
+    savedPlaces: string;
+    viewedPlaces: string;
+    visitedPlaces: string;
+    noSavedPlaces: string;
+    noViewedPlaces: string;
+    noVisitedPlaces: string;
+    memberSince: string;
+  };
 };
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -214,6 +235,27 @@ export const translations: Record<Language, TranslationDictionary> = {
       summer: "Summer",
       autumn: "Autumn",
       winter: "Winter"
+    },
+    auth: {
+      login: "Log in",
+      register: "Register",
+      logout: "Log out",
+      account: "My account",
+      email: "Email",
+      password: "Password",
+      name: "Name",
+      loginTitle: "Sign in",
+      registerTitle: "Create an account",
+      submit: "Continue",
+      switchToRegister: "No account yet? Register",
+      switchToLogin: "Already have an account? Log in",
+      savedPlaces: "Saved places",
+      viewedPlaces: "Viewed places",
+      visitedPlaces: "Visited places",
+      noSavedPlaces: "No saved places yet",
+      noViewedPlaces: "No viewed places yet",
+      noVisitedPlaces: "No visited places yet",
+      memberSince: "Member since"
     }
   },
   ru: {
@@ -367,6 +409,27 @@ export const translations: Record<Language, TranslationDictionary> = {
       summer: "Лето",
       autumn: "Осень",
       winter: "Зима"
+    },
+    auth: {
+      login: "Войти",
+      register: "Регистрация",
+      logout: "Выйти",
+      account: "Личный кабинет",
+      email: "Email",
+      password: "Пароль",
+      name: "Имя",
+      loginTitle: "Вход",
+      registerTitle: "Создать аккаунт",
+      submit: "Продолжить",
+      switchToRegister: "Нет аккаунта? Зарегистрироваться",
+      switchToLogin: "Уже есть аккаунт? Войти",
+      savedPlaces: "Сохранённые места",
+      viewedPlaces: "Просмотренные места",
+      visitedPlaces: "Посещённые места",
+      noSavedPlaces: "Пока нет сохранённых мест",
+      noViewedPlaces: "Пока нет просмотренных мест",
+      noVisitedPlaces: "Пока нет посещённых мест",
+      memberSince: "Дата регистрации"
     }
   },
   ja: {
@@ -520,6 +583,27 @@ export const translations: Record<Language, TranslationDictionary> = {
       summer: "夏",
       autumn: "秋",
       winter: "冬"
+    },
+    auth: {
+      login: "ログイン",
+      register: "登録",
+      logout: "ログアウト",
+      account: "マイページ",
+      email: "メールアドレス",
+      password: "パスワード",
+      name: "名前",
+      loginTitle: "サインイン",
+      registerTitle: "アカウント作成",
+      submit: "続ける",
+      switchToRegister: "アカウントをお持ちでない方は登録",
+      switchToLogin: "アカウントをお持ちの方はログイン",
+      savedPlaces: "保存した場所",
+      viewedPlaces: "閲覧した場所",
+      visitedPlaces: "訪問した場所",
+      noSavedPlaces: "保存した場所はまだありません",
+      noViewedPlaces: "閲覧した場所はまだありません",
+      noVisitedPlaces: "訪問した場所はまだありません",
+      memberSince: "登録日"
     }
   }
 };

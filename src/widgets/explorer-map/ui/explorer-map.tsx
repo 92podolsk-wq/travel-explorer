@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Minus, Plus } from "lucide-react";
 import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
@@ -332,7 +333,6 @@ export function ExplorerMap() {
         map.getCanvas().style.cursor = "";
       };
 
-      map.addControl(new maplibre.NavigationControl({ showCompass: false }), "bottom-right");
       map.on("zoom", () => setZoom(map.getZoom()));
       map.on("load", () => {
         hideBasemapPoiLayers(map);
@@ -411,6 +411,27 @@ export function ExplorerMap() {
       <div ref={containerRef} className="h-full w-full" />
       <div className="pointer-events-none absolute left-[402px] top-6 hidden rounded-md border border-white/70 bg-white/[0.82] px-3 py-2 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-xl md:block">
         Zoom {zoom.toFixed(1)} / {visiblePois.length} {t.app.places}
+      </div>
+      <div className="absolute bottom-5 left-[402px] z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomIn()}
+          aria-label="Zoom in"
+          title="Zoom in"
+          className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <div className="h-px bg-border" />
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomOut()}
+          aria-label="Zoom out"
+          title="Zoom out"
+          className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
       </div>
     </div>
   );

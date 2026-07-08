@@ -82,6 +82,8 @@ type TranslationDictionary = {
     memberSince: string;
     chooseAvatar: string;
     changeAvatar: string;
+    clearViewed: string;
+    clearViewedConfirm: string;
   };
 };
 
@@ -259,7 +261,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       noVisitedPlaces: "No visited places yet",
       memberSince: "Member since",
       chooseAvatar: "Choose an avatar",
-      changeAvatar: "Change avatar"
+      changeAvatar: "Change avatar",
+      clearViewed: "Clear viewed",
+      clearViewedConfirm: "Clear all viewed places? This can't be undone."
     }
   },
   ru: {
@@ -435,7 +439,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       noVisitedPlaces: "Пока нет посещённых мест",
       memberSince: "Дата регистрации",
       chooseAvatar: "Выберите аватар",
-      changeAvatar: "Сменить аватар"
+      changeAvatar: "Сменить аватар",
+      clearViewed: "Очистить",
+      clearViewedConfirm: "Очистить все просмотренные места? Это действие нельзя отменить."
     }
   },
   ja: {
@@ -611,7 +617,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       noVisitedPlaces: "訪問した場所はまだありません",
       memberSince: "登録日",
       chooseAvatar: "アバターを選択",
-      changeAvatar: "アバターを変更"
+      changeAvatar: "アバターを変更",
+      clearViewed: "履歴を消去",
+      clearViewedConfirm: "閲覧履歴をすべて消去しますか?この操作は元に戻せません。"
     }
   }
 };

@@ -46,3 +46,7 @@ export async function markViewed(userId: string, poiId: string): Promise<void> {
     update: {}
   });
 }
+
+export async function clearViewed(userId: string): Promise<void> {
+  await prisma.viewedPoi.deleteMany({ where: { userId } });
+}

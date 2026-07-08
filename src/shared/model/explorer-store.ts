@@ -48,6 +48,7 @@ type ExplorerState = {
   toggleFavorite: (poiId: string) => void;
   toggleVisited: (poiId: string) => void;
   markPoiViewed: (poiId: string) => void;
+  clearViewedPois: () => void;
   toggleHideViewedOnMap: () => void;
   toggleHideFavoritesOnMap: () => void;
   toggleHideVisitedOnMap: () => void;
@@ -136,6 +137,12 @@ export const useExplorerStore = create<ExplorerState>()(
     );
     if (get().currentUser) {
       fetch(`/api/me/viewed/${poiId}`, { method: "POST" }).catch(() => {});
+    }
+  },
+  clearViewedPois: () => {
+    set({ viewedPoiIds: [] });
+    if (get().currentUser) {
+      fetch("/api/me/viewed", { method: "DELETE" }).catch(() => {});
     }
   },
   toggleHideViewedOnMap: () => set((state) => ({ hideViewedOnMap: !state.hideViewedOnMap })),

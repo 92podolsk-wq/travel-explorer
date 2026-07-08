@@ -77,6 +77,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
+  const clearViewedPois = useExplorerStore((state) => state.clearViewedPois);
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
@@ -89,6 +90,12 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   function goToPoi(poiId: string) {
     selectPoiFromMap(poiId);
     router.push("/");
+  }
+
+  function handleClearViewed() {
+    if (window.confirm(t.clearViewedConfirm)) {
+      clearViewedPois();
+    }
   }
 
   async function handleSelectAvatar(avatarId: AvatarId) {
@@ -226,10 +233,21 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <Eye className="h-4 w-4 text-primary" />
-              {t.viewedPlaces}
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Eye className="h-4 w-4 text-primary" />
+                {t.viewedPlaces}
+              </h2>
+              {viewedPois.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearViewed}
+                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {t.clearViewed}
+                </button>
+              )}
+            </div>
             {viewedPois.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noViewedPlaces}</p>
             ) : (

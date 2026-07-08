@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, MapPin } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { Region } from "@/entities/region/model/types";
@@ -10,6 +10,7 @@ import { AuthMenu } from "@/features/auth/ui/auth-menu";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { CityIcon } from "@/shared/ui/city-icon";
 import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { cn } from "@/shared/lib/cn";
 
@@ -83,7 +84,7 @@ export function SiteHeader() {
           aria-expanded={isMenuOpen}
           className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60"
         >
-          <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
+          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} className="h-5 w-5 shadow-none" />
           {isAreaActive
             ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
             : [

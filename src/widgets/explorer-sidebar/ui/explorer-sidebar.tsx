@@ -16,7 +16,7 @@ import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/transl
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { Button } from "@/shared/ui/button";
-import { HankoSeal } from "@/shared/ui/hanko-seal";
+import { CityIcon } from "@/shared/ui/city-icon";
 import { SeigaihaWatermark } from "@/shared/ui/seigaiha-watermark";
 import { Input } from "@/shared/ui/input";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -102,7 +102,7 @@ export function ExplorerSidebar() {
           <h1 className="cursor-default text-3xl font-semibold tracking-normal">
             {headingText}
           </h1>
-          <HankoSeal character={activeRegion.sealCharacter} />
+          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} />
           <AnimatePresence>
             {isGreetingVisible && (
               <motion.div

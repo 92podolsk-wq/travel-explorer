@@ -16,6 +16,7 @@ import { cn } from "@/shared/lib/cn";
 
 export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
+  const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const favorites = useExplorerStore((state) => state.favorites);
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
@@ -27,9 +28,12 @@ export function PoiDetails() {
   const isDetailsOpen = useExplorerStore((state) => state.isDetailsOpen);
   const setDetailsOpen = useExplorerStore((state) => state.setDetailsOpen);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
+  const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
   const t = getTranslations(language);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+
+  const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
 
   useEffect(() => {
     if (isDetailsOpen && selectedPoi) {
@@ -62,6 +66,18 @@ export function PoiDetails() {
     selectedPoi.photos.some((photo) => photo.season && selectedSeasons.includes(photo.season));
   const showSeasonFallbackHint = selectedSeasons.length > 0 && !hasSeasonSpecificMatch;
   const activePhoto = displayPhotos[activePhotoIndex] ?? displayPhotos[0];
+
+  const currentIndex = regionPois.findIndex((poi) => poi.id === selectedPoi.id);
+  const hasMultiplePlaces = regionPois.length > 1 && currentIndex !== -1;
+
+  function goToOffset(offset: number) {
+    if (!hasMultiplePlaces) {
+      return;
+    }
+
+    const nextIndex = (currentIndex + offset + regionPois.length) % regionPois.length;
+    selectPoiFromMap(regionPois[nextIndex].id);
+  }
 
   return (
     <div className="absolute right-5 top-5 z-10 hidden h-[calc(100%-2.5rem)] w-[400px] lg:block">
@@ -259,6 +275,27 @@ export function PoiDetails() {
               </div>
             </div>
           </div>
+
+          {hasMultiplePlaces && (
+            <div className="flex shrink-0 items-center justify-between gap-2 border-t border-white/70 px-5 py-3">
+              <button
+                type="button"
+                onClick={() => goToOffset(-1)}
+                className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t.app.previousPlace}
+              </button>
+              <button
+                type="button"
+                onClick={() => goToOffset(1)}
+                className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                {t.app.nextPlace}
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
           </motion.section>
         )}
       </AnimatePresence>

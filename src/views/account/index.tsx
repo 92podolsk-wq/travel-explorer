@@ -83,6 +83,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | null>(null);
 
   function regionName(regionId: string) {
     const region = regions.find((r) => r.id === regionId);
@@ -94,23 +95,25 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     router.push("/");
   }
 
-  function handleClearViewed() {
-    if (window.confirm(t.clearViewedConfirm)) {
+  function confirmPendingClear() {
+    if (pendingClear === "saved") {
+      clearFavoritePois();
+    } else if (pendingClear === "visited") {
+      clearVisitedPois();
+    } else if (pendingClear === "viewed") {
       clearViewedPois();
     }
+    setPendingClear(null);
   }
 
-  function handleClearSaved() {
-    if (window.confirm(t.clearSavedConfirm)) {
-      clearFavoritePois();
-    }
-  }
-
-  function handleClearVisited() {
-    if (window.confirm(t.clearVisitedConfirm)) {
-      clearVisitedPois();
-    }
-  }
+  const pendingClearMessage =
+    pendingClear === "saved"
+      ? t.clearSavedConfirm
+      : pendingClear === "visited"
+        ? t.clearVisitedConfirm
+        : pendingClear === "viewed"
+          ? t.clearViewedConfirm
+          : null;
 
   async function handleSelectAvatar(avatarId: AvatarId) {
     const res = await fetch("/api/me/avatar", {
@@ -223,7 +226,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               {favoritePois.length > 0 && (
                 <button
                   type="button"
-                  onClick={handleClearSaved}
+                  onClick={() => setPendingClear("saved")}
                   className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 >
                   {t.clearSaved}
@@ -250,7 +253,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               {visitedPois.length > 0 && (
                 <button
                   type="button"
-                  onClick={handleClearVisited}
+                  onClick={() => setPendingClear("visited")}
                   className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 >
                   {t.clearVisited}
@@ -277,7 +280,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               {viewedPois.length > 0 && (
                 <button
                   type="button"
-                  onClick={handleClearViewed}
+                  onClick={() => setPendingClear("viewed")}
                   className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 >
                   {t.clearViewed}
@@ -296,6 +299,28 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           </section>
         </div>
       </div>
+
+      {pendingClear && (
+        <>
+          <button
+            type="button"
+            aria-label="Close"
+            className="fixed inset-0 z-40 bg-black/20"
+            onClick={() => setPendingClear(null)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+            <p className="text-sm text-foreground">{pendingClearMessage}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPendingClear(null)}>
+                {t.cancel}
+              </Button>
+              <Button type="button" size="sm" onClick={confirmPendingClear}>
+                {pendingClear === "saved" ? t.clearSaved : pendingClear === "visited" ? t.clearVisited : t.clearViewed}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

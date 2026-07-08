@@ -25,7 +25,8 @@ import { cn } from "@/shared/lib/cn";
 export function ExplorerSidebar() {
   const pois = useExplorerStore((state) => state.pois);
   const regions = useExplorerStore((state) => state.regions);
-  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
+  const areas = useExplorerStore((state) => state.areas);
+  const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
@@ -48,8 +49,12 @@ export function ExplorerSidebar() {
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
 
-  const activeRegion = findRegionById(regions, activeRegionId);
-  const regionPois = pois.filter((poi) => poi.regionId === activeRegionId);
+  const activeRegion = findRegionById(regions, activeRegionIds[0]);
+  const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
+  const isAreaActive = activeRegionIds.length > 1;
+  const activeArea = areas.find((area) => area.id === activeRegion.areaId);
+  const headingText =
+    isAreaActive && activeArea ? activeArea.nameByLanguage[language] : activeRegion.nameByLanguage[language];
 
   const activeMode =
     explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0];
@@ -95,7 +100,7 @@ export function ExplorerSidebar() {
           onMouseLeave={() => setIsGreetingVisible(false)}
         >
           <h1 className="cursor-default text-3xl font-semibold tracking-normal">
-            {activeRegion.nameByLanguage[language]}
+            {headingText}
           </h1>
           <HankoSeal character={activeRegion.sealCharacter} />
           <AnimatePresence>

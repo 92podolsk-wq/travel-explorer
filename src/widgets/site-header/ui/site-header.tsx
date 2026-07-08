@@ -23,15 +23,17 @@ export function SiteHeader() {
   const regions = useExplorerStore((state) => state.regions);
   const areas = useExplorerStore((state) => state.areas);
   const countries = useExplorerStore((state) => state.countries);
-  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
+  const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
+  const setActiveArea = useExplorerStore((state) => state.setActiveArea);
   const language = useExplorerStore((state) => state.language);
   const t = getTranslations(language);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const activeRegion = regions.find((region) => region.id === activeRegionId) ?? regions[0];
+  const activeRegion = regions.find((region) => region.id === activeRegionIds[0]) ?? regions[0];
   const activeArea = activeRegion ? areas.find((area) => area.id === activeRegion.areaId) : undefined;
   const activeCountry = activeArea ? countries.find((country) => country.id === activeArea.countryId) : undefined;
+  const isAreaActive = activeRegionIds.length > 1;
 
   const countryGroups: CountryGroup[] = [];
   for (const region of regions) {
@@ -82,9 +84,15 @@ export function SiteHeader() {
           className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60"
         >
           <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-          {activeRegion.nameByLanguage[language]}
-          {activeArea ? `, ${activeArea.nameByLanguage[language]}` : ""}
-          {activeCountry ? `, ${activeCountry.nameByLanguage[language]}` : ""}
+          {isAreaActive
+            ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
+            : [
+                activeRegion.nameByLanguage[language],
+                activeArea?.nameByLanguage[language],
+                activeCountry?.nameByLanguage[language]
+              ]
+                .filter(Boolean)
+                .join(", ")}
           <ChevronDown
             className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
             aria-hidden="true"
@@ -111,50 +119,71 @@ export function SiteHeader() {
                       {countryGroup.country.nameByLanguage[language]}
                     </p>
                   </div>
-                  {countryGroup.areaGroups.map((areaGroup) => (
-                    <div key={areaGroup.area.id} className="flex gap-8">
-                      <div>
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                          {t.app.area}
-                        </p>
-                        <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
-                          <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                          {areaGroup.area.nameByLanguage[language]}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                          {t.app.city}
-                        </p>
-                        <div className="flex flex-col gap-0.5">
-                          {areaGroup.regions.map((region) => (
-                            <button
-                              key={region.id}
-                              type="button"
-                              onClick={() => {
-                                setActiveRegion(region.id);
-                                setIsMenuOpen(false);
-                                router.push("/");
-                              }}
-                              className={cn(
-                                "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-medium transition",
-                                region.id === activeRegionId
-                                  ? "bg-primary/10 text-primary"
-                                  : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              {region.id === activeRegionId ? (
-                                <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                              ) : (
-                                <span className="h-3.5 w-3.5 shrink-0" />
-                              )}
-                              {region.nameByLanguage[language]}
-                            </button>
-                          ))}
+                  {countryGroup.areaGroups.map((areaGroup) => {
+                    const isThisAreaActive = areaGroup.regions.every((region) => activeRegionIds.includes(region.id));
+
+                    return (
+                      <div key={areaGroup.area.id} className="flex gap-8">
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                            {t.app.area}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveArea(areaGroup.area.id);
+                              setIsMenuOpen(false);
+                              router.push("/");
+                            }}
+                            className={cn(
+                              "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-semibold transition",
+                              isThisAreaActive
+                                ? "bg-primary/10 text-primary"
+                                : "text-foreground hover:bg-muted/60"
+                            )}
+                          >
+                            {isThisAreaActive ? (
+                              <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            ) : (
+                              <span className="h-3.5 w-3.5 shrink-0" />
+                            )}
+                            {areaGroup.area.nameByLanguage[language]}
+                          </button>
+                        </div>
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                            {t.app.city}
+                          </p>
+                          <div className="flex flex-col gap-0.5">
+                            {areaGroup.regions.map((region) => (
+                              <button
+                                key={region.id}
+                                type="button"
+                                onClick={() => {
+                                  setActiveRegion(region.id);
+                                  setIsMenuOpen(false);
+                                  router.push("/");
+                                }}
+                                className={cn(
+                                  "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-medium transition",
+                                  activeRegionIds.includes(region.id) && !isThisAreaActive
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground"
+                                )}
+                              >
+                                {activeRegionIds.includes(region.id) && !isThisAreaActive ? (
+                                  <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                                ) : (
+                                  <span className="h-3.5 w-3.5 shrink-0" />
+                                )}
+                                {region.nameByLanguage[language]}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ))}
             </div>

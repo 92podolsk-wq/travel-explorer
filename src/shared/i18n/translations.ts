@@ -53,6 +53,8 @@ type TranslationDictionary = {
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
+    previousPlace: string;
+    nextPlace: string;
   };
   modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
@@ -88,6 +90,7 @@ type TranslationDictionary = {
     clearSavedConfirm: string;
     clearVisited: string;
     clearVisitedConfirm: string;
+    cancel: string;
   };
 };
 
@@ -132,7 +135,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonFilter: "Season",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
-      now: "Now"
+      now: "Now",
+      previousPlace: "Previous",
+      nextPlace: "Next"
     },
     modes: {
       photographer: {
@@ -271,7 +276,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSaved: "Clear saved",
       clearSavedConfirm: "Clear all saved places? This can't be undone.",
       clearVisited: "Clear visited",
-      clearVisitedConfirm: "Clear all visited places? This can't be undone."
+      clearVisitedConfirm: "Clear all visited places? This can't be undone.",
+      cancel: "Cancel"
     }
   },
   ru: {
@@ -314,7 +320,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonFilter: "Сезон",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
-      now: "Сейчас"
+      now: "Сейчас",
+      previousPlace: "Назад",
+      nextPlace: "Далее"
     },
     modes: {
       photographer: {
@@ -453,7 +461,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSaved: "Очистить",
       clearSavedConfirm: "Очистить все сохранённые места? Это действие нельзя отменить.",
       clearVisited: "Очистить",
-      clearVisitedConfirm: "Очистить все посещённые места? Это действие нельзя отменить."
+      clearVisitedConfirm: "Очистить все посещённые места? Это действие нельзя отменить.",
+      cancel: "Отмена"
     }
   },
   ja: {
@@ -496,7 +505,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonFilter: "季節",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
-      now: "現在"
+      now: "現在",
+      previousPlace: "前へ",
+      nextPlace: "次へ"
     },
     modes: {
       photographer: {
@@ -635,7 +646,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSaved: "消去",
       clearSavedConfirm: "保存した場所をすべて消去しますか?この操作は元に戻せません。",
       clearVisited: "消去",
-      clearVisitedConfirm: "訪問した場所をすべて消去しますか?この操作は元に戻せません。"
+      clearVisitedConfirm: "訪問した場所をすべて消去しますか?この操作は元に戻せません。",
+      cancel: "キャンセル"
     }
   }
 };

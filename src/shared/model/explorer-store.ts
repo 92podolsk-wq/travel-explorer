@@ -17,12 +17,16 @@ function firstPoiIdForRegion(pois: Poi[], regionId: string) {
   return pois.find((poi) => poi.regionId === regionId)?.id ?? pois[0]?.id ?? "";
 }
 
+function firstPoiIdForRegions(pois: Poi[], regionIds: string[]) {
+  return pois.find((poi) => regionIds.includes(poi.regionId))?.id ?? pois[0]?.id ?? "";
+}
+
 type ExplorerState = {
   pois: Poi[];
   regions: Region[];
   countries: Country[];
   areas: Area[];
-  activeRegionId: string;
+  activeRegionIds: string[];
   selectedPoiId: string;
   activeModeId: ExplorationModeId;
   searchQuery: string;
@@ -42,6 +46,7 @@ type ExplorerState = {
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
+  setActiveArea: (areaId: string) => void;
   setActiveMode: (modeId: ExplorationModeId) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
@@ -70,7 +75,7 @@ export const useExplorerStore = create<ExplorerState>()(
   regions: seedRegions,
   countries: seedCountries,
   areas: seedAreas,
-  activeRegionId: defaultRegion.id,
+  activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
   activeModeId: defaultExplorationMode.id,
   searchQuery: "",
@@ -104,10 +109,20 @@ export const useExplorerStore = create<ExplorerState>()(
     set((state) => {
       const region = findRegionById(state.regions, regionId);
       return {
-        activeRegionId: regionId,
+        activeRegionIds: [regionId],
         zoom: region.defaultZoom,
         searchQuery: "",
         selectedPoiId: firstPoiIdForRegion(state.pois, regionId)
+      };
+    }),
+  setActiveArea: (areaId) =>
+    set((state) => {
+      const areaRegionIds = state.regions.filter((region) => region.areaId === areaId).map((region) => region.id);
+      const activeRegionIds = areaRegionIds.length > 0 ? areaRegionIds : state.activeRegionIds;
+      return {
+        activeRegionIds,
+        searchQuery: "",
+        selectedPoiId: firstPoiIdForRegions(state.pois, activeRegionIds)
       };
     }),
   setActiveMode: (modeId) => set({ activeModeId: modeId }),
@@ -169,15 +184,16 @@ export const useExplorerStore = create<ExplorerState>()(
       pois,
       selectedPoiId: pois.some((poi) => poi.id === state.selectedPoiId)
         ? state.selectedPoiId
-        : firstPoiIdForRegion(pois, state.activeRegionId)
+        : firstPoiIdForRegions(pois, state.activeRegionIds)
     })),
   setRegions: (regions) =>
-    set((state) => ({
-      regions,
-      activeRegionId: regions.some((region) => region.id === state.activeRegionId)
-        ? state.activeRegionId
-        : (regions[0]?.id ?? state.activeRegionId)
-    })),
+    set((state) => {
+      const validIds = state.activeRegionIds.filter((id) => regions.some((region) => region.id === id));
+      return {
+        regions,
+        activeRegionIds: validIds.length > 0 ? validIds : regions[0] ? [regions[0].id] : state.activeRegionIds
+      };
+    }),
   toggleSeason: (season) =>
     set((state) => ({
       selectedSeasons: state.selectedSeasons.includes(season)

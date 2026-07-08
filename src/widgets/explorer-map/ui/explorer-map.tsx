@@ -6,6 +6,7 @@ import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLay
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { findRegionById } from "@/entities/region/model/regions";
+import type { Region } from "@/entities/region/model/types";
 import { explorationModes } from "@/features/exploration-mode/model/modes";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
@@ -189,6 +190,15 @@ async function addPoiLayers(map: MapLibreMap) {
   });
 }
 
+function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {
+  const lngs = pois.map((poi) => poi.coordinates.lng);
+  const lats = pois.map((poi) => poi.coordinates.lat);
+  return [
+    [Math.min(...lngs), Math.min(...lats)],
+    [Math.max(...lngs), Math.max(...lats)]
+  ];
+}
+
 const languageToBasemapNameField: Record<Language, string> = {
   en: "name:en",
   ru: "name:ru",
@@ -237,13 +247,27 @@ function setPoiSourceData(map: MapLibreMap, data: PoiFeatureCollection) {
   (source as GeoJSONSource).setData(data);
 }
 
+function mergeBounds(regions: Region[]): [[number, number], [number, number]] {
+  const [first, ...rest] = regions;
+  return rest.reduce<[[number, number], [number, number]]>(
+    (bounds, region) => [
+      [Math.min(bounds[0][0], region.bounds[0][0]), Math.min(bounds[0][1], region.bounds[0][1])],
+      [Math.max(bounds[1][0], region.bounds[1][0]), Math.max(bounds[1][1], region.bounds[1][1])]
+    ],
+    [
+      [first.bounds[0][0], first.bounds[0][1]],
+      [first.bounds[1][0], first.bounds[1][1]]
+    ]
+  );
+}
+
 export function ExplorerMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
 
   const pois = useExplorerStore((state) => state.pois);
-  const activeRegionId = useExplorerStore((state) => state.activeRegionId);
+  const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
@@ -261,14 +285,14 @@ export function ExplorerMap() {
     [activeModeId]
   );
 
-  const activeRegion = useMemo(
-    () => findRegionById(regions, activeRegionId),
-    [regions, activeRegionId]
+  const activeRegions = useMemo(
+    () => regions.filter((region) => activeRegionIds.includes(region.id)),
+    [regions, activeRegionIds]
   );
 
   const regionPois = useMemo(
-    () => pois.filter((poi) => poi.regionId === activeRegionId),
-    [pois, activeRegionId]
+    () => pois.filter((poi) => activeRegionIds.includes(poi.regionId)),
+    [pois, activeRegionIds]
   );
 
   const visiblePois = useMemo(
@@ -304,7 +328,7 @@ export function ExplorerMap() {
       }
 
       const initialState = useExplorerStore.getState();
-      const initialRegion = findRegionById(initialState.regions, initialState.activeRegionId);
+      const initialRegion = findRegionById(initialState.regions, initialState.activeRegionIds[0]);
 
       const map = new maplibre.Map({
         container: containerRef.current,
@@ -363,13 +387,14 @@ export function ExplorerMap() {
   useEffect(() => {
     const map = mapRef.current;
 
-    if (!map || !isMapReady) {
+    if (!map || !isMapReady || activeRegions.length === 0) {
       return;
     }
 
+    const regionBounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
     map.setMaxBounds(undefined);
-    map.setMaxBounds(activeRegion.bounds);
-  }, [isMapReady, activeRegion]);
+    map.setMaxBounds(regionBounds);
+  }, [isMapReady, activeRegions]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -391,11 +416,38 @@ export function ExplorerMap() {
     applyBasemapLanguage(map, language);
   }, [isMapReady, language]);
 
+  const regionKey = activeRegions.map((region) => region.id).join(",");
+  const prevRegionKeyRef = useRef<string>("");
+
   useEffect(() => {
-    const selectedPoi = regionPois.find((poi) => poi.id === selectedPoiId);
     const map = mapRef.current;
 
-    if (!selectedPoi || !map) {
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    const regionChanged = regionKey !== prevRegionKeyRef.current;
+    prevRegionKeyRef.current = regionKey;
+
+    if (regionChanged) {
+      if (regionPois.length > 1) {
+        map.fitBounds(boundsFromPois(regionPois), { padding: 70, duration: 650, maxZoom: 15 });
+      } else if (regionPois.length === 1) {
+        map.easeTo({
+          center: [regionPois[0].coordinates.lng, regionPois[0].coordinates.lat],
+          zoom: activeRegions[0]?.defaultZoom ?? 12,
+          duration: 650
+        });
+      } else if (activeRegions.length > 0) {
+        const bounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
+        map.fitBounds(bounds, { padding: 70, duration: 650 });
+      }
+      return;
+    }
+
+    const selectedPoi = regionPois.find((poi) => poi.id === selectedPoiId);
+
+    if (!selectedPoi) {
       return;
     }
 
@@ -404,7 +456,7 @@ export function ExplorerMap() {
       duration: 650,
       zoom: Math.max(map.getZoom(), 12)
     });
-  }, [regionPois, selectedPoiId]);
+  }, [isMapReady, regionKey, regionPois, selectedPoiId, activeRegions]);
 
   return (
     <div className="absolute inset-0">

@@ -50,3 +50,11 @@ export async function markViewed(userId: string, poiId: string): Promise<void> {
 export async function clearViewed(userId: string): Promise<void> {
   await prisma.viewedPoi.deleteMany({ where: { userId } });
 }
+
+export async function clearFavorites(userId: string): Promise<void> {
+  await prisma.favorite.deleteMany({ where: { userId } });
+}
+
+export async function clearVisited(userId: string): Promise<void> {
+  await prisma.visitedPoi.deleteMany({ where: { userId } });
+}

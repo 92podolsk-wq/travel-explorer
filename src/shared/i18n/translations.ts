@@ -84,6 +84,10 @@ type TranslationDictionary = {
     changeAvatar: string;
     clearViewed: string;
     clearViewedConfirm: string;
+    clearSaved: string;
+    clearSavedConfirm: string;
+    clearVisited: string;
+    clearVisitedConfirm: string;
   };
 };
 
@@ -263,7 +267,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       chooseAvatar: "Choose an avatar",
       changeAvatar: "Change avatar",
       clearViewed: "Clear viewed",
-      clearViewedConfirm: "Clear all viewed places? This can't be undone."
+      clearViewedConfirm: "Clear all viewed places? This can't be undone.",
+      clearSaved: "Clear saved",
+      clearSavedConfirm: "Clear all saved places? This can't be undone.",
+      clearVisited: "Clear visited",
+      clearVisitedConfirm: "Clear all visited places? This can't be undone."
     }
   },
   ru: {
@@ -441,7 +449,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       chooseAvatar: "Выберите аватар",
       changeAvatar: "Сменить аватар",
       clearViewed: "Очистить",
-      clearViewedConfirm: "Очистить все просмотренные места? Это действие нельзя отменить."
+      clearViewedConfirm: "Очистить все просмотренные места? Это действие нельзя отменить.",
+      clearSaved: "Очистить",
+      clearSavedConfirm: "Очистить все сохранённые места? Это действие нельзя отменить.",
+      clearVisited: "Очистить",
+      clearVisitedConfirm: "Очистить все посещённые места? Это действие нельзя отменить."
     }
   },
   ja: {
@@ -619,7 +631,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       chooseAvatar: "アバターを選択",
       changeAvatar: "アバターを変更",
       clearViewed: "履歴を消去",
-      clearViewedConfirm: "閲覧履歴をすべて消去しますか?この操作は元に戻せません。"
+      clearViewedConfirm: "閲覧履歴をすべて消去しますか?この操作は元に戻せません。",
+      clearSaved: "消去",
+      clearSavedConfirm: "保存した場所をすべて消去しますか?この操作は元に戻せません。",
+      clearVisited: "消去",
+      clearVisitedConfirm: "訪問した場所をすべて消去しますか?この操作は元に戻せません。"
     }
   }
 };

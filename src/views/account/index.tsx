@@ -78,6 +78,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const clearViewedPois = useExplorerStore((state) => state.clearViewedPois);
+  const clearFavoritePois = useExplorerStore((state) => state.clearFavoritePois);
+  const clearVisitedPois = useExplorerStore((state) => state.clearVisitedPois);
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
@@ -95,6 +97,18 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   function handleClearViewed() {
     if (window.confirm(t.clearViewedConfirm)) {
       clearViewedPois();
+    }
+  }
+
+  function handleClearSaved() {
+    if (window.confirm(t.clearSavedConfirm)) {
+      clearFavoritePois();
+    }
+  }
+
+  function handleClearVisited() {
+    if (window.confirm(t.clearVisitedConfirm)) {
+      clearVisitedPois();
     }
   }
 
@@ -201,10 +215,21 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           )}
 
           <section className="flex flex-col gap-3">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <Bookmark className="h-4 w-4 text-primary" />
-              {t.savedPlaces}
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Bookmark className="h-4 w-4 text-primary" />
+                {t.savedPlaces}
+              </h2>
+              {favoritePois.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearSaved}
+                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {t.clearSaved}
+                </button>
+              )}
+            </div>
             {favoritePois.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noSavedPlaces}</p>
             ) : (
@@ -217,10 +242,21 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-              <MapPin className="h-4 w-4 text-primary" />
-              {t.visitedPlaces}
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <MapPin className="h-4 w-4 text-primary" />
+                {t.visitedPlaces}
+              </h2>
+              {visitedPois.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearVisited}
+                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  {t.clearVisited}
+                </button>
+              )}
+            </div>
             {visitedPois.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noVisitedPlaces}</p>
             ) : (

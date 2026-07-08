@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, ChevronDown, MapPin } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
@@ -18,6 +19,7 @@ type CountryGroup = {
 };
 
 export function SiteHeader() {
+  const router = useRouter();
   const regions = useExplorerStore((state) => state.regions);
   const areas = useExplorerStore((state) => state.areas);
   const countries = useExplorerStore((state) => state.countries);
@@ -58,15 +60,19 @@ export function SiteHeader() {
 
   return (
     <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-5">
-      <div className="flex items-center gap-2.5">
+      <button
+        type="button"
+        onClick={() => router.push("/")}
+        className="flex items-center gap-2.5 rounded-md transition hover:opacity-80"
+      >
         <TravelKittenLogo className="h-9 w-9" />
-        <div className="leading-tight">
+        <div className="text-left leading-tight">
           <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             Explore Japan
           </p>
         </div>
-      </div>
+      </button>
 
       <div className="relative">
         <button
@@ -128,6 +134,7 @@ export function SiteHeader() {
                               onClick={() => {
                                 setActiveRegion(region.id);
                                 setIsMenuOpen(false);
+                                router.push("/");
                               }}
                               className={cn(
                                 "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-medium transition",

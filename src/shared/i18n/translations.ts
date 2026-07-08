@@ -81,6 +81,7 @@ type TranslationDictionary = {
     noVisitedPlaces: string;
     memberSince: string;
     chooseAvatar: string;
+    changeAvatar: string;
   };
 };
 
@@ -257,7 +258,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noViewedPlaces: "No viewed places yet",
       noVisitedPlaces: "No visited places yet",
       memberSince: "Member since",
-      chooseAvatar: "Choose an avatar"
+      chooseAvatar: "Choose an avatar",
+      changeAvatar: "Change avatar"
     }
   },
   ru: {
@@ -432,7 +434,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noViewedPlaces: "Пока нет просмотренных мест",
       noVisitedPlaces: "Пока нет посещённых мест",
       memberSince: "Дата регистрации",
-      chooseAvatar: "Выберите аватар"
+      chooseAvatar: "Выберите аватар",
+      changeAvatar: "Сменить аватар"
     }
   },
   ja: {
@@ -607,7 +610,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noViewedPlaces: "閲覧した場所はまだありません",
       noVisitedPlaces: "訪問した場所はまだありません",
       memberSince: "登録日",
-      chooseAvatar: "アバターを選択"
+      chooseAvatar: "アバターを選択",
+      changeAvatar: "アバターを変更"
     }
   }
 };

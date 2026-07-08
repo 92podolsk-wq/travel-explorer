@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark, Check, Eye, MapPin } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
@@ -79,6 +79,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const dict = getTranslations(language);
   const t = dict.auth;
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
 
   function regionName(regionId: string) {
     const region = regions.find((r) => r.id === regionId);
@@ -100,6 +101,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) {
       const data = (await res.json()) as { user: User };
       hydrateAuth(data.user);
+      setIsAvatarPickerOpen(false);
     }
   }
 
@@ -133,8 +135,17 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       <div className="flex-1 px-6 py-10">
         <div className="mx-auto flex max-w-2xl flex-col gap-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <ProfileAvatar avatarId={currentUser?.avatarId} className="h-14 w-14" />
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center gap-1.5">
+                <ProfileAvatar avatarId={currentUser?.avatarId} className="h-14 w-14" />
+                <button
+                  type="button"
+                  onClick={() => setIsAvatarPickerOpen((value) => !value)}
+                  className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                >
+                  {t.changeAvatar}
+                </button>
+              </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">{currentUser?.name || currentUser?.email}</h1>
                 {currentUser && (
@@ -152,33 +163,35 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             </div>
           </div>
 
-          <section className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
-            <div className="grid grid-cols-6 gap-3">
-              {avatarIds.map((avatarId) => {
-                const isSelected = currentUser?.avatarId === avatarId;
-                return (
-                  <button
-                    key={avatarId}
-                    type="button"
-                    onClick={() => handleSelectAvatar(avatarId)}
-                    aria-label={avatarId}
-                    className={cn(
-                      "relative flex items-center justify-center rounded-full border-2 p-0.5 transition hover:-translate-y-0.5",
-                      isSelected ? "border-primary" : "border-transparent"
-                    )}
-                  >
-                    <ProfileAvatar avatarId={avatarId} className="h-11 w-11" />
-                    {isSelected && (
-                      <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Check className="h-2.5 w-2.5" />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+          {isAvatarPickerOpen && (
+            <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
+              <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
+              <div className="grid grid-cols-6 gap-3">
+                {avatarIds.map((avatarId) => {
+                  const isSelected = currentUser?.avatarId === avatarId;
+                  return (
+                    <button
+                      key={avatarId}
+                      type="button"
+                      onClick={() => handleSelectAvatar(avatarId)}
+                      aria-label={avatarId}
+                      className={cn(
+                        "relative flex items-center justify-center rounded-full border-2 p-0.5 transition hover:-translate-y-0.5",
+                        isSelected ? "border-primary" : "border-transparent"
+                      )}
+                    >
+                      <ProfileAvatar avatarId={avatarId} className="h-11 w-11" />
+                      {isSelected && (
+                        <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <Check className="h-2.5 w-2.5" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           <section className="flex flex-col gap-3">
             <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Area } from "@/entities/area/model/types";
-import type { Region, RegionInput } from "@/entities/region/model/types";
+import type { PublishStatus, Region, RegionInput } from "@/entities/region/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
@@ -21,6 +21,7 @@ type FormState = {
   nameRu: string;
   nameJa: string;
   sealCharacter: string;
+  status: PublishStatus;
 };
 
 function toFormState(region: Region | undefined, defaultAreaId: string): FormState {
@@ -39,7 +40,8 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
       nameEn: "",
       nameRu: "",
       nameJa: "",
-      sealCharacter: ""
+      sealCharacter: "",
+      status: "draft"
     };
   }
 
@@ -57,7 +59,8 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
     nameEn: region.nameByLanguage.en,
     nameRu: region.nameByLanguage.ru,
     nameJa: region.nameByLanguage.ja,
-    sealCharacter: region.sealCharacter
+    sealCharacter: region.sealCharacter,
+    status: region.status
   };
 }
 
@@ -95,7 +98,8 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
       ru: form.nameRu.trim() || name,
       ja: form.nameJa.trim() || name
     },
-    sealCharacter: form.sealCharacter.trim() || name.charAt(0)
+    sealCharacter: form.sealCharacter.trim() || name.charAt(0),
+    status: form.status
   };
 }
 
@@ -241,6 +245,23 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           </label>
           <Input value={form.sealCharacter} onChange={(e) => setForm((p) => ({ ...p, sealCharacter: e.target.value }))} placeholder="東" />
         </div>
+      </div>
+
+      <div>
+        <label
+          className={fieldLabel}
+          title="Черновик не показывается на сайте — виден только в админ-панели. Опубликуйте город, когда он будет готов."
+        >
+          Статус публикации
+        </label>
+        <select
+          className={selectClass}
+          value={form.status}
+          onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as "draft" | "published" }))}
+        >
+          <option value="draft">Черновик (скрыт на сайте)</option>
+          <option value="published">Опубликован</option>
+        </select>
       </div>
 
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}

@@ -40,6 +40,7 @@ type FormState = {
   seasons: string;
   bestTime: string;
   photos: PhotoFormState[];
+  status: "draft" | "published";
 };
 
 function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
@@ -64,7 +65,8 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       tags: [],
       seasons: "all year",
       bestTime: "Morning",
-      photos: [{ url: "", alt: "", author: "", season: "" }]
+      photos: [{ url: "", alt: "", author: "", season: "" }],
+      status: "draft"
     };
   }
 
@@ -91,7 +93,8 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     photos:
       poi.photos.length > 0
         ? poi.photos.map((p) => ({ url: p.url, alt: p.alt, author: p.author ?? "", season: p.season ?? "" }))
-        : [{ url: "", alt: "", author: "", season: "" }]
+        : [{ url: "", alt: "", author: "", season: "" }],
+    status: poi.status
   };
 }
 
@@ -147,7 +150,8 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     bestTime: splitList(form.bestTime),
     difficulty: form.difficulty,
     durationMinutes: Number(form.durationMinutes) || 0,
-    importance: Number(form.importance) || 0
+    importance: Number(form.importance) || 0,
+    status: form.status
   };
 }
 
@@ -377,6 +381,23 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
         >
           <option value="default">Показывать всегда (видно при любом масштабе)</option>
           <option value="zoomed-in">Показывать только при приближении (масштаб больше 12)</option>
+        </select>
+      </div>
+
+      <div>
+        <label
+          className={fieldLabel}
+          title="Черновик не показывается на сайте — виден только в админ-панели. Опубликуйте место, когда оно будет готово."
+        >
+          Статус публикации
+        </label>
+        <select
+          className={selectClass}
+          value={form.status}
+          onChange={(e) => setForm((p) => ({ ...p, status: e.target.value as "draft" | "published" }))}
+        >
+          <option value="draft">Черновик (скрыт на сайте)</option>
+          <option value="published">Опубликован</option>
         </select>
       </div>
 

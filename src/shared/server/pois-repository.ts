@@ -1,4 +1,5 @@
 import type { Language } from "@/shared/i18n/types";
+import type { PublishStatus } from "@/entities/region/model/types";
 import type { Difficulty, Photo, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
 import { prisma } from "./prisma-client";
 
@@ -56,12 +57,18 @@ function toPoi(row: PoiRow): Poi {
     difficulty: row.difficulty as Difficulty,
     durationMinutes: row.durationMinutes,
     importance: row.importance,
-    visibilityMode: row.visibilityMode as PoiVisibilityMode
+    visibilityMode: row.visibilityMode as PoiVisibilityMode,
+    status: row.status as PublishStatus
   };
 }
 
 export async function readPois(): Promise<Poi[]> {
   const rows = await prisma.poi.findMany({ include: { photos: true } });
+  return rows.map(toPoi);
+}
+
+export async function readPublishedPois(): Promise<Poi[]> {
+  const rows = await prisma.poi.findMany({ where: { status: "published" }, include: { photos: true } });
   return rows.map(toPoi);
 }
 
@@ -86,7 +93,8 @@ async function writePoi(id: string, input: PoiInput) {
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
-      visibilityMode: input.visibilityMode
+      visibilityMode: input.visibilityMode,
+      status: input.status
     },
     update: {
       regionId: input.regionId,
@@ -105,7 +113,8 @@ async function writePoi(id: string, input: PoiInput) {
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
-      visibilityMode: input.visibilityMode
+      visibilityMode: input.visibilityMode,
+      status: input.status
     }
   });
 

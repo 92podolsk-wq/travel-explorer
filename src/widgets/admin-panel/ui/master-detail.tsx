@@ -8,6 +8,7 @@ export type MasterDetailItem = {
   id: string;
   title: string;
   subtitle?: string;
+  badge?: string;
 };
 
 type MasterDetailProps = {
@@ -73,13 +74,20 @@ export function MasterDetail({
                 item.id === selectedId ? "bg-primary/10" : "hover:bg-muted"
               )}
             >
-              <span
-                className={cn(
-                  "truncate text-sm font-medium",
-                  item.id === selectedId ? "text-primary" : "text-foreground"
+              <span className="flex w-full items-center gap-1.5">
+                <span
+                  className={cn(
+                    "truncate text-sm font-medium",
+                    item.id === selectedId ? "text-primary" : "text-foreground"
+                  )}
+                >
+                  {item.title}
+                </span>
+                {item.badge && (
+                  <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {item.badge}
+                  </span>
                 )}
-              >
-                {item.title}
               </span>
               {item.subtitle && (
                 <span

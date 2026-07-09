@@ -2,13 +2,13 @@ import { ExplorerPage } from "@/views/explorer";
 import { readAreas } from "@/shared/server/areas-repository";
 import { readCountries } from "@/shared/server/countries-repository";
 import { readExplorationModes } from "@/shared/server/exploration-modes-repository";
-import { readPois } from "@/shared/server/pois-repository";
-import { readRegions } from "@/shared/server/regions-repository";
+import { readPublishedPois } from "@/shared/server/pois-repository";
+import { readPublishedRegions } from "@/shared/server/regions-repository";
 
 export default async function Home() {
   const [pois, regions, countries, areas, explorationModes] = await Promise.all([
-    readPois(),
-    readRegions(),
+    readPublishedPois(),
+    readPublishedRegions(),
     readCountries(),
     readAreas(),
     readExplorationModes()

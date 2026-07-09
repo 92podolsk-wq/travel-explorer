@@ -35,6 +35,7 @@ model Region {
   bounds               Json
   timezoneOffsetHours  Int
   sealCharacter        String
+  status               String   @default("published")
   pois                 Poi[]
 }
 
@@ -58,10 +59,29 @@ model Poi {
   durationMinutes  Int
   importance       Int
   visibilityMode   String
+  status           String   @default("published")
   photos           Photo[]
   favoritedBy      Favorite[]
   viewedBy         ViewedPoi[]
   visitedBy        VisitedPoi[]
+}
+
+model AdminAccount {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  createdAt    DateTime       @default(now())
+  sessions     AdminSession[]
+}
+
+model AdminSession {
+  id        String       @id @default(cuid())
+  tokenHash String       @unique
+  adminId   String
+  admin     AdminAccount @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
 }
 
 model ExplorationMode {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Ban, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import type { AdminAccount } from "@/entities/admin-account/model/types";
 import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
@@ -12,10 +13,14 @@ import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+import { AdminAccountForm } from "./admin-account-form";
 import { AreaForm } from "./area-form";
 import { CountryForm } from "./country-form";
+import { DashboardTab } from "./dashboard-tab";
 import { ExplorationModeForm } from "./exploration-mode-form";
+import { ImportExportPanel } from "./import-export-panel";
 import { MasterDetail } from "./master-detail";
+import { MediaLibraryTab } from "./media-library-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
 
@@ -23,22 +28,25 @@ type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" }
 
 type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
-type Tab = "countries" | "areas" | "cities" | "locations" | "modes" | "users";
+type Tab = "dashboard" | "countries" | "areas" | "cities" | "locations" | "media" | "modes" | "users" | "accounts";
 
 const tabLabels: Record<Tab, string> = {
+  dashboard: "Дашборд",
   countries: "Страны",
   areas: "Регионы",
   cities: "Города",
   locations: "Локации",
+  media: "Медиатека",
   modes: "Режимы",
-  users: "Пользователи"
+  users: "Пользователи",
+  accounts: "Администраторы"
 };
 
 const t = getTranslations("ru");
 
 export function AdminPanel() {
   const [authView, setAuthView] = useState<AuthViewState>({ mode: "loading" });
-  const [activeTab, setActiveTab] = useState<Tab>("locations");
+  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -46,6 +54,8 @@ export function AdminPanel() {
   const [pois, setPois] = useState<Poi[]>([]);
   const [explorationModes, setExplorationModes] = useState<ExplorationMode[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [currentAdmin, setCurrentAdmin] = useState<{ name: string; email: string } | null>(null);
 
   const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
   const [areaSelection, setAreaSelection] = useState<Selection>({ mode: "empty" });
@@ -53,6 +63,7 @@ export function AdminPanel() {
   const [locationSelection, setLocationSelection] = useState<Selection>({ mode: "empty" });
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
   const [modeSelection, setModeSelection] = useState<Selection>({ mode: "empty" });
+  const [accountSelection, setAccountSelection] = useState<Selection>({ mode: "empty" });
 
   const [countriesError, setCountriesError] = useState<string | null>(null);
   const [areasError, setAreasError] = useState<string | null>(null);
@@ -60,7 +71,9 @@ export function AdminPanel() {
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const [modesError, setModesError] = useState<string | null>(null);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [accountsError, setAccountsError] = useState<string | null>(null);
 
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -88,14 +101,30 @@ export function AdminPanel() {
     const res = await fetch("/api/admin/users");
     setUsers((await res.json()) as AdminUser[]);
   }
+  async function loadAccounts() {
+    const res = await fetch("/api/admin/accounts");
+    setAccounts((await res.json()) as AdminAccount[]);
+  }
 
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/admin/session");
-      const { authenticated } = (await res.json()) as { authenticated: boolean };
+      const { authenticated, admin } = (await res.json()) as {
+        authenticated: boolean;
+        admin: { name: string; email: string } | null;
+      };
 
       if (authenticated) {
-        await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadExplorationModes(), loadUsers()]);
+        setCurrentAdmin(admin);
+        await Promise.all([
+          loadCountries(),
+          loadAreas(),
+          loadRegions(),
+          loadPois(),
+          loadExplorationModes(),
+          loadUsers(),
+          loadAccounts()
+        ]);
         setAuthView({ mode: "ready" });
       } else {
         setAuthView({ mode: "login" });
@@ -110,21 +139,33 @@ export function AdminPanel() {
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
+      body: JSON.stringify({ email, password })
     });
 
     if (!res.ok) {
-      setLoginError("Неверный пароль.");
+      setLoginError("Неверный email или пароль.");
       return;
     }
 
+    const { admin } = (await res.json()) as { admin: { name: string; email: string } };
+    setCurrentAdmin(admin);
+
     setPassword("");
-    await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadExplorationModes(), loadUsers()]);
+    await Promise.all([
+      loadCountries(),
+      loadAreas(),
+      loadRegions(),
+      loadPois(),
+      loadExplorationModes(),
+      loadUsers(),
+      loadAccounts()
+    ]);
     setAuthView({ mode: "ready" });
   };
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
+    setCurrentAdmin(null);
     setAuthView({ mode: "login" });
   };
 
@@ -424,6 +465,60 @@ export function AdminPanel() {
     await loadUsers();
   };
 
+  const handleCreateAccount = async (input: { name: string; email: string; password: string }) => {
+    setAccountsError(null);
+    const res = await fetch("/api/admin/accounts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setAccountsError(data?.error ?? "Не удалось создать администратора.");
+      return;
+    }
+
+    const created = (await res.json()) as AdminAccount;
+    await loadAccounts();
+    setAccountSelection({ mode: "edit", id: created.id });
+  };
+
+  const handleUpdateAccount = async (id: string, input: { name: string; email: string; password: string }) => {
+    setAccountsError(null);
+    const res = await fetch(`/api/admin/accounts/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setAccountsError(data?.error ?? "Не удалось сохранить изменения.");
+      return;
+    }
+
+    await loadAccounts();
+  };
+
+  const handleDeleteAccount = async (account: AdminAccount) => {
+    if (!window.confirm(`Удалить администратора «${account.name}»? Это действие нельзя отменить.`)) {
+      return;
+    }
+
+    setAccountsError(null);
+    const res = await fetch(`/api/admin/accounts/${account.id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setAccountsError(data?.error ?? "Не удалось удалить администратора.");
+      return;
+    }
+
+    setAccountSelection({ mode: "empty" });
+    await loadAccounts();
+  };
+
   if (authView.mode === "loading") {
     return null;
   }
@@ -432,14 +527,20 @@ export function AdminPanel() {
     return (
       <div className="mx-auto mt-24 max-w-sm rounded-lg border border-border bg-white p-6 shadow-sm">
         <h1 className="mb-1 text-lg font-semibold">Админ-панель Travel Explorer</h1>
-        <p className="mb-5 text-sm text-muted-foreground">Введите пароль администратора для управления местами.</p>
+        <p className="mb-5 text-sm text-muted-foreground">Войдите под своей учётной записью администратора.</p>
         <form onSubmit={handleLogin} className="space-y-3">
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            autoFocus
+          />
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Пароль"
-            autoFocus
           />
           {loginError && <p className="text-sm font-medium text-red-600">{loginError}</p>}
           <Button type="submit" className="w-full">
@@ -460,13 +561,20 @@ export function AdminPanel() {
           <h1 className="text-2xl font-semibold">Админ-панель Travel Explorer</h1>
           <p className="text-sm text-muted-foreground">
             Стран: {countries.length} · Регионов: {areas.length} · Городов: {regions.length} · Локаций: {pois.length} ·
-            Режимов: {explorationModes.length} · Пользователей: {users.length}
+            Режимов: {explorationModes.length} · Пользователей: {users.length} · Админов: {accounts.length}
           </p>
         </div>
-        <Button type="button" variant="outline" onClick={handleLogout} className="gap-1.5">
-          <LogOut className="h-4 w-4" />
-          Выйти
-        </Button>
+        <div className="flex items-center gap-3">
+          {currentAdmin && (
+            <p className="text-sm text-muted-foreground">
+              Вы вошли как <span className="font-semibold text-foreground">{currentAdmin.name}</span>
+            </p>
+          )}
+          <Button type="button" variant="outline" onClick={handleLogout} className="gap-1.5">
+            <LogOut className="h-4 w-4" />
+            Выйти
+          </Button>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-1 rounded-md border border-border bg-muted/60 p-0.5">
@@ -484,6 +592,8 @@ export function AdminPanel() {
           </button>
         ))}
       </div>
+
+      {activeTab === "dashboard" && <DashboardTab />}
 
       {activeTab === "countries" && (
         <>
@@ -592,7 +702,8 @@ export function AdminPanel() {
               const area = findCityArea(region);
               const country = area ? findAreaCountry(area) : undefined;
               const subtitle = area && country ? `${area.name}, ${country.name}` : area?.name;
-              return { id: region.id, title: region.name, subtitle };
+              const badge = region.status === "draft" ? "Черновик" : undefined;
+              return { id: region.id, title: region.name, subtitle, badge };
             })}
             selectedId={citySelection.mode === "edit" ? citySelection.id : citySelection.mode === "create" ? "__create__" : null}
             onSelect={(id) => setCitySelection({ mode: "edit", id })}
@@ -642,6 +753,7 @@ export function AdminPanel() {
       {activeTab === "locations" && (
         <>
           {locationsError && <p className="mb-4 text-sm font-medium text-red-600">{locationsError}</p>}
+          <ImportExportPanel onImported={loadPois} />
           <div className="mb-3 flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Город</label>
             <select
@@ -666,7 +778,8 @@ export function AdminPanel() {
               .map((poi) => ({
                 id: poi.id,
                 title: poi.name,
-                subtitle: regions.find((region) => region.id === poi.regionId)?.name
+                subtitle: regions.find((region) => region.id === poi.regionId)?.name,
+                badge: poi.status === "draft" ? "Черновик" : undefined
               }))}
             selectedId={
               locationSelection.mode === "edit" ? locationSelection.id : locationSelection.mode === "create" ? "__create__" : null
@@ -717,6 +830,8 @@ export function AdminPanel() {
           </MasterDetail>
         </>
       )}
+
+      {activeTab === "media" && <MediaLibraryTab regions={regions} />}
 
       {activeTab === "modes" && (
         <>
@@ -841,6 +956,55 @@ export function AdminPanel() {
               </tbody>
             </table>
           </div>
+        </>
+      )}
+
+      {activeTab === "accounts" && (
+        <>
+          {accountsError && <p className="mb-4 text-sm font-medium text-red-600">{accountsError}</p>}
+          <MasterDetail
+            items={accounts.map((account) => ({ id: account.id, title: account.name, subtitle: account.email }))}
+            selectedId={
+              accountSelection.mode === "edit" ? accountSelection.id : accountSelection.mode === "create" ? "__create__" : null
+            }
+            onSelect={(id) => setAccountSelection({ mode: "edit", id })}
+            onAdd={() => setAccountSelection({ mode: "create" })}
+            addLabel="Добавить администратора"
+            searchPlaceholder="Поиск администратора"
+            emptyLabel="Администраторов пока нет"
+          >
+            {accountSelection.mode === "empty" && (
+              <p className="text-sm text-muted-foreground">Выберите администратора слева или добавьте нового.</p>
+            )}
+            {accountSelection.mode === "create" && (
+              <AdminAccountForm onCancel={() => setAccountSelection({ mode: "empty" })} onSubmit={handleCreateAccount} />
+            )}
+            {accountSelection.mode === "edit" &&
+              (() => {
+                const account = accounts.find((a) => a.id === accountSelection.id);
+                if (!account) return null;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{account.name}</p>
+                      <button
+                        type="button"
+                        aria-label="Удалить администратора"
+                        onClick={() => handleDeleteAccount(account)}
+                        className="text-xs font-medium text-red-600 hover:underline"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                    <AdminAccountForm
+                      account={account}
+                      onCancel={() => setAccountSelection({ mode: "empty" })}
+                      onSubmit={(input) => handleUpdateAccount(account.id, input)}
+                    />
+                  </div>
+                );
+              })()}
+          </MasterDetail>
         </>
       )}
     </div>

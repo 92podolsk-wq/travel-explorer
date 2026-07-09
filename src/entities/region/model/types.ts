@@ -1,6 +1,8 @@
 import type { Coordinates } from "@/entities/poi/model/types";
 import type { Language } from "@/shared/i18n/types";
 
+export type PublishStatus = "draft" | "published";
+
 export type Region = {
   id: string;
   name: string;
@@ -11,6 +13,7 @@ export type Region = {
   timezoneOffsetHours: number;
   nameByLanguage: Record<Language, string>;
   sealCharacter: string;
+  status: PublishStatus;
 };
 
 export type RegionInput = Omit<Region, "id"> & { id?: string };

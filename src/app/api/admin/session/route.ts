@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
-import { isAdminAuthenticated } from "@/shared/server/admin-auth";
+import { getCurrentAdmin } from "@/shared/server/admin-auth";
 
 export async function GET() {
-  return NextResponse.json({ authenticated: await isAdminAuthenticated() });
+  const admin = await getCurrentAdmin();
+
+  return NextResponse.json({
+    authenticated: admin !== null,
+    admin: admin ? { id: admin.id, name: admin.name, email: admin.email } : null
+  });
 }

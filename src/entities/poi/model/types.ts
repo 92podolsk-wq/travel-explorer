@@ -1,3 +1,4 @@
+import type { PublishStatus } from "@/entities/region/model/types";
 import type { Language } from "@/shared/i18n/types";
 
 export type PoiCategory =
@@ -63,6 +64,7 @@ export type Poi = {
   durationMinutes: number;
   importance: number;
   visibilityMode: PoiVisibilityMode;
+  status: PublishStatus;
 };
 
 export type PoiInput = Omit<Poi, "id"> & { id?: string };

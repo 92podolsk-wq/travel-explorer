@@ -21,6 +21,7 @@ import { ExplorationModeForm } from "./exploration-mode-form";
 import { ImportExportPanel } from "./import-export-panel";
 import { MasterDetail } from "./master-detail";
 import { MediaLibraryTab } from "./media-library-tab";
+import { ReportsTab } from "./reports-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
 
@@ -28,7 +29,17 @@ type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" }
 
 type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
-type Tab = "dashboard" | "countries" | "areas" | "cities" | "locations" | "media" | "modes" | "users" | "accounts";
+type Tab =
+  | "dashboard"
+  | "countries"
+  | "areas"
+  | "cities"
+  | "locations"
+  | "media"
+  | "modes"
+  | "reports"
+  | "users"
+  | "accounts";
 
 const tabLabels: Record<Tab, string> = {
   dashboard: "Дашборд",
@@ -38,6 +49,7 @@ const tabLabels: Record<Tab, string> = {
   locations: "Локации",
   media: "Медиатека",
   modes: "Режимы",
+  reports: "Сообщения",
   users: "Пользователи",
   accounts: "Администраторы"
 };
@@ -887,6 +899,8 @@ export function AdminPanel() {
           </MasterDetail>
         </>
       )}
+
+      {activeTab === "reports" && <ReportsTab />}
 
       {activeTab === "users" && (
         <>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -13,6 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
+import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 
 export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
@@ -29,9 +30,11 @@ export function PoiDetails() {
   const setDetailsOpen = useExplorerStore((state) => state.setDetailsOpen);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
+  const currentUser = useExplorerStore((state) => state.currentUser);
   const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
   const t = getTranslations(language);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
 
@@ -43,6 +46,7 @@ export function PoiDetails() {
 
   useEffect(() => {
     setActivePhotoIndex(0);
+    setIsReportOpen(false);
   }, [selectedPoiId, selectedSeasons]);
 
   if (!selectedPoi) {
@@ -296,9 +300,26 @@ export function PoiDetails() {
               </button>
             </div>
           )}
+
+          {currentUser && (
+            <div className="shrink-0 border-t border-white/70 px-5 py-3">
+              <button
+                type="button"
+                onClick={() => setIsReportOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {t.report.cta}
+              </button>
+            </div>
+          )}
           </motion.section>
         )}
       </AnimatePresence>
+
+      {isReportOpen && (
+        <ReportInaccuracyModal poiId={selectedPoi.id} language={language} onClose={() => setIsReportOpen(false)} />
+      )}
     </div>
   );
 }

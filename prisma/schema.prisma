@@ -64,6 +64,7 @@ model Poi {
   favoritedBy      Favorite[]
   viewedBy         ViewedPoi[]
   visitedBy        VisitedPoi[]
+  reports          PoiReport[]
 }
 
 model AdminAccount {
@@ -118,6 +119,7 @@ model User {
   favorites    Favorite[]
   viewedPois   ViewedPoi[]
   visitedPois  VisitedPoi[]
+  poiReports   PoiReport[]
 }
 
 model Session {
@@ -160,4 +162,15 @@ model VisitedPoi {
   visitedAt DateTime @default(now())
 
   @@unique([userId, poiId])
+}
+
+model PoiReport {
+  id        String   @id @default(cuid())
+  poiId     String
+  poi       Poi      @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
 }

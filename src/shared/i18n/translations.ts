@@ -85,6 +85,17 @@ type TranslationDictionary = {
     clearVisitedConfirm: string;
     cancel: string;
   };
+  report: {
+    cta: string;
+    title: string;
+    placeholder: string;
+    submit: string;
+    sending: string;
+    cancel: string;
+    thanks: string;
+    close: string;
+    error: string;
+  };
 };
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -249,6 +260,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearVisited: "Clear visited",
       clearVisitedConfirm: "Clear all visited places? This can't be undone.",
       cancel: "Cancel"
+    },
+    report: {
+      cta: "Found an inaccuracy in this description?",
+      title: "Report an inaccuracy",
+      placeholder: "Describe what's inaccurate...",
+      submit: "Send",
+      sending: "Sending…",
+      cancel: "Cancel",
+      thanks: "Thanks for the feedback! We'll take a look soon.",
+      close: "Close",
+      error: "Couldn't send it. Please try again."
     }
   },
   ru: {
@@ -412,6 +434,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearVisited: "Очистить",
       clearVisitedConfirm: "Очистить все посещённые места? Это действие нельзя отменить.",
       cancel: "Отмена"
+    },
+    report: {
+      cta: "Нашли неточность в описании локации?",
+      title: "Сообщить о неточности",
+      placeholder: "Опишите, в чём заключается неточность...",
+      submit: "Отправить",
+      sending: "Отправка…",
+      cancel: "Отмена",
+      thanks: "Спасибо за обратную связь! Мы скоро всё проверим.",
+      close: "Закрыть",
+      error: "Не удалось отправить. Попробуйте ещё раз."
     }
   },
   ja: {
@@ -575,6 +608,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearVisited: "消去",
       clearVisitedConfirm: "訪問した場所をすべて消去しますか?この操作は元に戻せません。",
       cancel: "キャンセル"
+    },
+    report: {
+      cta: "この説明に誤りがありましたか?",
+      title: "誤りを報告",
+      placeholder: "誤りの内容を記入してください...",
+      submit: "送信",
+      sending: "送信中…",
+      cancel: "キャンセル",
+      thanks: "フィードバックありがとうございます!近日中に確認します。",
+      close: "閉じる",
+      error: "送信できませんでした。もう一度お試しください。"
     }
   }
 };

@@ -1,11 +1,5 @@
 import type { Difficulty, Poi, PoiCategory, PoiTag, Season } from "@/entities/poi/model/types";
-import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
 import type { Language } from "./types";
-
-type ModeCopy = {
-  label: string;
-  description: string;
-};
 
 type PoiCopy = {
   description: string;
@@ -56,7 +50,6 @@ type TranslationDictionary = {
     previousPlace: string;
     nextPlace: string;
   };
-  modes: Record<ExplorationModeId, ModeCopy>;
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
   tag: Record<PoiTag, string>;
@@ -138,28 +131,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       now: "Now",
       previousPlace: "Previous",
       nextPlace: "Next"
-    },
-    modes: {
-      photographer: {
-        label: "Photographer",
-        description: "Photo score, light, viewpoints, and atmosphere."
-      },
-      "first-visit": {
-        label: "First Visit",
-        description: "Kyoto classics with strong planning value."
-      },
-      nature: {
-        label: "Nature",
-        description: "Gardens, rivers, mountains, and softer walking days."
-      },
-      autumn: {
-        label: "Autumn",
-        description: "Color, texture, and seasonal depth."
-      },
-      sakura: {
-        label: "Sakura",
-        description: "Spring blossom anchors and canal walks."
-      }
     },
     poi: {
       "fushimi-inari": {
@@ -324,28 +295,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       previousPlace: "Назад",
       nextPlace: "Далее"
     },
-    modes: {
-      photographer: {
-        label: "Фотограф",
-        description: "Фотогеничность, свет, видовые точки и атмосфера."
-      },
-      "first-visit": {
-        label: "Первый визит",
-        description: "Классика Киото с высокой ценностью для планирования."
-      },
-      nature: {
-        label: "Природа",
-        description: "Сады, реки, горы и спокойные прогулочные дни."
-      },
-      autumn: {
-        label: "Осень",
-        description: "Цвет, фактура и сезонная глубина."
-      },
-      sakura: {
-        label: "Сакура",
-        description: "Весенние точки цветения и прогулки вдоль каналов."
-      }
-    },
     poi: {
       "fushimi-inari": {
         description:
@@ -508,28 +457,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       now: "現在",
       previousPlace: "前へ",
       nextPlace: "次へ"
-    },
-    modes: {
-      photographer: {
-        label: "フォトグラファー",
-        description: "写真スコア、光、眺望、雰囲気。"
-      },
-      "first-visit": {
-        label: "初めての訪問",
-        description: "計画価値の高い京都の定番スポット。"
-      },
-      nature: {
-        label: "自然",
-        description: "庭園、川、山、穏やかな散策日和。"
-      },
-      autumn: {
-        label: "秋",
-        description: "色彩、質感、季節の深み。"
-      },
-      sakura: {
-        label: "桜",
-        description: "春の桜の名所と運河沿いの散策。"
-      }
     },
     poi: {
       "fushimi-inari": {

@@ -4,13 +4,12 @@ import { useMemo, useState } from "react";
 import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
 import { seasons } from "@/entities/poi/model/constants";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
 import { SeasonWeatherStrip } from "./season-weather-strip";
-import { explorationModes } from "@/features/exploration-mode/model/modes";
-import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
-import { modeIcons } from "@/features/exploration-mode/ui/mode-icon";
+import { getModeIcon } from "@/features/exploration-mode/ui/mode-icon";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import { getSunTimes } from "@/shared/lib/sun-times";
@@ -29,6 +28,7 @@ export function ExplorerSidebar() {
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
+  const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
@@ -57,7 +57,7 @@ export function ExplorerSidebar() {
     isAreaActive && activeArea ? activeArea.nameByLanguage[language] : activeRegion.nameByLanguage[language];
 
   const activeMode =
-    explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0];
+    explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode;
   const visiblePois = getVisiblePois(
     regionPois,
     activeMode,
@@ -159,7 +159,7 @@ export function ExplorerSidebar() {
       <div className="border-b border-white/70 p-4">
         <div className="flex flex-wrap gap-2">
           {explorationModes.map((mode) => {
-            const ModeIcon = modeIcons[mode.id as ExplorationModeId];
+            const ModeIcon = getModeIcon(mode.icon);
             const matchCount = regionPois.filter((poi) =>
               poi.tags.some((tag) => mode.tags.includes(tag))
             ).length;
@@ -170,8 +170,8 @@ export function ExplorerSidebar() {
                 type="button"
                 variant={mode.id === activeModeId ? "default" : "outline"}
                 size="sm"
-                onClick={() => setActiveMode(mode.id as ExplorationModeId)}
-                title={t.modes[mode.id].description}
+                onClick={() => setActiveMode(mode.id)}
+                title={mode.descriptionByLanguage[language] ?? mode.description}
                 className={cn(
                   "h-9 max-w-full rounded-md px-3",
                   mode.id === activeModeId ? "shadow-soft" : "bg-white/[0.58]"
@@ -179,7 +179,7 @@ export function ExplorerSidebar() {
               >
                 <ModeIcon className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">
-                  {t.modes[mode.id].label} ({matchCount})
+                  {mode.nameByLanguage[language] ?? mode.name} ({matchCount})
                 </span>
               </Button>
             );

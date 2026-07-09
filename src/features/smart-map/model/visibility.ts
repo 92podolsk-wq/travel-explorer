@@ -1,5 +1,6 @@
+import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { Poi } from "@/entities/poi/model/types";
-import type { ExplorationMode } from "@/features/exploration-mode/model/types";
+import { computeModeScore } from "@/features/exploration-mode/model/score";
 
 export const zoomedInOnlyThreshold = 12;
 
@@ -45,7 +46,7 @@ export function getVisiblePois(
   return pois
     .map((poi) => ({
       poi,
-      score: mode.score(poi)
+      score: computeModeScore(poi, mode)
     }))
     .filter(({ poi, score }) => {
       const matchesMode = poi.tags.some((tag) => mode.tags.includes(tag));

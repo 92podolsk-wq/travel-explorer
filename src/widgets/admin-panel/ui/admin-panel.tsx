@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 import { Ban, LogOut, ShieldCheck, Trash2 } from "lucide-react";
 import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
+import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
+import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { AreaForm } from "./area-form";
 import { CountryForm } from "./country-form";
+import { ExplorationModeForm } from "./exploration-mode-form";
 import { MasterDetail } from "./master-detail";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
@@ -20,15 +23,18 @@ type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" }
 
 type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
-type Tab = "countries" | "areas" | "cities" | "locations" | "users";
+type Tab = "countries" | "areas" | "cities" | "locations" | "modes" | "users";
 
 const tabLabels: Record<Tab, string> = {
   countries: "Страны",
   areas: "Регионы",
   cities: "Города",
   locations: "Локации",
+  modes: "Режимы",
   users: "Пользователи"
 };
+
+const t = getTranslations("ru");
 
 export function AdminPanel() {
   const [authView, setAuthView] = useState<AuthViewState>({ mode: "loading" });
@@ -38,6 +44,7 @@ export function AdminPanel() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [pois, setPois] = useState<Poi[]>([]);
+  const [explorationModes, setExplorationModes] = useState<ExplorationMode[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
 
   const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
@@ -45,11 +52,13 @@ export function AdminPanel() {
   const [citySelection, setCitySelection] = useState<Selection>({ mode: "empty" });
   const [locationSelection, setLocationSelection] = useState<Selection>({ mode: "empty" });
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
+  const [modeSelection, setModeSelection] = useState<Selection>({ mode: "empty" });
 
   const [countriesError, setCountriesError] = useState<string | null>(null);
   const [areasError, setAreasError] = useState<string | null>(null);
   const [citiesError, setCitiesError] = useState<string | null>(null);
   const [locationsError, setLocationsError] = useState<string | null>(null);
+  const [modesError, setModesError] = useState<string | null>(null);
   const [usersError, setUsersError] = useState<string | null>(null);
 
   const [password, setPassword] = useState("");
@@ -71,6 +80,10 @@ export function AdminPanel() {
     const res = await fetch("/api/pois");
     setPois((await res.json()) as Poi[]);
   }
+  async function loadExplorationModes() {
+    const res = await fetch("/api/exploration-modes");
+    setExplorationModes((await res.json()) as ExplorationMode[]);
+  }
   async function loadUsers() {
     const res = await fetch("/api/admin/users");
     setUsers((await res.json()) as AdminUser[]);
@@ -82,7 +95,7 @@ export function AdminPanel() {
       const { authenticated } = (await res.json()) as { authenticated: boolean };
 
       if (authenticated) {
-        await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadUsers()]);
+        await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadExplorationModes(), loadUsers()]);
         setAuthView({ mode: "ready" });
       } else {
         setAuthView({ mode: "login" });
@@ -106,7 +119,7 @@ export function AdminPanel() {
     }
 
     setPassword("");
-    await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadUsers()]);
+    await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadExplorationModes(), loadUsers()]);
     setAuthView({ mode: "ready" });
   };
 
@@ -322,6 +335,58 @@ export function AdminPanel() {
     await loadPois();
   };
 
+  const handleCreateMode = async (input: ExplorationModeInput) => {
+    setModesError(null);
+    const res = await fetch("/api/exploration-modes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      setModesError("Не удалось создать режим.");
+      return;
+    }
+
+    const created = (await res.json()) as ExplorationMode;
+    await loadExplorationModes();
+    setModeSelection({ mode: "edit", id: created.id });
+  };
+
+  const handleUpdateMode = async (id: string, input: ExplorationModeInput) => {
+    setModesError(null);
+    const res = await fetch(`/api/exploration-modes/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      setModesError("Не удалось сохранить изменения.");
+      return;
+    }
+
+    await loadExplorationModes();
+  };
+
+  const handleDeleteMode = async (mode: ExplorationMode) => {
+    if (!window.confirm(`Удалить режим «${mode.name}»? Это действие нельзя отменить.`)) {
+      return;
+    }
+
+    setModesError(null);
+    const res = await fetch(`/api/exploration-modes/${mode.id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setModesError(data?.error ?? "Не удалось удалить режим.");
+      return;
+    }
+
+    setModeSelection({ mode: "empty" });
+    await loadExplorationModes();
+  };
+
   const handleToggleUserBlock = async (user: AdminUser) => {
     const action = user.isBlocked ? "разблокировать" : "заблокировать";
     if (!window.confirm(`Вы действительно хотите ${action} пользователя «${user.email}»?`)) {
@@ -395,7 +460,7 @@ export function AdminPanel() {
           <h1 className="text-2xl font-semibold">Админ-панель Travel Explorer</h1>
           <p className="text-sm text-muted-foreground">
             Стран: {countries.length} · Регионов: {areas.length} · Городов: {regions.length} · Локаций: {pois.length} ·
-            Пользователей: {users.length}
+            Режимов: {explorationModes.length} · Пользователей: {users.length}
           </p>
         </div>
         <Button type="button" variant="outline" onClick={handleLogout} className="gap-1.5">
@@ -645,6 +710,61 @@ export function AdminPanel() {
                       regions={regions}
                       onCancel={() => setLocationSelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateLocation(poi.id, input)}
+                    />
+                  </div>
+                );
+              })()}
+          </MasterDetail>
+        </>
+      )}
+
+      {activeTab === "modes" && (
+        <>
+          {modesError && <p className="mb-4 text-sm font-medium text-red-600">{modesError}</p>}
+          <p className="mb-3 text-sm text-muted-foreground">
+            Эти карточки показываются как фильтры в боковой панели сайта (например «Фотограф», «Природа»). Место
+            попадает в режим, если у него есть хотя бы один из выбранных тегов.
+          </p>
+          <MasterDetail
+            items={explorationModes.map((mode) => ({
+              id: mode.id,
+              title: mode.name,
+              subtitle: mode.tags.map((tag) => t.tag[tag]).join(", ")
+            }))}
+            selectedId={modeSelection.mode === "edit" ? modeSelection.id : modeSelection.mode === "create" ? "__create__" : null}
+            onSelect={(id) => setModeSelection({ mode: "edit", id })}
+            onAdd={() => setModeSelection({ mode: "create" })}
+            addLabel="Добавить режим"
+            searchPlaceholder="Поиск режима"
+            emptyLabel="Режимов пока нет"
+          >
+            {modeSelection.mode === "empty" && (
+              <p className="text-sm text-muted-foreground">Выберите режим слева или добавьте новый.</p>
+            )}
+            {modeSelection.mode === "create" && (
+              <ExplorationModeForm onCancel={() => setModeSelection({ mode: "empty" })} onSubmit={handleCreateMode} />
+            )}
+            {modeSelection.mode === "edit" &&
+              (() => {
+                const mode = explorationModes.find((m) => m.id === modeSelection.id);
+                if (!mode) return null;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{mode.name}</p>
+                      <button
+                        type="button"
+                        aria-label="Удалить режим"
+                        onClick={() => handleDeleteMode(mode)}
+                        className="text-xs font-medium text-red-600 hover:underline"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                    <ExplorationModeForm
+                      mode={mode}
+                      onCancel={() => setModeSelection({ mode: "empty" })}
+                      onSubmit={(input) => handleUpdateMode(mode.id, input)}
                     />
                   </div>
                 );

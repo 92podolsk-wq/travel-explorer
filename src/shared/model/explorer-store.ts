@@ -8,8 +8,8 @@ import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
 import type { Poi, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
-import { defaultExplorationMode } from "@/features/exploration-mode/model/modes";
-import type { ExplorationModeId } from "@/features/exploration-mode/model/types";
+import { seedExplorationModes } from "@/entities/exploration-mode/model/exploration-modes";
+import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { User, UserPoiState } from "@/entities/user/model/types";
 import type { Language } from "@/shared/i18n/types";
 
@@ -26,9 +26,10 @@ type ExplorerState = {
   regions: Region[];
   countries: Country[];
   areas: Area[];
+  explorationModes: ExplorationMode[];
   activeRegionIds: string[];
   selectedPoiId: string;
-  activeModeId: ExplorationModeId;
+  activeModeId: string;
   searchQuery: string;
   favorites: string[];
   viewedPoiIds: string[];
@@ -47,7 +48,7 @@ type ExplorerState = {
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
   setActiveArea: (areaId: string) => void;
-  setActiveMode: (modeId: ExplorationModeId) => void;
+  setActiveMode: (modeId: string) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
   toggleFavorite: (poiId: string) => void;
@@ -65,6 +66,7 @@ type ExplorerState = {
   setRegions: (regions: Region[]) => void;
   setCountries: (countries: Country[]) => void;
   setAreas: (areas: Area[]) => void;
+  setExplorationModes: (explorationModes: ExplorationMode[]) => void;
   toggleSeason: (season: Season) => void;
 };
 
@@ -75,9 +77,10 @@ export const useExplorerStore = create<ExplorerState>()(
   regions: seedRegions,
   countries: seedCountries,
   areas: seedAreas,
+  explorationModes: seedExplorationModes,
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
-  activeModeId: defaultExplorationMode.id,
+  activeModeId: seedExplorationModes[0]?.id ?? "",
   searchQuery: "",
   favorites: [],
   viewedPoiIds: [],
@@ -201,7 +204,14 @@ export const useExplorerStore = create<ExplorerState>()(
         : [...state.selectedSeasons, season]
     })),
   setCountries: (countries) => set({ countries }),
-  setAreas: (areas) => set({ areas })
+  setAreas: (areas) => set({ areas }),
+  setExplorationModes: (explorationModes) =>
+    set((state) => ({
+      explorationModes,
+      activeModeId: explorationModes.some((mode) => mode.id === state.activeModeId)
+        ? state.activeModeId
+        : explorationModes[0]?.id ?? state.activeModeId
+    }))
     }),
     {
       name: "travel-explorer-settings",

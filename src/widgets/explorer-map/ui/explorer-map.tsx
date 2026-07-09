@@ -5,9 +5,9 @@ import { Minus, Plus } from "lucide-react";
 import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
+import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
-import { explorationModes } from "@/features/exploration-mode/model/modes";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
@@ -270,6 +270,7 @@ export function ExplorerMap() {
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const activeModeId = useExplorerStore((state) => state.activeModeId);
+  const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const regions = useExplorerStore((state) => state.regions);
   const language = useExplorerStore((state) => state.language);
@@ -281,8 +282,8 @@ export function ExplorerMap() {
   const t = getTranslations(language);
 
   const activeMode = useMemo(
-    () => explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0],
-    [activeModeId]
+    () => explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode,
+    [activeModeId, explorationModes]
   );
 
   const activeRegions = useMemo(

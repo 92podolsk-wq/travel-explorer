@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
+import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -18,13 +19,21 @@ type ExplorerPageProps = {
   initialRegions: Region[];
   initialCountries: Country[];
   initialAreas: Area[];
+  initialExplorationModes: ExplorationMode[];
 };
 
-export function ExplorerPage({ initialPois, initialRegions, initialCountries, initialAreas }: ExplorerPageProps) {
+export function ExplorerPage({
+  initialPois,
+  initialRegions,
+  initialCountries,
+  initialAreas,
+  initialExplorationModes
+}: ExplorerPageProps) {
   const setPois = useExplorerStore((state) => state.setPois);
   const setRegions = useExplorerStore((state) => state.setRegions);
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
+  const setExplorationModes = useExplorerStore((state) => state.setExplorationModes);
 
   useHydrateAuth();
 
@@ -33,6 +42,7 @@ export function ExplorerPage({ initialPois, initialRegions, initialCountries, in
     setAreas(initialAreas);
     setRegions(initialRegions);
     setPois(initialPois);
+    setExplorationModes(initialExplorationModes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

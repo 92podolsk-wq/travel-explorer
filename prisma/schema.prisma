@@ -64,6 +64,17 @@ model Poi {
   visitedBy        VisitedPoi[]
 }
 
+model ExplorationMode {
+  id                    String @id
+  position              Int
+  name                  String
+  nameByLanguage        Json
+  description           String
+  descriptionByLanguage Json
+  tags                  String[]
+  icon                  String
+}
+
 model Photo {
   id       String  @id
   poiId    String

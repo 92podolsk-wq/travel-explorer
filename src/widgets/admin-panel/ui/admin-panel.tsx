@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LogOut } from "lucide-react";
+import { Ban, LogOut, ShieldCheck, Trash2 } from "lucide-react";
 import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
+import type { AdminUser } from "@/entities/user/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
@@ -19,13 +20,14 @@ type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" }
 
 type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
-type Tab = "countries" | "areas" | "cities" | "locations";
+type Tab = "countries" | "areas" | "cities" | "locations" | "users";
 
 const tabLabels: Record<Tab, string> = {
   countries: "Страны",
   areas: "Регионы",
   cities: "Города",
-  locations: "Локации"
+  locations: "Локации",
+  users: "Пользователи"
 };
 
 export function AdminPanel() {
@@ -36,6 +38,7 @@ export function AdminPanel() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [regions, setRegions] = useState<Region[]>([]);
   const [pois, setPois] = useState<Poi[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
 
   const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
   const [areaSelection, setAreaSelection] = useState<Selection>({ mode: "empty" });
@@ -47,6 +50,7 @@ export function AdminPanel() {
   const [areasError, setAreasError] = useState<string | null>(null);
   const [citiesError, setCitiesError] = useState<string | null>(null);
   const [locationsError, setLocationsError] = useState<string | null>(null);
+  const [usersError, setUsersError] = useState<string | null>(null);
 
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -67,6 +71,10 @@ export function AdminPanel() {
     const res = await fetch("/api/pois");
     setPois((await res.json()) as Poi[]);
   }
+  async function loadUsers() {
+    const res = await fetch("/api/admin/users");
+    setUsers((await res.json()) as AdminUser[]);
+  }
 
   useEffect(() => {
     (async () => {
@@ -74,7 +82,7 @@ export function AdminPanel() {
       const { authenticated } = (await res.json()) as { authenticated: boolean };
 
       if (authenticated) {
-        await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois()]);
+        await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadUsers()]);
         setAuthView({ mode: "ready" });
       } else {
         setAuthView({ mode: "login" });
@@ -98,7 +106,7 @@ export function AdminPanel() {
     }
 
     setPassword("");
-    await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois()]);
+    await Promise.all([loadCountries(), loadAreas(), loadRegions(), loadPois(), loadUsers()]);
     setAuthView({ mode: "ready" });
   };
 
@@ -314,6 +322,43 @@ export function AdminPanel() {
     await loadPois();
   };
 
+  const handleToggleUserBlock = async (user: AdminUser) => {
+    const action = user.isBlocked ? "разблокировать" : "заблокировать";
+    if (!window.confirm(`Вы действительно хотите ${action} пользователя «${user.email}»?`)) {
+      return;
+    }
+
+    setUsersError(null);
+    const res = await fetch(`/api/admin/users/${user.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isBlocked: !user.isBlocked })
+    });
+
+    if (!res.ok) {
+      setUsersError("Не удалось изменить статус пользователя.");
+      return;
+    }
+
+    await loadUsers();
+  };
+
+  const handleDeleteUser = async (user: AdminUser) => {
+    if (!window.confirm(`Удалить пользователя «${user.email}»? Это действие нельзя отменить.`)) {
+      return;
+    }
+
+    setUsersError(null);
+    const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      setUsersError("Не удалось удалить пользователя.");
+      return;
+    }
+
+    await loadUsers();
+  };
+
   if (authView.mode === "loading") {
     return null;
   }
@@ -349,7 +394,8 @@ export function AdminPanel() {
         <div>
           <h1 className="text-2xl font-semibold">Админ-панель Travel Explorer</h1>
           <p className="text-sm text-muted-foreground">
-            Стран: {countries.length} · Регионов: {areas.length} · Городов: {regions.length} · Локаций: {pois.length}
+            Стран: {countries.length} · Регионов: {areas.length} · Городов: {regions.length} · Локаций: {pois.length} ·
+            Пользователей: {users.length}
           </p>
         </div>
         <Button type="button" variant="outline" onClick={handleLogout} className="gap-1.5">
@@ -604,6 +650,77 @@ export function AdminPanel() {
                 );
               })()}
           </MasterDetail>
+        </>
+      )}
+
+      {activeTab === "users" && (
+        <>
+          {usersError && <p className="mb-4 text-sm font-medium text-red-600">{usersError}</p>}
+          <div className="overflow-hidden rounded-lg border border-border bg-white shadow-sm">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2.5">Имя</th>
+                  <th className="px-4 py-2.5">Email</th>
+                  <th className="px-4 py-2.5">Регистрация</th>
+                  <th className="px-4 py-2.5">Статус</th>
+                  <th className="px-4 py-2.5 text-right">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-6 text-center text-sm text-muted-foreground">
+                      Пользователей пока нет
+                    </td>
+                  </tr>
+                )}
+                {users.map((user) => (
+                  <tr key={user.id} className="border-b border-border last:border-0">
+                    <td className="px-4 py-2.5 font-medium text-foreground">{user.name ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{user.email}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleDateString("ru-RU")}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-xs font-semibold",
+                          user.isBlocked ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                        )}
+                      >
+                        {user.isBlocked ? "Заблокирован" : "Активен"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUserBlock(user)}
+                          className="flex items-center gap-1 text-xs font-medium text-foreground transition hover:underline"
+                        >
+                          {user.isBlocked ? (
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                          ) : (
+                            <Ban className="h-3.5 w-3.5" />
+                          )}
+                          {user.isBlocked ? "Разблокировать" : "Заблокировать"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(user)}
+                          className="flex items-center gap-1 text-xs font-medium text-red-600 transition hover:underline"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Удалить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>

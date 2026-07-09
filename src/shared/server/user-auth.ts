@@ -63,5 +63,11 @@ export async function getCurrentUser() {
     return null;
   }
 
+  if (session.user.isBlocked) {
+    await prisma.session.deleteMany({ where: { userId: session.user.id } });
+    cookieStore.delete(SESSION_COOKIE_NAME);
+    return null;
+  }
+
   return session.user;
 }

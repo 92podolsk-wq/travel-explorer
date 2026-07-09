@@ -6,6 +6,15 @@ export type User = {
   createdAt: string;
 };
 
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string | null;
+  avatarId: string | null;
+  isBlocked: boolean;
+  createdAt: string;
+};
+
 export type UserPoiState = {
   favoritePoiIds: string[];
   viewedPoiIds: string[];

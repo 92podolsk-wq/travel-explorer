@@ -81,6 +81,7 @@ model User {
   passwordHash String
   name         String?
   avatarId     String?
+  isBlocked    Boolean  @default(false)
   createdAt    DateTime @default(now())
   sessions     Session[]
   favorites    Favorite[]

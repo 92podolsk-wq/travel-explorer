@@ -54,6 +54,27 @@ const tabLabels: Record<Tab, string> = {
   accounts: "Администраторы"
 };
 
+type TabGroup = "overview" | "content" | "community";
+
+const tabGroups: Record<TabGroup, Tab[]> = {
+  overview: ["dashboard"],
+  content: ["countries", "areas", "cities", "locations", "media", "modes"],
+  community: ["reports", "users", "accounts"]
+};
+
+const groupLabels: Record<TabGroup, string> = {
+  overview: "Обзор",
+  content: "Контент",
+  community: "Сообщество"
+};
+
+function groupOfTab(tab: Tab): TabGroup {
+  for (const group of Object.keys(tabGroups) as TabGroup[]) {
+    if (tabGroups[group].includes(tab)) return group;
+  }
+  return "content";
+}
+
 const t = getTranslations("ru");
 
 export function AdminPanel() {
@@ -589,20 +610,45 @@ export function AdminPanel() {
         </div>
       </div>
 
-      <div className="mb-6 flex gap-1 rounded-md border border-border bg-muted/60 p-0.5">
-        {(Object.keys(tabLabels) as Tab[]).map((tab) => (
+      <div className="mb-3 flex gap-1 rounded-md border border-border bg-muted/60 p-0.5">
+        {(Object.keys(tabGroups) as TabGroup[]).map((group) => (
           <button
-            key={tab}
+            key={group}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => {
+              if (groupOfTab(activeTab) !== group) {
+                setActiveTab(tabGroups[group][0]);
+              }
+            }}
             className={cn(
               "flex-1 rounded px-3 py-2 text-sm font-semibold transition",
-              activeTab === tab ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              groupOfTab(activeTab) === group
+                ? "bg-white text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            {tabLabels[tab]}
+            {groupLabels[group]}
           </button>
         ))}
+      </div>
+
+      <div className="mb-6 flex min-h-[34px] flex-wrap items-center gap-1.5">
+        {tabGroups[groupOfTab(activeTab)].length > 1 &&
+          tabGroups[groupOfTab(activeTab)].map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-xs font-semibold transition",
+                activeTab === tab
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-white text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tabLabels[tab]}
+            </button>
+          ))}
       </div>
 
       {activeTab === "dashboard" && <DashboardTab />}

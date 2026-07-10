@@ -14,6 +14,8 @@ import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+import { missingLanguages } from "@/shared/lib/translation-completeness";
+import type { MasterDetailBadge } from "./master-detail";
 import { AdminAccountForm } from "./admin-account-form";
 import { AreaForm } from "./area-form";
 import { CountryForm } from "./country-form";
@@ -596,6 +598,12 @@ export function AdminPanel() {
   const findCityArea = (region: Region) => areas.find((area) => area.id === region.areaId);
   const unreadReportsCount = reports.filter((report) => report.status === "new").length;
 
+  const translationBadge = (...fields: Record<string, string>[]): MasterDetailBadge[] => {
+    const missing = missingLanguages(fields);
+    if (missing.length === 0) return [];
+    return [{ label: `Нет перевода: ${missing.map((lang) => lang.toUpperCase()).join("/")}`, tone: "red" }];
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
@@ -781,8 +789,11 @@ export function AdminPanel() {
               const area = findCityArea(region);
               const country = area ? findAreaCountry(area) : undefined;
               const subtitle = area && country ? `${area.name}, ${country.name}` : area?.name;
-              const badge = region.status === "draft" ? "Черновик" : undefined;
-              return { id: region.id, title: region.name, subtitle, badge };
+              const badges: MasterDetailBadge[] = [
+                ...(region.status === "draft" ? [{ label: "Черновик" }] : []),
+                ...translationBadge(region.nameByLanguage)
+              ];
+              return { id: region.id, title: region.name, subtitle, badges };
             })}
             selectedId={citySelection.mode === "edit" ? citySelection.id : citySelection.mode === "create" ? "__create__" : null}
             onSelect={(id) => setCitySelection({ mode: "edit", id })}
@@ -858,7 +869,10 @@ export function AdminPanel() {
                 id: poi.id,
                 title: poi.name,
                 subtitle: regions.find((region) => region.id === poi.regionId)?.name,
-                badge: poi.status === "draft" ? "Черновик" : undefined
+                badges: [
+                  ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
+                  ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
+                ] as MasterDetailBadge[]
               }))}
             selectedId={
               locationSelection.mode === "edit" ? locationSelection.id : locationSelection.mode === "create" ? "__create__" : null

@@ -4,11 +4,16 @@ import { useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 
+export type MasterDetailBadge = {
+  label: string;
+  tone?: "amber" | "red";
+};
+
 export type MasterDetailItem = {
   id: string;
   title: string;
   subtitle?: string;
-  badge?: string;
+  badges?: MasterDetailBadge[];
 };
 
 type MasterDetailProps = {
@@ -83,11 +88,17 @@ export function MasterDetail({
                 >
                   {item.title}
                 </span>
-                {item.badge && (
-                  <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                    {item.badge}
+                {item.badges?.map((badge) => (
+                  <span
+                    key={badge.label}
+                    className={cn(
+                      "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                      badge.tone === "red" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                    )}
+                  >
+                    {badge.label}
                   </span>
-                )}
+                ))}
               </span>
               {item.subtitle && (
                 <span

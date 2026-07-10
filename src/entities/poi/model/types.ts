@@ -52,6 +52,7 @@ export type Poi = {
   nameByLanguage: Record<Language, string>;
   coordinates: Coordinates;
   description: string;
+  descriptionByLanguage: Record<Language, string>;
   rating: number;
   photos: Photo[];
   categories: PoiCategory[];

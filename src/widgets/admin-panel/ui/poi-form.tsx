@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Star, Trash2 } from "lucide-react";
+import { Languages, Plus, Star, Trash2 } from "lucide-react";
 import { poiCategories, poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
@@ -9,6 +9,8 @@ import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+import { translateFromRussian } from "@/shared/lib/admin-translate";
+import { missingLanguages } from "@/shared/lib/translation-completeness";
 
 const t = getTranslations("ru");
 
@@ -25,7 +27,9 @@ type FormState = {
   nameEn: string;
   nameRu: string;
   nameJa: string;
-  description: string;
+  descriptionEn: string;
+  descriptionRu: string;
+  descriptionJa: string;
   lat: string;
   lng: string;
   rating: string;
@@ -51,7 +55,9 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       nameEn: "",
       nameRu: "",
       nameJa: "",
-      description: "",
+      descriptionEn: "",
+      descriptionRu: "",
+      descriptionJa: "",
       lat: "",
       lng: "",
       rating: "4.5",
@@ -76,7 +82,9 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     nameEn: poi.nameByLanguage.en,
     nameRu: poi.nameByLanguage.ru,
     nameJa: poi.nameByLanguage.ja,
-    description: poi.description,
+    descriptionEn: poi.descriptionByLanguage.en,
+    descriptionRu: poi.descriptionByLanguage.ru,
+    descriptionJa: poi.descriptionByLanguage.ja,
     lat: String(poi.coordinates.lat),
     lng: String(poi.coordinates.lng),
     rating: String(poi.rating),
@@ -107,7 +115,7 @@ function splitList(value: string) {
 
 function toPoiInput(form: FormState): PoiInput | { error: string } {
   if (!form.name.trim()) return { error: "Укажите название." };
-  if (!form.description.trim()) return { error: "Укажите описание." };
+  if (!form.descriptionRu.trim()) return { error: "Укажите описание (на русском)." };
 
   const lat = Number(form.lat);
   const lng = Number(form.lng);
@@ -128,6 +136,7 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
   if (photos.length === 0) return { error: "Добавьте хотя бы одну ссылку на фото." };
 
   const name = form.name.trim();
+  const descriptionRu = form.descriptionRu.trim();
 
   return {
     regionId: form.regionId,
@@ -137,7 +146,12 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
       ru: form.nameRu.trim() || name,
       ja: form.nameJa.trim() || name
     },
-    description: form.description.trim(),
+    description: descriptionRu,
+    descriptionByLanguage: {
+      en: form.descriptionEn.trim() || descriptionRu,
+      ru: descriptionRu,
+      ja: form.descriptionJa.trim() || descriptionRu
+    },
     coordinates: { lat, lng },
     rating: Number(form.rating) || 0,
     photos,
@@ -178,6 +192,42 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
   const [form, setForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
+  const missingDescription = missingLanguages([{ en: form.descriptionEn, ja: form.descriptionJa }]);
+
+  const handleAutoTranslate = async () => {
+    const items = [
+      ...(form.nameRu.trim() ? [{ key: "name", text: form.nameRu.trim() }] : []),
+      ...(form.descriptionRu.trim() ? [{ key: "description", text: form.descriptionRu.trim() }] : [])
+    ];
+
+    if (items.length === 0) {
+      setTranslateError("Сначала заполните название и описание на русском.");
+      return;
+    }
+
+    setTranslateError(null);
+    setIsTranslating(true);
+    try {
+      const translations = await translateFromRussian(items);
+      setForm((p) => ({
+        ...p,
+        ...(translations.name
+          ? { nameEn: translations.name.en ?? p.nameEn, nameJa: translations.name.ja ?? p.nameJa }
+          : {}),
+        ...(translations.description
+          ? { descriptionEn: translations.description.en ?? p.descriptionEn, descriptionJa: translations.description.ja ?? p.descriptionJa }
+          : {})
+      }));
+    } catch (err) {
+      setTranslateError(err instanceof Error ? err.message : "Не удалось перевести текст.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const toggleListValue = <T extends string>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -247,6 +297,17 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
         <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Nanzen-ji" />
       </div>
 
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Заполните название и описание на русском, затем нажмите «Перевести», чтобы автоматически подставить EN и JA.
+        </p>
+        <Button type="button" variant="outline" onClick={handleAutoTranslate} disabled={isTranslating} className="shrink-0 gap-1.5">
+          <Languages className="h-3.5 w-3.5" />
+          {isTranslating ? "Перевод…" : "Перевести с русского"}
+        </Button>
+      </div>
+      {translateError && <p className="text-sm font-medium text-red-600">{translateError}</p>}
+
       <div>
         <label
           className={fieldLabel}
@@ -259,19 +320,48 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Нандзэн-дзи" />
           <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 南禅寺" />
         </div>
+        {missingName.length > 0 && (
+          <p className="mt-1 text-xs font-medium text-amber-600">
+            Похоже, не переведено: {missingName.map((lang) => lang.toUpperCase()).join(", ")}
+          </p>
+        )}
       </div>
 
       <div>
-        <label className={fieldLabel} title="Краткое описание места — показывается в боковой панели и в карточке места.">
-          Описание
+        <label
+          className={fieldLabel}
+          title="Описание места на разных языках сайта — показывается в боковой панели и в карточке места в зависимости от выбранного языка интерфейса."
+        >
+          Описания по языкам
         </label>
-        <textarea
-          className={textareaClass}
-          rows={3}
-          value={form.description}
-          onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
-          placeholder="Короткое описание, показывается в боковой панели и на карточке места."
-        />
+        <div className="grid grid-cols-3 gap-3">
+          <textarea
+            className={textareaClass}
+            rows={3}
+            value={form.descriptionEn}
+            onChange={(e) => setForm((p) => ({ ...p, descriptionEn: e.target.value }))}
+            placeholder="EN — short description"
+          />
+          <textarea
+            className={textareaClass}
+            rows={3}
+            value={form.descriptionRu}
+            onChange={(e) => setForm((p) => ({ ...p, descriptionRu: e.target.value }))}
+            placeholder="RU — короткое описание"
+          />
+          <textarea
+            className={textareaClass}
+            rows={3}
+            value={form.descriptionJa}
+            onChange={(e) => setForm((p) => ({ ...p, descriptionJa: e.target.value }))}
+            placeholder="JA — 短い説明"
+          />
+        </div>
+        {missingDescription.length > 0 && (
+          <p className="mt-1 text-xs font-medium text-amber-600">
+            Похоже, не переведено: {missingDescription.map((lang) => lang.toUpperCase()).join(", ")}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">

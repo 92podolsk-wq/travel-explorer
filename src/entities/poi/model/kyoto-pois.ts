@@ -1,6 +1,6 @@
 import type { Poi } from "./types";
 
-const kyotoPoisWithoutStatus: Omit<Poi, "status">[] = [
+const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = [
   {
     id: "fushimi-inari",
     name: "Fushimi Inari Taisha",
@@ -546,4 +546,8 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status">[] = [
   }
 ];
 
-export const kyotoPois: Poi[] = kyotoPoisWithoutStatus.map((poi) => ({ ...poi, status: "published" as const }));
+export const kyotoPois: Poi[] = kyotoPoisWithoutStatus.map((poi) => ({
+  ...poi,
+  descriptionByLanguage: { en: poi.description, ru: poi.description, ja: poi.description },
+  status: "published" as const
+}));

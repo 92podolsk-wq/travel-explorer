@@ -36,6 +36,11 @@ export function toPoi(row: PoiRow): Poi {
     nameByLanguage: row.nameByLanguage as Record<Language, string>,
     coordinates: { lat: row.lat, lng: row.lng },
     description: row.description,
+    descriptionByLanguage: (row.descriptionByLanguage as Record<Language, string> | null) ?? {
+      en: row.description,
+      ru: row.description,
+      ja: row.description
+    },
     rating: row.rating,
     photos: [...row.photos]
       .sort((a, b) => a.position - b.position)
@@ -83,6 +88,7 @@ async function writePoi(id: string, input: PoiInput) {
       lat: input.coordinates.lat,
       lng: input.coordinates.lng,
       description: input.description,
+      descriptionByLanguage: input.descriptionByLanguage,
       rating: input.rating,
       categories: input.categories,
       tags: input.tags,
@@ -103,6 +109,7 @@ async function writePoi(id: string, input: PoiInput) {
       lat: input.coordinates.lat,
       lng: input.coordinates.lng,
       description: input.description,
+      descriptionByLanguage: input.descriptionByLanguage,
       rating: input.rating,
       categories: input.categories,
       tags: input.tags,

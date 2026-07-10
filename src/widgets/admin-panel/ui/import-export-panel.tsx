@@ -26,6 +26,11 @@ function csvRowToPoiInput(row: Record<string, string>): PoiInput {
       ja: row.nameJa?.trim() || name
     },
     description: row.description?.trim() ?? "",
+    descriptionByLanguage: {
+      en: row.description?.trim() ?? "",
+      ru: row.description?.trim() ?? "",
+      ja: row.description?.trim() ?? ""
+    },
     coordinates: { lat: Number(row.lat), lng: Number(row.lng) },
     rating: Number(row.rating) || 4.5,
     photos: row.photoUrl?.trim()

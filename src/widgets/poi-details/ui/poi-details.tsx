@@ -13,6 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
+import { looksTranslated } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 
 export function PoiDetails() {
@@ -58,6 +59,13 @@ export function PoiDetails() {
   const poiName = selectedPoi.nameByLanguage[language] ?? selectedPoi.name;
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
+  const localizedDescription = selectedPoi.descriptionByLanguage[language];
+  const description =
+    language === "ru"
+      ? localizedDescription
+      : looksTranslated(language, localizedDescription)
+        ? localizedDescription
+        : (poiCopy?.description ?? selectedPoi.description);
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
 
   const seasonFilteredPhotos =
@@ -230,9 +238,7 @@ export function PoiDetails() {
               </Button>
             </div>
 
-            <p className="text-[15px] leading-7 text-muted-foreground">
-              {poiCopy?.description ?? selectedPoi.description}
-            </p>
+            <p className="text-[15px] leading-7 text-muted-foreground">{description}</p>
 
             <div className="mt-6 grid grid-cols-3 gap-2.5">
               <Metric

@@ -49,6 +49,7 @@ model Poi {
   lat              Float
   lng              Float
   description      String
+  descriptionByLanguage Json?
   rating           Float
   categories       String[]
   tags             String[]
@@ -107,6 +108,8 @@ model Photo {
   author   String?
   season   String?
   position Int
+
+  @@index([poiId])
 }
 
 model User {
@@ -132,6 +135,8 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt    DateTime
   createdAt    DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Favorite {

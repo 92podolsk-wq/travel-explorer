@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { Languages } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { PublishStatus, Region, RegionInput } from "@/entities/region/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { cn } from "@/shared/lib/cn";
+import { translateFromRussian } from "@/shared/lib/admin-translate";
+import { missingLanguages } from "@/shared/lib/translation-completeness";
 
 type FormState = {
   name: string;
@@ -138,6 +142,32 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
   const [form, setForm] = useState<FormState>(() => toFormState(region, areas[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
+
+  const handleAutoTranslate = async () => {
+    if (!form.nameRu.trim()) {
+      setTranslateError("Сначала заполните название на русском.");
+      return;
+    }
+
+    setTranslateError(null);
+    setIsTranslating(true);
+    try {
+      const translations = await translateFromRussian([{ key: "name", text: form.nameRu.trim() }]);
+      setForm((p) => ({
+        ...p,
+        nameEn: translations.name?.en ?? p.nameEn,
+        nameJa: translations.name?.ja ?? p.nameJa
+      }));
+    } catch (err) {
+      setTranslateError(err instanceof Error ? err.message : "Не удалось перевести текст.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -191,17 +221,29 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
       </div>
 
       <div>
-        <label
-          className={fieldLabel}
-          title="Название города на разных языках сайта — именно эти значения показываются в заголовке и в меню выбора локации в зависимости от выбранного языка интерфейса."
-        >
-          Названия по языкам
-        </label>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <label
+            className={cn(fieldLabel, "mb-0")}
+            title="Название города на разных языках сайта — именно эти значения показываются в заголовке и в меню выбора локации в зависимости от выбранного языка интерфейса."
+          >
+            Названия по языкам
+          </label>
+          <Button type="button" variant="outline" onClick={handleAutoTranslate} disabled={isTranslating} className="h-7 shrink-0 gap-1.5 px-2 text-xs">
+            <Languages className="h-3.5 w-3.5" />
+            {isTranslating ? "Перевод…" : "Перевести с русского"}
+          </Button>
+        </div>
         <div className="grid grid-cols-3 gap-3">
           <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Tokyo" />
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Токио" />
           <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 東京" />
         </div>
+        {translateError && <p className="mt-1 text-xs font-medium text-red-600">{translateError}</p>}
+        {missingName.length > 0 && (
+          <p className="mt-1 text-xs font-medium text-amber-600">
+            Похоже, не переведено: {missingName.map((lang) => lang.toUpperCase()).join(", ")}
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3">

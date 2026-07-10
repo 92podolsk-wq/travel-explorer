@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Check, Eye, GripVertical, MapPin, Route, Share2, X } from "lucide-react";
+import { Bookmark, Check, Eye, GripVertical, MapPin, Pencil, Route, Share2, X } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
@@ -98,6 +98,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | null>(null);
   const [dragPoiId, setDragPoiId] = useState<string | null>(null);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
 
   const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
 
@@ -139,6 +141,19 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
     setDragPoiId(null);
     handleReorderItinerary(reordered);
+  }
+
+  async function handleRenameItinerary(newTitle: string) {
+    const trimmed = newTitle.trim();
+    setIsEditingTitle(false);
+    if (!trimmed || !itinerary || trimmed === itinerary.title) return;
+
+    const res = await fetch("/api/me/itinerary", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: trimmed })
+    });
+    if (res.ok) setItinerary(await res.json());
   }
 
   async function handleShareItinerary() {
@@ -335,8 +350,32 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Route className="h-4 w-4 text-primary" />
-                {t.myItinerary}
+                <Route className="h-4 w-4 shrink-0 text-primary" />
+                {isEditingTitle ? (
+                  <input
+                    autoFocus
+                    value={titleDraft}
+                    onChange={(e) => setTitleDraft(e.target.value)}
+                    onBlur={() => handleRenameItinerary(titleDraft)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRenameItinerary(titleDraft);
+                      if (e.key === "Escape") setIsEditingTitle(false);
+                    }}
+                    className="rounded border border-primary/30 bg-white px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTitleDraft(itinerary?.title ?? "");
+                      setIsEditingTitle(true);
+                    }}
+                    className="flex items-center gap-1 transition hover:text-primary"
+                  >
+                    {itinerary?.title || t.myItinerary}
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                )}
               </h2>
               {itinerary && itinerary.stops.length > 0 && (
                 <button

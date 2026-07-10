@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Check, Eye, GripVertical, MapPin, Pencil, Route, Share2, X } from "lucide-react";
+import { Bookmark, Check, Download, Eye, GripVertical, MapPin, Pencil, Route, Share2, Wand2, X } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
@@ -100,6 +100,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [generatorRegionId, setGeneratorRegionId] = useState("");
+  const [generatorDays, setGeneratorDays] = useState(2);
+  const [generatorHoursPerDay, setGeneratorHoursPerDay] = useState(6);
+  const [generatorSource, setGeneratorSource] = useState<"favorites" | "recommended">("favorites");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatorError, setGeneratorError] = useState<string | null>(null);
 
   const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
 
@@ -117,11 +124,20 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
-  async function handleReorderItinerary(orderedPoiIds: string[]) {
+  async function handleMoveStopToDay(poiId: string, day: number) {
+    const res = await fetch(`/api/me/itinerary/stops/${poiId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ day })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleReorderItinerary(day: number, orderedPoiIds: string[]) {
     const res = await fetch("/api/me/itinerary/reorder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderedPoiIds })
+      body: JSON.stringify({ day, orderedPoiIds })
     });
     if (res.ok) setItinerary(await res.json());
   }
@@ -132,15 +148,65 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       return;
     }
 
-    const ids = itinerary.stops.map((stop) => stop.poi.id);
-    const fromIndex = ids.indexOf(dragPoiId);
-    const toIndex = ids.indexOf(targetPoiId);
-    const reordered = [...ids];
+    const dragStop = itinerary.stops.find((stop) => stop.poi.id === dragPoiId);
+    const targetStop = itinerary.stops.find((stop) => stop.poi.id === targetPoiId);
+    if (!dragStop || !targetStop || dragStop.day !== targetStop.day) {
+      setDragPoiId(null);
+      return;
+    }
+
+    const dayPoiIds = itinerary.stops.filter((stop) => stop.day === dragStop.day).map((stop) => stop.poi.id);
+    const fromIndex = dayPoiIds.indexOf(dragPoiId);
+    const toIndex = dayPoiIds.indexOf(targetPoiId);
+    const reordered = [...dayPoiIds];
     reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, dragPoiId);
 
     setDragPoiId(null);
-    handleReorderItinerary(reordered);
+    handleReorderItinerary(dragStop.day, reordered);
+  }
+
+  async function handleGenerateItinerary() {
+    if (!generatorRegionId) return;
+    if (itinerary && itinerary.stops.length > 0 && !window.confirm(t.generateItineraryConfirm)) {
+      return;
+    }
+
+    setGeneratorError(null);
+    setIsGenerating(true);
+    try {
+      const res = await fetch("/api/me/itinerary/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          regionId: generatorRegionId,
+          days: generatorDays,
+          hoursPerDay: generatorHoursPerDay,
+          source: generatorSource
+        })
+      });
+
+      if (!res.ok) {
+        setGeneratorError(t.generateItineraryEmpty);
+        return;
+      }
+
+      const result = await res.json();
+      if (result.stops.length === 0) {
+        setGeneratorError(t.generateItineraryEmpty);
+        return;
+      }
+
+      setItinerary(result);
+      setIsGeneratorOpen(false);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  function handleDownloadPdf() {
+    if (!itinerary) return;
+    window.open(`/trip/${itinerary.shareToken}?print=1`, "_blank");
   }
 
   async function handleRenameItinerary(newTitle: string) {
@@ -377,57 +443,168 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                   </button>
                 )}
               </h2>
-              {itinerary && itinerary.stops.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleShareItinerary}
-                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  <Share2 className="h-3 w-3" />
-                  {isLinkCopied ? t.linkCopied : t.shareItinerary}
-                </button>
-              )}
+              <div className="flex items-center gap-3">
+                {regions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!generatorRegionId) setGeneratorRegionId(regions[0]?.id ?? "");
+                      setIsGeneratorOpen((value) => !value);
+                    }}
+                    className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    <Wand2 className="h-3 w-3" />
+                    {t.generateItinerary}
+                  </button>
+                )}
+                {itinerary && itinerary.stops.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleDownloadPdf}
+                      className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      <Download className="h-3 w-3" />
+                      {t.downloadPdf}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShareItinerary}
+                      className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      <Share2 className="h-3 w-3" />
+                      {isLinkCopied ? t.linkCopied : t.shareItinerary}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
+
+            {isGeneratorOpen && (
+              <div className="flex flex-col gap-2.5 rounded-md border border-border bg-white/[0.78] p-3">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <select
+                    value={generatorRegionId}
+                    onChange={(e) => setGeneratorRegionId(e.target.value)}
+                    className="h-9 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                  >
+                    {regions.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {regionName(region.id)}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={generatorSource}
+                    onChange={(e) => setGeneratorSource(e.target.value as "favorites" | "recommended")}
+                    className="h-9 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                  >
+                    <option value="favorites">{t.generateItinerarySourceFavorites}</option>
+                    <option value="recommended">{t.generateItinerarySourceRecommended}</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <label className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground">
+                    {t.generateItineraryDays}
+                    <input
+                      type="number"
+                      min={1}
+                      max={14}
+                      value={generatorDays}
+                      onChange={(e) => setGeneratorDays(Number(e.target.value) || 1)}
+                      className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground">
+                    {t.generateItineraryHoursPerDay}
+                    <input
+                      type="number"
+                      min={1}
+                      max={14}
+                      value={generatorHoursPerDay}
+                      onChange={(e) => setGeneratorHoursPerDay(Number(e.target.value) || 1)}
+                      className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                    />
+                  </label>
+                </div>
+                {generatorError && <p className="text-xs font-medium text-red-600">{generatorError}</p>}
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setIsGeneratorOpen(false)}>
+                    {t.cancel}
+                  </Button>
+                  <Button type="button" onClick={handleGenerateItinerary} disabled={isGenerating}>
+                    {t.generateItinerarySubmit}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {!itinerary || itinerary.stops.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.itineraryEmpty}</p>
             ) : (
               <>
-                <div className="flex flex-col gap-2">
-                  {itinerary.stops.map((stop) => (
-                    <div
-                      key={stop.id}
-                      draggable
-                      onDragStart={() => setDragPoiId(stop.poi.id)}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => handleItineraryDrop(stop.poi.id)}
-                      className={cn(
-                        "flex items-center gap-1.5 transition",
-                        dragPoiId === stop.poi.id && "opacity-50"
-                      )}
-                    >
-                      <span className="cursor-grab text-muted-foreground">
-                        <GripVertical className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <PoiRow
-                          poi={stop.poi}
-                          regionName={regionName(stop.poi.regionId)}
-                          onSelect={() => goToPoi(stop.poi.id)}
-                          action={
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFromItinerary(stop.poi.id)}
-                              aria-label={t.removeFromItinerary}
-                              className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+                {(() => {
+                  const days = [...new Set(itinerary.stops.map((stop) => stop.day))].sort((a, b) => a - b);
+                  const maxDay = Math.max(...days);
+                  return days.map((day) => (
+                    <div key={day} className="flex flex-col gap-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t.dayLabel.replace("{n}", String(day))}
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {itinerary.stops
+                          .filter((stop) => stop.day === day)
+                          .map((stop) => (
+                            <div
+                              key={stop.id}
+                              draggable
+                              onDragStart={() => setDragPoiId(stop.poi.id)}
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={() => handleItineraryDrop(stop.poi.id)}
+                              className={cn(
+                                "flex items-center gap-1.5 transition",
+                                dragPoiId === stop.poi.id && "opacity-50"
+                              )}
                             >
-                              <X className="h-4 w-4" />
-                            </button>
-                          }
-                        />
+                              <span className="cursor-grab text-muted-foreground">
+                                <GripVertical className="h-4 w-4" />
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <PoiRow
+                                  poi={stop.poi}
+                                  regionName={regionName(stop.poi.regionId)}
+                                  onSelect={() => goToPoi(stop.poi.id)}
+                                  action={
+                                    <div className="flex items-center gap-1">
+                                      <select
+                                        value={stop.day}
+                                        onChange={(e) => handleMoveStopToDay(stop.poi.id, Number(e.target.value))}
+                                        className="h-7 rounded border border-border bg-white px-1 text-xs outline-none"
+                                      >
+                                        {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
+                                          <option key={d} value={d}>
+                                            {t.dayLabel.replace("{n}", String(d))}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveFromItinerary(stop.poi.id)}
+                                        aria-label={t.removeFromItinerary}
+                                        className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  }
+                                />
+                              </div>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ));
+                })()}
                 {(() => {
                   const summary = computeItinerarySummary(itinerary.stops.map((stop) => stop.poi));
                   return (

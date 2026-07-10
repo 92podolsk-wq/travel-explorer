@@ -2,6 +2,7 @@ import type { Poi } from "@/entities/poi/model/types";
 
 export type ItineraryStopWithPoi = {
   id: string;
+  day: number;
   position: number;
   poi: Poi;
 };

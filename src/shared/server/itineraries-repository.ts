@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import type { Itinerary } from "@/entities/itinerary/model/types";
+import type { Poi } from "@/entities/poi/model/types";
 import { toPoi, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
 
@@ -15,8 +16,8 @@ function toItinerary(row: ItineraryRow): Itinerary {
     title: row.title,
     shareToken: row.shareToken,
     stops: [...row.stops]
-      .sort((a, b) => a.position - b.position)
-      .map((stop) => ({ id: stop.id, position: stop.position, poi: toPoi(stop.poi as PoiRow) }))
+      .sort((a, b) => (a.day !== b.day ? a.day - b.day : a.position - b.position))
+      .map((stop) => ({ id: stop.id, day: stop.day, position: stop.position, poi: toPoi(stop.poi as PoiRow) }))
   };
 }
 
@@ -49,14 +50,15 @@ export async function addStop(userId: string, poiId: string): Promise<Itinerary>
     update: {}
   });
 
-  const maxPosition = await prisma.itineraryStop.aggregate({
-    where: { itineraryId: itinerary.id },
-    _max: { position: true }
-  });
+  const existingStops = await prisma.itineraryStop.findMany({ where: { itineraryId: itinerary.id } });
+  const targetDay = existingStops.reduce((max, stop) => Math.max(max, stop.day), 1);
+  const maxPosition = existingStops
+    .filter((stop) => stop.day === targetDay)
+    .reduce((max, stop) => Math.max(max, stop.position), -1);
 
   await prisma.itineraryStop.upsert({
     where: { itineraryId_poiId: { itineraryId: itinerary.id, poiId } },
-    create: { itineraryId: itinerary.id, poiId, position: (maxPosition._max.position ?? -1) + 1 },
+    create: { itineraryId: itinerary.id, poiId, day: targetDay, position: maxPosition + 1 },
     update: {}
   });
 
@@ -72,14 +74,14 @@ export async function removeStop(userId: string, poiId: string): Promise<Itinera
   return getOrCreateItinerary(userId);
 }
 
-export async function reorderStops(userId: string, orderedPoiIds: string[]): Promise<Itinerary | null> {
+export async function reorderDayStops(userId: string, day: number, orderedPoiIds: string[]): Promise<Itinerary | null> {
   const itinerary = await prisma.itinerary.findUnique({ where: { userId }, include: { stops: true } });
   if (!itinerary) {
     return null;
   }
 
-  const currentPoiIds = new Set(itinerary.stops.map((stop) => stop.poiId));
-  if (orderedPoiIds.length !== itinerary.stops.length || !orderedPoiIds.every((id) => currentPoiIds.has(id))) {
+  const dayPoiIds = new Set(itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poiId));
+  if (orderedPoiIds.length !== dayPoiIds.size || !orderedPoiIds.every((id) => dayPoiIds.has(id))) {
     return null;
   }
 
@@ -91,6 +93,49 @@ export async function reorderStops(userId: string, orderedPoiIds: string[]): Pro
       })
     )
   );
+
+  return getOrCreateItinerary(userId);
+}
+
+export async function moveStopToDay(userId: string, poiId: string, day: number): Promise<Itinerary | null> {
+  const itinerary = await prisma.itinerary.findUnique({ where: { userId }, include: { stops: true } });
+  if (!itinerary) {
+    return null;
+  }
+
+  const stop = itinerary.stops.find((s) => s.poiId === poiId);
+  if (!stop) {
+    return null;
+  }
+
+  const maxPosition = itinerary.stops
+    .filter((s) => s.day === day && s.poiId !== poiId)
+    .reduce((max, s) => Math.max(max, s.position), -1);
+
+  await prisma.itineraryStop.update({
+    where: { itineraryId_poiId: { itineraryId: itinerary.id, poiId } },
+    data: { day, position: maxPosition + 1 }
+  });
+
+  return getOrCreateItinerary(userId);
+}
+
+export async function generateItinerary(userId: string, plan: Poi[][], title?: string): Promise<Itinerary> {
+  const itinerary = await prisma.itinerary.upsert({
+    where: { userId },
+    create: { userId, shareToken: generateShareToken(), ...(title ? { title } : {}) },
+    update: title ? { title } : {}
+  });
+
+  await prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id } });
+
+  const data = plan.flatMap((dayStops, dayIndex) =>
+    dayStops.map((poi, position) => ({ itineraryId: itinerary.id, poiId: poi.id, day: dayIndex + 1, position }))
+  );
+
+  if (data.length > 0) {
+    await prisma.itineraryStop.createMany({ data });
+  }
 
   return getOrCreateItinerary(userId);
 }

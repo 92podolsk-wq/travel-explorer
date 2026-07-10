@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { reorderStops } from "@/shared/server/itineraries-repository";
+import { reorderDayStops } from "@/shared/server/itineraries-repository";
 import { getCurrentUser } from "@/shared/server/user-auth";
 
 export async function POST(request: Request) {
@@ -8,12 +8,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { orderedPoiIds } = (await request.json()) as { orderedPoiIds?: string[] };
-  if (!Array.isArray(orderedPoiIds)) {
-    return NextResponse.json({ error: "orderedPoiIds is required" }, { status: 400 });
+  const { day, orderedPoiIds } = (await request.json()) as { day?: number; orderedPoiIds?: string[] };
+  if (!Array.isArray(orderedPoiIds) || typeof day !== "number") {
+    return NextResponse.json({ error: "day and orderedPoiIds are required" }, { status: 400 });
   }
 
-  const result = await reorderStops(user.id, orderedPoiIds);
+  const result = await reorderDayStops(user.id, day, orderedPoiIds);
   if (!result) {
     return NextResponse.json({ error: "Invalid stop list" }, { status: 400 });
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Layers, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
@@ -17,6 +17,7 @@ import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { getUpcomingSeasonReminder } from "@/shared/lib/season-reminder";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { LiveWeatherChips } from "./live-weather-chips";
+import { SwipeDiscoveryModal } from "@/widgets/swipe-discovery/ui/swipe-discovery-modal";
 import { Button } from "@/shared/ui/button";
 import { CityIcon } from "@/shared/ui/city-icon";
 import { SeigaihaWatermark } from "@/shared/ui/seigaiha-watermark";
@@ -57,9 +58,12 @@ export function ExplorerSidebar() {
   const setIsLocatingUser = useExplorerStore((state) => state.setIsLocatingUser);
   const setLocationError = useExplorerStore((state) => state.setLocationError);
   const setSortByDistance = useExplorerStore((state) => state.setSortByDistance);
+  const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
+  const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
+  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
 
   async function handleNearMeClick() {
     if (sortByDistance) {
@@ -85,6 +89,7 @@ export function ExplorerSidebar() {
 
   const activeRegion = findRegionById(regions, activeRegionIds[0]);
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
+  const swipeCandidates = regionPois.filter((poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id));
   const isAreaActive = activeRegionIds.length > 1;
   const activeArea = areas.find((area) => area.id === activeRegion.areaId);
   const headingText =
@@ -125,6 +130,7 @@ export function ExplorerSidebar() {
   );
 
   return (
+    <>
     <motion.aside
       initial={{ opacity: 0, x: -18 }}
       animate={{ opacity: 1, x: 0 }}
@@ -231,6 +237,15 @@ export function ExplorerSidebar() {
             )}
           >
             <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsSwipeOpen(true)}
+            disabled={swipeCandidates.length === 0}
+            title={t.app.swipeDiscoveryHint}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-white text-muted-foreground transition hover:text-foreground disabled:opacity-40"
+          >
+            <Layers className="h-4 w-4" />
           </button>
         </div>
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
@@ -421,5 +436,15 @@ export function ExplorerSidebar() {
         </div>
       </div>
     </motion.aside>
+    {isSwipeOpen && (
+      <SwipeDiscoveryModal
+        pois={swipeCandidates}
+        language={language}
+        onLike={toggleFavorite}
+        onSkip={markPoiViewed}
+        onClose={() => setIsSwipeOpen(false)}
+      />
+    )}
+    </>
   );
 }

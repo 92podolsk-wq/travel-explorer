@@ -55,6 +55,13 @@ type TranslationDictionary = {
     locationError: string;
     seasonReminder: string;
     seasonReminderToday: string;
+    swipeDiscovery: string;
+    swipeDiscoveryHint: string;
+    swipeEmpty: string;
+    swipeLike: string;
+    swipeSkip: string;
+    swipeProgress: string;
+    swipeClose: string;
   };
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
@@ -99,6 +106,16 @@ type TranslationDictionary = {
     linkCopied: string;
     visitTime: string;
     walkingTime: string;
+    dayLabel: string;
+    generateItinerary: string;
+    generateItineraryDays: string;
+    generateItineraryHoursPerDay: string;
+    generateItinerarySourceFavorites: string;
+    generateItinerarySourceRecommended: string;
+    generateItinerarySubmit: string;
+    generateItineraryConfirm: string;
+    generateItineraryEmpty: string;
+    downloadPdf: string;
   };
   report: {
     cta: string;
@@ -162,7 +179,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       locating: "Locating…",
       locationError: "Couldn't get your location. Check your browser's location permission.",
       seasonReminder: "{season} season starts in {city} in {days} days",
-      seasonReminderToday: "{season} season starts today in {city}"
+      seasonReminderToday: "{season} season starts today in {city}",
+      swipeDiscovery: "Quick picks",
+      swipeDiscoveryHint: "Swipe through places: like to save, skip to mark as seen",
+      swipeEmpty: "You've gone through every place here.",
+      swipeLike: "Like",
+      swipeSkip: "Skip",
+      swipeProgress: "{current} of {total}",
+      swipeClose: "Close"
     },
     poi: {
       "fushimi-inari": {
@@ -289,7 +313,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       shareItinerary: "Share",
       linkCopied: "Link copied",
       visitTime: "Visiting",
-      walkingTime: "Walking"
+      walkingTime: "Walking",
+      dayLabel: "Day {n}",
+      generateItinerary: "Auto-generate",
+      generateItineraryDays: "Days",
+      generateItineraryHoursPerDay: "Hours per day",
+      generateItinerarySourceFavorites: "From favorites",
+      generateItinerarySourceRecommended: "Recommended places",
+      generateItinerarySubmit: "Generate",
+      generateItineraryConfirm: "This will replace your current itinerary. Continue?",
+      generateItineraryEmpty: "No places found for these settings.",
+      downloadPdf: "Download PDF"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -351,7 +385,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       locating: "Определяем местоположение…",
       locationError: "Не удалось определить местоположение. Проверьте разрешение геолокации в браузере.",
       seasonReminder: "Через {days} дн. в {city} начинается сезон: {season}",
-      seasonReminderToday: "Сегодня в {city} начинается сезон: {season}"
+      seasonReminderToday: "Сегодня в {city} начинается сезон: {season}",
+      swipeDiscovery: "Быстрый выбор",
+      swipeDiscoveryHint: "Пролистайте места: нравится — сохранить, пропустить — отметить просмотренным",
+      swipeEmpty: "Вы просмотрели все места здесь.",
+      swipeLike: "Нравится",
+      swipeSkip: "Пропустить",
+      swipeProgress: "{current} из {total}",
+      swipeClose: "Закрыть"
     },
     poi: {
       "fushimi-inari": {
@@ -478,7 +519,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       shareItinerary: "Поделиться",
       linkCopied: "Ссылка скопирована",
       visitTime: "На месте",
-      walkingTime: "В пути"
+      walkingTime: "В пути",
+      dayLabel: "День {n}",
+      generateItinerary: "Автосоставить маршрут",
+      generateItineraryDays: "Дней",
+      generateItineraryHoursPerDay: "Часов в день",
+      generateItinerarySourceFavorites: "Из избранного",
+      generateItinerarySourceRecommended: "Рекомендованные места",
+      generateItinerarySubmit: "Составить",
+      generateItineraryConfirm: "Это заменит текущий маршрут. Продолжить?",
+      generateItineraryEmpty: "Не нашлось мест под эти настройки.",
+      downloadPdf: "Скачать PDF"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -540,7 +591,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       locating: "位置情報を取得中…",
       locationError: "現在地を取得できませんでした。ブラウザの位置情報の許可を確認してください。",
       seasonReminder: "あと{days}日で{city}で{season}シーズンが始まります",
-      seasonReminderToday: "本日{city}で{season}シーズンが始まります"
+      seasonReminderToday: "本日{city}で{season}シーズンが始まります",
+      swipeDiscovery: "クイック選択",
+      swipeDiscoveryHint: "場所をスワイプ:気に入ったら保存、スキップで既読に",
+      swipeEmpty: "ここにある場所はすべて確認しました。",
+      swipeLike: "気に入り",
+      swipeSkip: "スキップ",
+      swipeProgress: "{total}件中{current}件目",
+      swipeClose: "閉じる"
     },
     poi: {
       "fushimi-inari": {
@@ -667,7 +725,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       shareItinerary: "共有",
       linkCopied: "リンクをコピーしました",
       visitTime: "滞在時間",
-      walkingTime: "移動時間"
+      walkingTime: "移動時間",
+      dayLabel: "{n}日目",
+      generateItinerary: "ルートを自動作成",
+      generateItineraryDays: "日数",
+      generateItineraryHoursPerDay: "1日の時間",
+      generateItinerarySourceFavorites: "お気に入りから",
+      generateItinerarySourceRecommended: "おすすめの場所",
+      generateItinerarySubmit: "作成する",
+      generateItineraryConfirm: "現在のルートは置き換えられます。続けますか?",
+      generateItineraryEmpty: "この条件に合う場所が見つかりませんでした。",
+      downloadPdf: "PDFをダウンロード"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

@@ -1,4 +1,5 @@
 import type { UserPoiState } from "@/entities/user/model/types";
+import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "./prisma-client";
 
 export async function getUserPoiState(userId: string): Promise<UserPoiState> {
@@ -40,11 +41,16 @@ export async function toggleVisited(userId: string, poiId: string): Promise<bool
 }
 
 export async function markViewed(userId: string, poiId: string): Promise<void> {
-  await prisma.viewedPoi.upsert({
-    where: { userId_poiId: { userId, poiId } },
-    create: { userId, poiId },
-    update: {}
-  });
+  try {
+    await prisma.viewedPoi.upsert({
+      where: { userId_poiId: { userId, poiId } },
+      create: { userId, poiId },
+      update: {}
+    });
+  } catch (error) {
+    const isDuplicate = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+    if (!isDuplicate) throw error;
+  }
 }
 
 export async function clearViewed(userId: string): Promise<void> {

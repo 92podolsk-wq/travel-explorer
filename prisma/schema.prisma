@@ -200,6 +200,7 @@ model ItineraryStop {
   itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   poiId       String
   poi         Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  day         Int       @default(1)
   position    Int
 
   @@unique([itineraryId, poiId])

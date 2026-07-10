@@ -26,9 +26,9 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`;
 }
 
-type PoiRow = Awaited<ReturnType<typeof prisma.poi.findFirstOrThrow<{ include: { photos: true } }>>>;
+export type PoiRow = Awaited<ReturnType<typeof prisma.poi.findFirstOrThrow<{ include: { photos: true } }>>>;
 
-function toPoi(row: PoiRow): Poi {
+export function toPoi(row: PoiRow): Poi {
   return {
     id: row.id,
     regionId: row.regionId,

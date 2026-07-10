@@ -36,6 +36,7 @@ model Region {
   timezoneOffsetHours  Int
   sealCharacter        String
   status               String   @default("published")
+  seasonWindows        Json?
   pois                 Poi[]
 }
 
@@ -65,6 +66,7 @@ model Poi {
   viewedBy         ViewedPoi[]
   visitedBy        VisitedPoi[]
   reports          PoiReport[]
+  itineraryStops   ItineraryStop[]
 }
 
 model AdminAccount {
@@ -120,6 +122,7 @@ model User {
   viewedPois   ViewedPoi[]
   visitedPois  VisitedPoi[]
   poiReports   PoiReport[]
+  itinerary    Itinerary?
 }
 
 model Session {
@@ -173,4 +176,26 @@ model PoiReport {
   message   String
   status    String   @default("new")
   createdAt DateTime @default(now())
+}
+
+model Itinerary {
+  id         String          @id @default(cuid())
+  userId     String          @unique
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String          @default("Мой маршрут")
+  shareToken String          @unique
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  stops      ItineraryStop[]
+}
+
+model ItineraryStop {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  poiId       String
+  poi         Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  position    Int
+
+  @@unique([itineraryId, poiId])
 }

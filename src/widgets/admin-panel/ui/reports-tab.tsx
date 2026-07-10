@@ -1,40 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, RotateCcw, Trash2 } from "lucide-react";
+import type { PoiReport, PoiReportStatus } from "@/entities/poi-report/model/types";
 import { cn } from "@/shared/lib/cn";
 
-type PoiReportStatus = "new" | "resolved";
-
-type PoiReport = {
-  id: string;
-  poiId: string;
-  poiName: string;
-  regionId: string;
-  userId: string;
-  userEmail: string;
-  userName: string | null;
-  message: string;
-  status: PoiReportStatus;
-  createdAt: string;
+type ReportsTabProps = {
+  reports: PoiReport[];
+  onReload: () => void;
 };
 
-export function ReportsTab() {
-  const [reports, setReports] = useState<PoiReport[]>([]);
+export function ReportsTab({ reports, onReload }: ReportsTabProps) {
   const [error, setError] = useState<string | null>(null);
-
-  async function loadReports() {
-    const res = await fetch("/api/admin/reports");
-    if (!res.ok) {
-      setError("Не удалось загрузить сообщения.");
-      return;
-    }
-    setReports((await res.json()) as PoiReport[]);
-  }
-
-  useEffect(() => {
-    loadReports();
-  }, []);
 
   const handleToggleStatus = async (report: PoiReport) => {
     const nextStatus: PoiReportStatus = report.status === "new" ? "resolved" : "new";
@@ -50,7 +27,7 @@ export function ReportsTab() {
       return;
     }
 
-    await loadReports();
+    onReload();
   };
 
   const handleDelete = async (report: PoiReport) => {
@@ -64,7 +41,7 @@ export function ReportsTab() {
       return;
     }
 
-    await loadReports();
+    onReload();
   };
 
   return (

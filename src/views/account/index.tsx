@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Check, Eye, MapPin } from "lucide-react";
+import { Bookmark, Check, Eye, GripVertical, MapPin, Route, Share2, X } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
+import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
@@ -26,27 +27,36 @@ type AccountPageProps = {
   initialAreas: Area[];
 };
 
-function PoiRow({ poi, regionName, onSelect }: { poi: Poi; regionName: string; onSelect: () => void }) {
+function PoiRow({
+  poi,
+  regionName,
+  onSelect,
+  action
+}: {
+  poi: Poi;
+  regionName: string;
+  onSelect: () => void;
+  action?: React.ReactNode;
+}) {
   const thumbnail = poi.photos[0]?.url;
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="flex w-full items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 text-left shadow-sm transition hover:bg-muted/60"
-    >
-      {thumbnail ? (
-        <img src={thumbnail} alt={poi.name} className="h-12 w-12 shrink-0 rounded object-cover" />
-      ) : (
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
-          <MapPin className="h-5 w-5" />
+    <div className="flex w-full items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
+      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        {thumbnail ? (
+          <img src={thumbnail} alt={poi.name} className="h-12 w-12 shrink-0 rounded object-cover" />
+        ) : (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
+            <MapPin className="h-5 w-5" />
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-foreground">{poi.name}</p>
+          <p className="truncate text-xs text-muted-foreground">{regionName}</p>
         </div>
-      )}
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">{poi.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{regionName}</p>
-      </div>
-    </button>
+      </button>
+      {action}
+    </div>
   );
 }
 
@@ -80,10 +90,64 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const clearViewedPois = useExplorerStore((state) => state.clearViewedPois);
   const clearFavoritePois = useExplorerStore((state) => state.clearFavoritePois);
   const clearVisitedPois = useExplorerStore((state) => state.clearVisitedPois);
+  const itinerary = useExplorerStore((state) => state.itinerary);
+  const setItinerary = useExplorerStore((state) => state.setItinerary);
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | null>(null);
+  const [dragPoiId, setDragPoiId] = useState<string | null>(null);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+
+  const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
+
+  async function handleAddToItinerary(poiId: string) {
+    const res = await fetch("/api/me/itinerary/stops", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poiId })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleRemoveFromItinerary(poiId: string) {
+    const res = await fetch(`/api/me/itinerary/stops/${poiId}`, { method: "DELETE" });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleReorderItinerary(orderedPoiIds: string[]) {
+    const res = await fetch("/api/me/itinerary/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedPoiIds })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  function handleItineraryDrop(targetPoiId: string) {
+    if (!dragPoiId || dragPoiId === targetPoiId || !itinerary) {
+      setDragPoiId(null);
+      return;
+    }
+
+    const ids = itinerary.stops.map((stop) => stop.poi.id);
+    const fromIndex = ids.indexOf(dragPoiId);
+    const toIndex = ids.indexOf(targetPoiId);
+    const reordered = [...ids];
+    reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, dragPoiId);
+
+    setDragPoiId(null);
+    handleReorderItinerary(reordered);
+  }
+
+  async function handleShareItinerary() {
+    if (!itinerary) return;
+    const url = `${window.location.origin}/trip/${itinerary.shareToken}`;
+    await navigator.clipboard.writeText(url);
+    setIsLinkCopied(true);
+    setTimeout(() => setIsLinkCopied(false), 2000);
+  }
 
   function regionName(regionId: string) {
     const region = regions.find((r) => r.id === regionId);
@@ -237,10 +301,104 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               <p className="text-sm text-muted-foreground">{t.noSavedPlaces}</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {favoritePois.map((poi) => (
-                  <PoiRow key={poi.id} poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
-                ))}
+                {favoritePois.map((poi) => {
+                  const isInItinerary = itineraryPoiIds.has(poi.id);
+                  return (
+                    <PoiRow
+                      key={poi.id}
+                      poi={poi}
+                      regionName={regionName(poi.regionId)}
+                      onSelect={() => goToPoi(poi.id)}
+                      action={
+                        <button
+                          type="button"
+                          onClick={() =>
+                            isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
+                          }
+                          className={cn(
+                            "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
+                            isInItinerary
+                              ? "border-primary/40 bg-primary/10 text-primary"
+                              : "border-border text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {isInItinerary ? t.inItinerary : t.addToItinerary}
+                        </button>
+                      }
+                    />
+                  );
+                })}
               </div>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                <Route className="h-4 w-4 text-primary" />
+                {t.myItinerary}
+              </h2>
+              {itinerary && itinerary.stops.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleShareItinerary}
+                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                >
+                  <Share2 className="h-3 w-3" />
+                  {isLinkCopied ? t.linkCopied : t.shareItinerary}
+                </button>
+              )}
+            </div>
+            {!itinerary || itinerary.stops.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t.itineraryEmpty}</p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  {itinerary.stops.map((stop) => (
+                    <div
+                      key={stop.id}
+                      draggable
+                      onDragStart={() => setDragPoiId(stop.poi.id)}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={() => handleItineraryDrop(stop.poi.id)}
+                      className={cn(
+                        "flex items-center gap-1.5 transition",
+                        dragPoiId === stop.poi.id && "opacity-50"
+                      )}
+                    >
+                      <span className="cursor-grab text-muted-foreground">
+                        <GripVertical className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <PoiRow
+                          poi={stop.poi}
+                          regionName={regionName(stop.poi.regionId)}
+                          onSelect={() => goToPoi(stop.poi.id)}
+                          action={
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFromItinerary(stop.poi.id)}
+                              aria-label={t.removeFromItinerary}
+                              className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          }
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {(() => {
+                  const summary = computeItinerarySummary(itinerary.stops.map((stop) => stop.poi));
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      {t.visitTime} {summary.visitMinutes} {dict.app.minutesShort} · {t.walkingTime}{" "}
+                      {summary.walkingMinutes} {dict.app.minutesShort}
+                    </p>
+                  );
+                })()}
+              </>
             )}
           </section>
 

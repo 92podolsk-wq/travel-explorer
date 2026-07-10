@@ -7,6 +7,7 @@ import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
+import type { PoiReport } from "@/entities/poi-report/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
@@ -88,6 +89,7 @@ export function AdminPanel() {
   const [explorationModes, setExplorationModes] = useState<ExplorationMode[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [reports, setReports] = useState<PoiReport[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<{ name: string; email: string } | null>(null);
 
   const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
@@ -138,6 +140,10 @@ export function AdminPanel() {
     const res = await fetch("/api/admin/accounts");
     setAccounts((await res.json()) as AdminAccount[]);
   }
+  async function loadReports() {
+    const res = await fetch("/api/admin/reports");
+    setReports((await res.json()) as PoiReport[]);
+  }
 
   useEffect(() => {
     (async () => {
@@ -156,7 +162,8 @@ export function AdminPanel() {
           loadPois(),
           loadExplorationModes(),
           loadUsers(),
-          loadAccounts()
+          loadAccounts(),
+          loadReports()
         ]);
         setAuthView({ mode: "ready" });
       } else {
@@ -191,7 +198,8 @@ export function AdminPanel() {
       loadPois(),
       loadExplorationModes(),
       loadUsers(),
-      loadAccounts()
+      loadAccounts(),
+      loadReports()
     ]);
     setAuthView({ mode: "ready" });
   };
@@ -586,6 +594,7 @@ export function AdminPanel() {
 
   const findAreaCountry = (area: Area) => countries.find((country) => country.id === area.countryId);
   const findCityArea = (region: Region) => areas.find((area) => area.id === region.areaId);
+  const unreadReportsCount = reports.filter((report) => report.status === "new").length;
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -627,7 +636,14 @@ export function AdminPanel() {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            {groupLabels[group]}
+            <span className="inline-flex items-center gap-1.5">
+              {groupLabels[group]}
+              {group === "community" && unreadReportsCount > 0 && (
+                <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadReportsCount}
+                </span>
+              )}
+            </span>
           </button>
         ))}
       </div>
@@ -640,13 +656,18 @@ export function AdminPanel() {
               type="button"
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "rounded-md border px-3 py-1.5 text-xs font-semibold transition",
+                "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition",
                 activeTab === tab
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-white text-muted-foreground hover:text-foreground"
               )}
             >
               {tabLabels[tab]}
+              {tab === "reports" && unreadReportsCount > 0 && (
+                <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadReportsCount}
+                </span>
+              )}
             </button>
           ))}
       </div>
@@ -946,7 +967,7 @@ export function AdminPanel() {
         </>
       )}
 
-      {activeTab === "reports" && <ReportsTab />}
+      {activeTab === "reports" && <ReportsTab reports={reports} onReload={loadReports} />}
 
       {activeTab === "users" && (
         <>

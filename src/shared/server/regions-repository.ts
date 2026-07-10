@@ -1,5 +1,5 @@
 import type { Language } from "@/shared/i18n/types";
-import type { PublishStatus, Region, RegionInput } from "@/entities/region/model/types";
+import type { PublishStatus, Region, RegionInput, SeasonWindows } from "@/entities/region/model/types";
 import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
@@ -38,7 +38,8 @@ function toRegion(row: RegionRow): Region {
     timezoneOffsetHours: row.timezoneOffsetHours,
     nameByLanguage: row.nameByLanguage as Record<Language, string>,
     sealCharacter: row.sealCharacter,
-    status: row.status as PublishStatus
+    status: row.status as PublishStatus,
+    seasonWindows: (row.seasonWindows as SeasonWindows | null) ?? {}
   };
 }
 
@@ -63,7 +64,8 @@ function toRegionData(input: RegionInput) {
     bounds: input.bounds,
     timezoneOffsetHours: input.timezoneOffsetHours,
     sealCharacter: input.sealCharacter,
-    status: input.status
+    status: input.status,
+    seasonWindows: input.seasonWindows
   };
 }
 

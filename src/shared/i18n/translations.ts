@@ -49,6 +49,12 @@ type TranslationDictionary = {
     now: string;
     previousPlace: string;
     nextPlace: string;
+    nearMe: string;
+    nearMeHint: string;
+    locating: string;
+    locationError: string;
+    seasonReminder: string;
+    seasonReminderToday: string;
   };
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
@@ -84,6 +90,15 @@ type TranslationDictionary = {
     clearVisited: string;
     clearVisitedConfirm: string;
     cancel: string;
+    myItinerary: string;
+    itineraryEmpty: string;
+    addToItinerary: string;
+    inItinerary: string;
+    removeFromItinerary: string;
+    shareItinerary: string;
+    linkCopied: string;
+    visitTime: string;
+    walkingTime: string;
   };
   report: {
     cta: string;
@@ -141,7 +156,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       tomorrow: "Tomorrow",
       now: "Now",
       previousPlace: "Previous",
-      nextPlace: "Next"
+      nextPlace: "Next",
+      nearMe: "Near me",
+      nearMeHint: "Sort places by distance from your location",
+      locating: "Locating…",
+      locationError: "Couldn't get your location. Check your browser's location permission.",
+      seasonReminder: "{season} season starts in {city} in {days} days",
+      seasonReminderToday: "{season} season starts today in {city}"
     },
     poi: {
       "fushimi-inari": {
@@ -259,7 +280,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSavedConfirm: "Clear all saved places? This can't be undone.",
       clearVisited: "Clear visited",
       clearVisitedConfirm: "Clear all visited places? This can't be undone.",
-      cancel: "Cancel"
+      cancel: "Cancel",
+      myItinerary: "My itinerary",
+      itineraryEmpty: "Add places from your favorites to build an itinerary.",
+      addToItinerary: "Add to itinerary",
+      inItinerary: "In itinerary",
+      removeFromItinerary: "Remove",
+      shareItinerary: "Share",
+      linkCopied: "Link copied",
+      visitTime: "Visiting",
+      walkingTime: "Walking"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -315,7 +345,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       tomorrow: "Завтра",
       now: "Сейчас",
       previousPlace: "Назад",
-      nextPlace: "Далее"
+      nextPlace: "Далее",
+      nearMe: "Рядом со мной",
+      nearMeHint: "Сортировать места по расстоянию от вас",
+      locating: "Определяем местоположение…",
+      locationError: "Не удалось определить местоположение. Проверьте разрешение геолокации в браузере.",
+      seasonReminder: "Через {days} дн. в {city} начинается сезон: {season}",
+      seasonReminderToday: "Сегодня в {city} начинается сезон: {season}"
     },
     poi: {
       "fushimi-inari": {
@@ -433,7 +469,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSavedConfirm: "Очистить все сохранённые места? Это действие нельзя отменить.",
       clearVisited: "Очистить",
       clearVisitedConfirm: "Очистить все посещённые места? Это действие нельзя отменить.",
-      cancel: "Отмена"
+      cancel: "Отмена",
+      myItinerary: "Мой маршрут",
+      itineraryEmpty: "Добавьте места из избранного, чтобы построить маршрут.",
+      addToItinerary: "В маршрут",
+      inItinerary: "В маршруте",
+      removeFromItinerary: "Убрать",
+      shareItinerary: "Поделиться",
+      linkCopied: "Ссылка скопирована",
+      visitTime: "На месте",
+      walkingTime: "В пути"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -489,7 +534,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       tomorrow: "明日",
       now: "現在",
       previousPlace: "前へ",
-      nextPlace: "次へ"
+      nextPlace: "次へ",
+      nearMe: "現在地の近く",
+      nearMeHint: "現在地からの距離で並び替え",
+      locating: "位置情報を取得中…",
+      locationError: "現在地を取得できませんでした。ブラウザの位置情報の許可を確認してください。",
+      seasonReminder: "あと{days}日で{city}で{season}シーズンが始まります",
+      seasonReminderToday: "本日{city}で{season}シーズンが始まります"
     },
     poi: {
       "fushimi-inari": {
@@ -607,7 +658,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       clearSavedConfirm: "保存した場所をすべて消去しますか?この操作は元に戻せません。",
       clearVisited: "消去",
       clearVisitedConfirm: "訪問した場所をすべて消去しますか?この操作は元に戻せません。",
-      cancel: "キャンセル"
+      cancel: "キャンセル",
+      myItinerary: "自分のルート",
+      itineraryEmpty: "お気に入りから場所を追加してルートを作成しましょう。",
+      addToItinerary: "ルートに追加",
+      inItinerary: "ルートに追加済み",
+      removeFromItinerary: "削除",
+      shareItinerary: "共有",
+      linkCopied: "リンクをコピーしました",
+      visitTime: "滞在時間",
+      walkingTime: "移動時間"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

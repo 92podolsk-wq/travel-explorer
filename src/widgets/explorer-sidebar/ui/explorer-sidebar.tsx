@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
@@ -12,6 +12,9 @@ import { SeasonWeatherStrip } from "./season-weather-strip";
 import { getModeIcon } from "@/features/exploration-mode/ui/mode-icon";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
+import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
+import { getCurrentPosition } from "@/shared/lib/geolocate";
+import { getUpcomingSeasonReminder } from "@/shared/lib/season-reminder";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { Button } from "@/shared/ui/button";
@@ -46,8 +49,39 @@ export function ExplorerSidebar() {
   const selectPoi = useExplorerStore((state) => state.selectPoi);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
   const toggleSeason = useExplorerStore((state) => state.toggleSeason);
+  const userLocation = useExplorerStore((state) => state.userLocation);
+  const isLocatingUser = useExplorerStore((state) => state.isLocatingUser);
+  const locationError = useExplorerStore((state) => state.locationError);
+  const sortByDistance = useExplorerStore((state) => state.sortByDistance);
+  const setUserLocation = useExplorerStore((state) => state.setUserLocation);
+  const setIsLocatingUser = useExplorerStore((state) => state.setIsLocatingUser);
+  const setLocationError = useExplorerStore((state) => state.setLocationError);
+  const setSortByDistance = useExplorerStore((state) => state.setSortByDistance);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
+  const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
+
+  async function handleNearMeClick() {
+    if (sortByDistance) {
+      setSortByDistance(false);
+      return;
+    }
+    if (userLocation) {
+      setSortByDistance(true);
+      return;
+    }
+    setIsLocatingUser(true);
+    setLocationError(null);
+    try {
+      const coords = await getCurrentPosition();
+      setUserLocation(coords);
+      setSortByDistance(true);
+    } catch {
+      setLocationError(t.app.locationError);
+    } finally {
+      setIsLocatingUser(false);
+    }
+  }
 
   const activeRegion = findRegionById(regions, activeRegionIds[0]);
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
@@ -55,6 +89,10 @@ export function ExplorerSidebar() {
   const activeArea = areas.find((area) => area.id === activeRegion.areaId);
   const headingText =
     isAreaActive && activeArea ? activeArea.nameByLanguage[language] : activeRegion.nameByLanguage[language];
+
+  const seasonReminder = !isAreaActive ? getUpcomingSeasonReminder(activeRegion.seasonWindows) : null;
+  const reminderKey = seasonReminder ? `${activeRegion.id}:${seasonReminder.season}` : null;
+  const showSeasonReminder = seasonReminder && reminderKey && !dismissedReminders.has(reminderKey);
 
   const activeMode =
     explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode;
@@ -70,7 +108,8 @@ export function ExplorerSidebar() {
       favoritePoiIds: favorites,
       hideFavorites: hideFavoritesOnMap,
       visitedPoiIds,
-      hideVisited: hideVisitedOnMap
+      hideVisited: hideVisitedOnMap,
+      nearbyOrigin: sortByDistance ? userLocation : null
     }
   );
 
@@ -144,16 +183,57 @@ export function ExplorerSidebar() {
           />
         </div>
 
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            aria-label={t.app.searchAria}
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder={t.app.searchPlaceholder}
-            className="pl-9"
-          />
+        {showSeasonReminder && seasonReminder && reminderKey && (
+          <div className="mb-3 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary">
+            {(() => {
+              const SeasonIcon = seasonIcons[seasonReminder.season];
+              return <SeasonIcon className="h-3.5 w-3.5 shrink-0" />;
+            })()}
+            <span className="flex-1">
+              {(seasonReminder.daysUntil === 0 ? t.app.seasonReminderToday : t.app.seasonReminder)
+                .replace("{season}", t.season[seasonReminder.season])
+                .replace("{city}", headingText)
+                .replace("{days}", String(seasonReminder.daysUntil))}
+            </span>
+            <button
+              type="button"
+              onClick={() => setDismissedReminders((prev) => new Set(prev).add(reminderKey))}
+              aria-label={t.report.close}
+              className="shrink-0 text-primary/70 transition hover:text-primary"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-1.5">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              aria-label={t.app.searchAria}
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder={t.app.searchPlaceholder}
+              className="pl-9"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleNearMeClick}
+            disabled={isLocatingUser}
+            aria-pressed={sortByDistance}
+            title={t.app.nearMeHint}
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition disabled:opacity-60",
+              sortByDistance
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-white text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
+          </button>
         </div>
+        {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
       </div>
 
       <div className="border-b border-white/70 p-4">
@@ -326,6 +406,12 @@ export function ExplorerSidebar() {
                         {poi.durationMinutes}
                         {t.app.minutesShort}
                       </span>
+                      {sortByDistance && userLocation && (
+                        <span className="inline-flex items-center gap-1 text-primary">
+                          <LocateFixed className="h-3.5 w-3.5" />
+                          {formatDistance(haversineDistanceMeters(userLocation, poi.coordinates))}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

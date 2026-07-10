@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl";
-import type { Feature, FeatureCollection, Point } from "geojson";
+import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, Marker as MapLibreMarker } from "maplibre-gl";
+import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
 import { findRegionById } from "@/entities/region/model/regions";
@@ -20,6 +20,9 @@ const poiHitLayerId = "poi-hit-area";
 const poiCircleLayerId = "poi-circles";
 const poiIconLayerId = "poi-icons";
 const poiLabelLayerId = "poi-labels";
+const routeSourceId = "travel-explorer-itinerary-route";
+const routeLayerId = "itinerary-route-line";
+const routeApproximateLayerId = "itinerary-route-line-approximate";
 
 type PoiFeatureProperties = {
   id: string;
@@ -32,8 +35,14 @@ type PoiFeatureProperties = {
 
 type PoiFeature = Feature<Point, PoiFeatureProperties>;
 type PoiFeatureCollection = FeatureCollection<Point, PoiFeatureProperties>;
+type RouteFeatureCollection = FeatureCollection<LineString, { approximate: boolean }>;
 
 const emptyPoiCollection: PoiFeatureCollection = {
+  type: "FeatureCollection",
+  features: []
+};
+
+const emptyRouteCollection: RouteFeatureCollection = {
   type: "FeatureCollection",
   features: []
 };
@@ -86,6 +95,38 @@ async function addPoiLayers(map: MapLibreMap) {
   }
 
   await registerCategoryMarkerIcons(map);
+
+  map.addSource(routeSourceId, {
+    type: "geojson",
+    data: emptyRouteCollection
+  });
+
+  map.addLayer({
+    id: routeLayerId,
+    type: "line",
+    source: routeSourceId,
+    filter: ["==", ["get", "approximate"], false],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#287f72",
+      "line-width": 3,
+      "line-opacity": 0.75
+    }
+  });
+
+  map.addLayer({
+    id: routeApproximateLayerId,
+    type: "line",
+    source: routeSourceId,
+    filter: ["==", ["get", "approximate"], true],
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#287f72",
+      "line-width": 3,
+      "line-opacity": 0.75,
+      "line-dasharray": [2, 1.5]
+    }
+  });
 
   map.addSource(poiSourceId, {
     type: "geojson",
@@ -247,6 +288,33 @@ function setPoiSourceData(map: MapLibreMap, data: PoiFeatureCollection) {
   (source as GeoJSONSource).setData(data);
 }
 
+function setRouteSourceData(map: MapLibreMap, data: RouteFeatureCollection) {
+  const source = map.getSource(routeSourceId);
+
+  if (!source) {
+    return;
+  }
+
+  (source as GeoJSONSource).setData(data);
+}
+
+async function fetchWalkingRouteCoordinates(coordinates: Poi["coordinates"][]): Promise<[number, number][] | null> {
+  const coordStr = coordinates.map((c) => `${c.lng},${c.lat}`).join(";");
+
+  try {
+    const res = await fetch(
+      `https://router.project-osrm.org/route/v1/foot/${coordStr}?overview=full&geometries=geojson`
+    );
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as { routes?: Array<{ geometry?: { coordinates?: [number, number][] } }> };
+    const geometry = data.routes?.[0]?.geometry?.coordinates;
+    return Array.isArray(geometry) && geometry.length > 0 ? geometry : null;
+  } catch {
+    return null;
+  }
+}
+
 function mergeBounds(regions: Region[]): [[number, number], [number, number]] {
   const [first, ...rest] = regions;
   return rest.reduce<[[number, number], [number, number]]>(
@@ -279,7 +347,11 @@ export function ExplorerMap() {
   const hideViewedOnMap = useExplorerStore((state) => state.hideViewedOnMap);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const setZoom = useExplorerStore((state) => state.setZoom);
+  const userLocation = useExplorerStore((state) => state.userLocation);
+  const sortByDistance = useExplorerStore((state) => state.sortByDistance);
+  const itinerary = useExplorerStore((state) => state.itinerary);
   const t = getTranslations(language);
+  const userMarkerRef = useRef<MapLibreMarker | null>(null);
 
   const activeMode = useMemo(
     () => explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode,
@@ -304,9 +376,9 @@ export function ExplorerMap() {
         zoom,
         searchQuery,
         (poi) => getLocalizedPoiSearchText(poi, language),
-        { viewedPoiIds, hideViewed: hideViewedOnMap }
+        { viewedPoiIds, hideViewed: hideViewedOnMap, nearbyOrigin: sortByDistance ? userLocation : null }
       ),
-    [activeMode, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap]
+    [activeMode, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap, sortByDistance, userLocation]
   );
 
   const poiCollection = useMemo(
@@ -458,6 +530,87 @@ export function ExplorerMap() {
       zoom: Math.max(map.getZoom(), 12)
     });
   }, [isMapReady, regionKey, regionPois, selectedPoiId, activeRegions]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady) return;
+
+    let isCancelled = false;
+
+    (async () => {
+      const maplibre = await import("maplibre-gl");
+      if (isCancelled) return;
+
+      if (!userLocation) {
+        userMarkerRef.current?.remove();
+        userMarkerRef.current = null;
+        return;
+      }
+
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
+        return;
+      }
+
+      const el = document.createElement("div");
+      el.className = "h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-[0_0_0_5px_rgba(59,130,246,0.28)]";
+
+      userMarkerRef.current = new maplibre.Marker({ element: el }).setLngLat([userLocation.lng, userLocation.lat]).addTo(map);
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMapReady, userLocation]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady) return;
+
+    const stopsInView = (itinerary?.stops ?? []).filter((stop) => activeRegionIds.includes(stop.poi.regionId));
+
+    if (stopsInView.length < 2) {
+      setRouteSourceData(map, emptyRouteCollection);
+      return;
+    }
+
+    let isCancelled = false;
+    const straightLine: RouteFeatureCollection = {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: { approximate: true },
+          geometry: {
+            type: "LineString",
+            coordinates: stopsInView.map((stop) => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
+          }
+        }
+      ]
+    };
+
+    setRouteSourceData(map, straightLine);
+
+    (async () => {
+      const routeCoordinates = await fetchWalkingRouteCoordinates(stopsInView.map((stop) => stop.poi.coordinates));
+      if (isCancelled || !routeCoordinates) return;
+
+      setRouteSourceData(map, {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: { approximate: false },
+            geometry: { type: "LineString", coordinates: routeCoordinates }
+          }
+        ]
+      });
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMapReady, itinerary, activeRegionIds]);
 
   return (
     <div className="absolute inset-0">

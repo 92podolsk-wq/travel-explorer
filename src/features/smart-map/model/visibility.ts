@@ -1,6 +1,7 @@
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
-import type { Poi } from "@/entities/poi/model/types";
+import type { Coordinates, Poi } from "@/entities/poi/model/types";
 import { computeModeScore } from "@/features/exploration-mode/model/score";
+import { haversineDistanceMeters } from "@/shared/lib/geo";
 
 export const zoomedInOnlyThreshold = 12;
 
@@ -23,6 +24,7 @@ type VisibilityOptions = {
   hideFavorites?: boolean;
   visitedPoiIds?: string[];
   hideVisited?: boolean;
+  nearbyOrigin?: Coordinates | null;
 };
 
 export function getVisiblePois(
@@ -37,7 +39,8 @@ export function getVisiblePois(
     favoritePoiIds = [],
     hideFavorites = false,
     visitedPoiIds = [],
-    hideVisited = false
+    hideVisited = false,
+    nearbyOrigin = null
   }: VisibilityOptions = {}
 ) {
   const normalizedQuery = query.trim().toLowerCase();
@@ -71,6 +74,11 @@ export function getVisiblePois(
         (score >= threshold || poi.mustVisit || matchesMode)
       );
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      if (nearbyOrigin) {
+        return haversineDistanceMeters(nearbyOrigin, a.poi.coordinates) - haversineDistanceMeters(nearbyOrigin, b.poi.coordinates);
+      }
+      return b.score - a.score;
+    })
     .map(({ poi }) => poi);
 }

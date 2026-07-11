@@ -11,6 +11,7 @@ import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { translateFromRussian } from "@/shared/lib/admin-translate";
 import { missingLanguages } from "@/shared/lib/translation-completeness";
+import { LocationMapPicker } from "./location-map-picker";
 
 const t = getTranslations("ru");
 
@@ -362,6 +363,20 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
             Похоже, не переведено: {missingDescription.map((lang) => lang.toUpperCase()).join(", ")}
           </p>
         )}
+      </div>
+
+      <div>
+        <label className={fieldLabel} title="Найдите место на карте, чтобы точно указать координаты, вместо того чтобы вводить их вручную.">
+          Расположение на карте
+        </label>
+        <LocationMapPicker
+          lat={form.lat}
+          lng={form.lng}
+          onChange={(lat, lng) => setForm((p) => ({ ...p, lat: lat.toFixed(6), lng: lng.toFixed(6) }))}
+          fallbackCenter={
+            regions.find((region) => region.id === form.regionId)?.center ?? { lat: 35.0116, lng: 135.7681 }
+          }
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3">

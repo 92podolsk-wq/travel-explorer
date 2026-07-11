@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/shared/ui/service-worker-register";
+import { CookieConsentBanner } from "@/shared/ui/cookie-consent-banner";
 
 export const metadata: Metadata = {
   title: "Travel Explorer",
@@ -33,6 +34,7 @@ export default function RootLayout({
       <body>
         {children}
         <ServiceWorkerRegister />
+        <CookieConsentBanner />
       </body>
     </html>
   );

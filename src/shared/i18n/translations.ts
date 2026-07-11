@@ -63,6 +63,8 @@ type TranslationDictionary = {
     swipeSkip: string;
     swipeProgress: string;
     swipeClose: string;
+    cookieConsentText: string;
+    cookieConsentAccept: string;
   };
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
@@ -188,7 +190,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeLike: "Like",
       swipeSkip: "Skip",
       swipeProgress: "{current} of {total}",
-      swipeClose: "Close"
+      swipeClose: "Close",
+      cookieConsentText:
+        "We use cookies and local storage to remember your language and selected city, and to keep you signed in.",
+      cookieConsentAccept: "Accept"
     },
     poi: {
       "fushimi-inari": {
@@ -397,7 +402,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeLike: "Нравится",
       swipeSkip: "Пропустить",
       swipeProgress: "{current} из {total}",
-      swipeClose: "Закрыть"
+      swipeClose: "Закрыть",
+      cookieConsentText:
+        "Мы используем куки и локальное хранилище, чтобы запоминать язык и выбранный город, а также сохранять вход в аккаунт.",
+      cookieConsentAccept: "Принять"
     },
     poi: {
       "fushimi-inari": {
@@ -606,7 +614,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeLike: "気に入り",
       swipeSkip: "スキップ",
       swipeProgress: "{total}件中{current}件目",
-      swipeClose: "閉じる"
+      swipeClose: "閉じる",
+      cookieConsentText: "言語や選択した都市を記憶し、ログイン状態を保つためにクッキーとローカルストレージを使用しています。",
+      cookieConsentAccept: "同意する"
     },
     poi: {
       "fushimi-inari": {

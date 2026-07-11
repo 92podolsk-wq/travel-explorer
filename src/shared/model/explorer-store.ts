@@ -239,7 +239,7 @@ export const useExplorerStore = create<ExplorerState>()(
     }),
     {
       name: "travel-explorer-settings",
-      partialize: (state) => ({ language: state.language })
+      partialize: (state) => ({ language: state.language, activeRegionIds: state.activeRegionIds })
     }
   )
 );

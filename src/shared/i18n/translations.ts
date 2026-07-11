@@ -43,6 +43,7 @@ type TranslationDictionary = {
     hideVisitedHint: string;
     showVisitedHint: string;
     kyotoGreeting: string;
+    modeFilters: string;
     seasonFilter: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
@@ -168,6 +169,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideVisitedHint: "Hide visited places from the map",
       showVisitedHint: "Show visited places on the map",
       kyotoGreeting: "Konnichiwa!",
+      modeFilters: "Filters",
       seasonFilter: "Season",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
@@ -376,6 +378,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideVisitedHint: "Скрыть посещённые места с карты",
       showVisitedHint: "Показать посещённые места на карте",
       kyotoGreeting: "Коничива!",
+      modeFilters: "Фильтры",
       seasonFilter: "Сезон",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
@@ -584,6 +587,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideVisitedHint: "訪問済みの場所を地図から隠す",
       showVisitedHint: "訪問済みの場所を地図に表示",
       kyotoGreeting: "こんにちは！",
+      modeFilters: "フィルター",
       seasonFilter: "季節",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",

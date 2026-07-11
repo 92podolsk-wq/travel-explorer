@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, Clock, Eye, EyeOff, Layers, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Layers, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
 import { seasons } from "@/entities/poi/model/constants";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
@@ -31,7 +30,7 @@ export function ExplorerSidebar() {
   const areas = useExplorerStore((state) => state.areas);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
-  const activeModeId = useExplorerStore((state) => state.activeModeId);
+  const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
   const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
@@ -45,7 +44,7 @@ export function ExplorerSidebar() {
   const toggleHideVisitedOnMap = useExplorerStore((state) => state.toggleHideVisitedOnMap);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
-  const setActiveMode = useExplorerStore((state) => state.setActiveMode);
+  const toggleModeFilter = useExplorerStore((state) => state.toggleModeFilter);
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
   const selectPoi = useExplorerStore((state) => state.selectPoiFromMap);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
@@ -65,6 +64,7 @@ export function ExplorerSidebar() {
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
+  const [isModeFilterOpen, setIsModeFilterOpen] = useState(false);
 
   async function handleNearMeClick() {
     if (sortByDistance) {
@@ -100,11 +100,10 @@ export function ExplorerSidebar() {
   const reminderKey = seasonReminder ? `${activeRegion.id}:${seasonReminder.season}` : null;
   const showSeasonReminder = seasonReminder && reminderKey && !dismissedReminders.has(reminderKey);
 
-  const activeMode =
-    explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode;
+  const selectedModes = explorationModes.filter((mode) => selectedModeIds.includes(mode.id));
   const visiblePois = getVisiblePois(
     regionPois,
-    activeMode,
+    selectedModes,
     zoom,
     searchQuery,
     (poi) => getLocalizedPoiSearchText(poi, language),
@@ -265,35 +264,53 @@ export function ExplorerSidebar() {
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
       </div>
 
-      <div className="hidden shrink-0 border-b border-white/70 p-4 sm:block">
-        <div className="flex flex-wrap gap-2">
-          {explorationModes.map((mode) => {
-            const ModeIcon = getModeIcon(mode.icon);
-            const matchCount = regionPois.filter((poi) =>
-              poi.tags.some((tag) => mode.tags.includes(tag))
-            ).length;
+      <div className="hidden shrink-0 border-b border-white/70 sm:block">
+        <button
+          type="button"
+          onClick={() => setIsModeFilterOpen((value) => !value)}
+          aria-expanded={isModeFilterOpen}
+          className="flex w-full items-center justify-between gap-2 p-4 pb-3 text-left"
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {t.app.modeFilters}
+            {selectedModeIds.length > 0 && (
+              <span className="ml-1.5 text-primary">({selectedModeIds.length})</span>
+            )}
+          </span>
+          <ChevronDown
+            className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isModeFilterOpen && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
+        {isModeFilterOpen && (
+          <div className="flex flex-wrap gap-2 px-4 pb-4">
+            {explorationModes.map((mode) => {
+              const ModeIcon = getModeIcon(mode.icon);
+              const isSelected = selectedModeIds.includes(mode.id);
+              const matchCount = regionPois.filter((poi) =>
+                poi.tags.some((tag) => mode.tags.includes(tag))
+              ).length;
 
-            return (
-              <Button
-                key={mode.id}
-                type="button"
-                variant={mode.id === activeModeId ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveMode(mode.id)}
-                title={mode.descriptionByLanguage[language] ?? mode.description}
-                className={cn(
-                  "h-9 max-w-full rounded-md px-3",
-                  mode.id === activeModeId ? "shadow-soft" : "bg-white/[0.58]"
-                )}
-              >
-                <ModeIcon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {mode.nameByLanguage[language] ?? mode.name} ({matchCount})
-                </span>
-              </Button>
-            );
-          })}
-        </div>
+              return (
+                <Button
+                  key={mode.id}
+                  type="button"
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleModeFilter(mode.id)}
+                  aria-pressed={isSelected}
+                  title={mode.descriptionByLanguage[language] ?? mode.description}
+                  className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-white/[0.58]")}
+                >
+                  <ModeIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">
+                    {mode.nameByLanguage[language] ?? mode.name} ({matchCount})
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="shrink-0 border-b border-white/70 p-4 pt-3">

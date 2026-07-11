@@ -30,7 +30,7 @@ type ExplorerState = {
   explorationModes: ExplorationMode[];
   activeRegionIds: string[];
   selectedPoiId: string;
-  activeModeId: string;
+  selectedModeIds: string[];
   searchQuery: string;
   favorites: string[];
   viewedPoiIds: string[];
@@ -54,7 +54,7 @@ type ExplorerState = {
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
   setActiveArea: (areaId: string) => void;
-  setActiveMode: (modeId: string) => void;
+  toggleModeFilter: (modeId: string) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
   toggleFavorite: (poiId: string) => void;
@@ -91,7 +91,7 @@ export const useExplorerStore = create<ExplorerState>()(
   explorationModes: seedExplorationModes,
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
-  activeModeId: seedExplorationModes[0]?.id ?? "",
+  selectedModeIds: [],
   searchQuery: "",
   favorites: [],
   viewedPoiIds: [],
@@ -144,7 +144,12 @@ export const useExplorerStore = create<ExplorerState>()(
         selectedPoiId: firstPoiIdForRegions(state.pois, activeRegionIds)
       };
     }),
-  setActiveMode: (modeId) => set({ activeModeId: modeId }),
+  toggleModeFilter: (modeId) =>
+    set((state) => ({
+      selectedModeIds: state.selectedModeIds.includes(modeId)
+        ? state.selectedModeIds.filter((id) => id !== modeId)
+        : [...state.selectedModeIds, modeId]
+    })),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
   toggleFavorite: (poiId) => {
@@ -224,9 +229,7 @@ export const useExplorerStore = create<ExplorerState>()(
   setExplorationModes: (explorationModes) =>
     set((state) => ({
       explorationModes,
-      activeModeId: explorationModes.some((mode) => mode.id === state.activeModeId)
-        ? state.activeModeId
-        : explorationModes[0]?.id ?? state.activeModeId
+      selectedModeIds: state.selectedModeIds.filter((id) => explorationModes.some((mode) => mode.id === id))
     })),
   setUserLocation: (location) => set({ userLocation: location }),
   setIsLocatingUser: (value) => set({ isLocatingUser: value }),

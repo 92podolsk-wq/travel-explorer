@@ -29,7 +29,7 @@ type VisibilityOptions = {
 
 export function getVisiblePois(
   pois: Poi[],
-  mode: ExplorationMode,
+  selectedModes: ExplorationMode[],
   zoom: number,
   query: string,
   getSearchText: (poi: Poi) => string = () => "",
@@ -45,14 +45,16 @@ export function getVisiblePois(
 ) {
   const normalizedQuery = query.trim().toLowerCase();
   const threshold = zoomThreshold(zoom);
+  const hasActiveFilter = selectedModes.length > 0;
+  const selectedTags = new Set(selectedModes.flatMap((mode) => mode.tags));
 
   return pois
     .map((poi) => ({
       poi,
-      score: computeModeScore(poi, mode)
+      score: computeModeScore(poi, { tags: [...selectedTags] })
     }))
     .filter(({ poi, score }) => {
-      const matchesMode = poi.tags.some((tag) => mode.tags.includes(tag));
+      const matchesFilterTags = !hasActiveFilter || poi.tags.some((tag) => selectedTags.has(tag));
       const matchesSearch =
         normalizedQuery.length === 0 ||
         poi.name.toLowerCase().includes(normalizedQuery) ||
@@ -71,7 +73,8 @@ export function getVisiblePois(
         visibleWhenFavorite &&
         visibleWhenVisited &&
         matchesSearch &&
-        (score >= threshold || poi.mustVisit || matchesMode)
+        matchesFilterTags &&
+        (hasActiveFilter || score >= threshold || poi.mustVisit)
       );
     })
     .sort((a, b) => {

@@ -5,7 +5,6 @@ import { Minus, Plus } from "lucide-react";
 import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, Marker as MapLibreMarker } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
-import { emptyExplorationMode } from "@/entities/exploration-mode/model/exploration-modes";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
@@ -337,7 +336,7 @@ export function ExplorerMap() {
   const pois = useExplorerStore((state) => state.pois);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
-  const activeModeId = useExplorerStore((state) => state.activeModeId);
+  const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
   const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const regions = useExplorerStore((state) => state.regions);
@@ -353,9 +352,9 @@ export function ExplorerMap() {
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
 
-  const activeMode = useMemo(
-    () => explorationModes.find((mode) => mode.id === activeModeId) ?? explorationModes[0] ?? emptyExplorationMode,
-    [activeModeId, explorationModes]
+  const selectedModes = useMemo(
+    () => explorationModes.filter((mode) => selectedModeIds.includes(mode.id)),
+    [selectedModeIds, explorationModes]
   );
 
   const activeRegions = useMemo(
@@ -372,13 +371,13 @@ export function ExplorerMap() {
     () =>
       getVisiblePois(
         regionPois,
-        activeMode,
+        selectedModes,
         zoom,
         searchQuery,
         (poi) => getLocalizedPoiSearchText(poi, language),
         { viewedPoiIds, hideViewed: hideViewedOnMap, nearbyOrigin: sortByDistance ? userLocation : null }
       ),
-    [activeMode, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap, sortByDistance, userLocation]
+    [selectedModes, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap, sortByDistance, userLocation]
   );
 
   const poiCollection = useMemo(

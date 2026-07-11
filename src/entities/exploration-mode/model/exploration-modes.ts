@@ -74,14 +74,3 @@ export const seedExplorationModes: ExplorationMode[] = [
 ];
 
 export const defaultExplorationMode = seedExplorationModes[0];
-
-export const emptyExplorationMode: ExplorationMode = {
-  id: "",
-  position: 0,
-  name: "",
-  nameByLanguage: { en: "", ru: "", ja: "" },
-  description: "",
-  descriptionByLanguage: { en: "", ru: "", ja: "" },
-  tags: [],
-  icon: "sparkles"
-};

@@ -718,6 +718,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <CountryForm
+                      key={country.id}
                       country={country}
                       onCancel={() => setCountrySelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateCountry(country.id, input)}
@@ -769,6 +770,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <AreaForm
+                      key={area.id}
                       area={area}
                       countries={countries}
                       onCancel={() => setAreaSelection({ mode: "empty" })}
@@ -828,6 +830,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <RegionForm
+                      key={region.id}
                       region={region}
                       areas={areas}
                       onCancel={() => setCitySelection({ mode: "empty" })}
@@ -912,6 +915,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <PoiForm
+                      key={poi.id}
                       poi={poi}
                       regions={regions}
                       onCancel={() => setLocationSelection({ mode: "empty" })}
@@ -970,6 +974,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <ExplorationModeForm
+                      key={mode.id}
                       mode={mode}
                       onCancel={() => setModeSelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateMode(mode.id, input)}
@@ -1092,6 +1097,7 @@ export function AdminPanel() {
                       </button>
                     </div>
                     <AdminAccountForm
+                      key={account.id}
                       account={account}
                       onCancel={() => setAccountSelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateAccount(account.id, input)}

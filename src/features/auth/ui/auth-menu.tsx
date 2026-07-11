@@ -95,10 +95,10 @@ export function AuthMenu() {
           type="button"
           onClick={() => setIsUserMenuOpen((value) => !value)}
           aria-expanded={isUserMenuOpen}
-          className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted/60"
+          className="flex max-w-[7.5rem] items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted/60 sm:max-w-none"
         >
-          <ProfileAvatar avatarId={currentUser.avatarId} className="h-6 w-6" />
-          {currentUser.name || currentUser.email}
+          <ProfileAvatar avatarId={currentUser.avatarId} className="h-6 w-6 shrink-0" />
+          <span className="truncate">{currentUser.name || currentUser.email}</span>
           <ChevronDown
             className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`}
             aria-hidden="true"

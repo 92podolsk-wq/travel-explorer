@@ -62,14 +62,14 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-5">
+    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3 sm:gap-3 sm:px-5">
       <button
         type="button"
         onClick={() => router.push("/")}
-        className="flex items-center gap-2.5 rounded-md transition hover:opacity-80"
+        className="flex shrink-0 items-center gap-2.5 rounded-md transition hover:opacity-80"
       >
-        <TravelKittenLogo className="h-9 w-9" />
-        <div className="text-left leading-tight">
+        <TravelKittenLogo className="h-9 w-9 shrink-0" />
+        <div className="hidden text-left leading-tight sm:block">
           <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             Explore Japan
@@ -77,25 +77,27 @@ export function SiteHeader() {
         </div>
       </button>
 
-      <div className="relative">
+      <div className="relative min-w-0 flex-1 sm:flex-initial">
         <button
           type="button"
           onClick={() => setIsMenuOpen((value) => !value)}
           aria-expanded={isMenuOpen}
-          className="flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60"
+          className="flex w-full min-w-0 items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60 sm:w-auto"
         >
-          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} className="h-5 w-5 shadow-none" />
-          {isAreaActive
-            ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
-            : [
-                activeRegion.nameByLanguage[language],
-                activeArea?.nameByLanguage[language],
-                activeCountry?.nameByLanguage[language]
-              ]
-                .filter(Boolean)
-                .join(", ")}
+          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} className="h-5 w-5 shrink-0 shadow-none" />
+          <span className="min-w-0 flex-1 truncate text-left">
+            {isAreaActive
+              ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
+              : [
+                  activeRegion.nameByLanguage[language],
+                  activeArea?.nameByLanguage[language],
+                  activeCountry?.nameByLanguage[language]
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+          </span>
           <ChevronDown
-            className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
+            className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
             aria-hidden="true"
           />
         </button>
@@ -192,7 +194,7 @@ export function SiteHeader() {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
         <LanguageSwitcher />
         <AuthMenu />
       </div>

@@ -1,5 +1,6 @@
 import { Delaunay } from "d3-delaunay";
 import type { Region } from "@/entities/region/model/types";
+import type { Language } from "@/shared/i18n/types";
 
 export const regionVoronoiColors = [
   "#c9834b",
@@ -16,7 +17,7 @@ export const regionVoronoiColors = [
 
 export type RegionVoronoiFeature = {
   type: "Feature";
-  properties: { regionId: string; color: string };
+  properties: { regionId: string; name: string; color: string };
   geometry: { type: "Polygon"; coordinates: [number, number][][] };
 };
 
@@ -30,7 +31,7 @@ export const emptyRegionVoronoiCollection: RegionVoronoiCollection = {
   features: []
 };
 
-export function buildRegionVoronoi(regions: Region[]): RegionVoronoiCollection {
+export function buildRegionVoronoi(regions: Region[], language: Language): RegionVoronoiCollection {
   if (regions.length < 2) {
     return emptyRegionVoronoiCollection;
   }
@@ -57,7 +58,11 @@ export function buildRegionVoronoi(regions: Region[]): RegionVoronoiCollection {
 
     features.push({
       type: "Feature",
-      properties: { regionId: region.id, color: regionVoronoiColors[index % regionVoronoiColors.length] },
+      properties: {
+        regionId: region.id,
+        name: region.nameByLanguage[language] ?? region.name,
+        color: regionVoronoiColors[index % regionVoronoiColors.length]
+      },
       geometry: { type: "Polygon", coordinates: [cell as [number, number][]] }
     });
   });

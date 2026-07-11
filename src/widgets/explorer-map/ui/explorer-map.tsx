@@ -34,6 +34,7 @@ const routeApproximateLayerId = "itinerary-route-line-approximate";
 const regionVoronoiSourceId = "travel-explorer-region-voronoi";
 const regionVoronoiFillLayerId = "region-voronoi-fill";
 const regionVoronoiLineLayerId = "region-voronoi-line";
+const regionVoronoiLabelLayerId = "region-voronoi-label";
 
 type PoiFeatureProperties = {
   id: string;
@@ -134,6 +135,25 @@ async function addPoiLayers(map: MapLibreMap) {
       "line-color": ["get", "color"],
       "line-width": 2,
       "line-opacity": 0.7
+    }
+  });
+
+  map.addLayer({
+    id: regionVoronoiLabelLayerId,
+    type: "symbol",
+    source: regionVoronoiSourceId,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["Noto Sans Bold"],
+      "text-size": 16,
+      "text-transform": "uppercase",
+      "text-letter-spacing": 0.08,
+      "text-allow-overlap": false
+    },
+    paint: {
+      "text-color": ["get", "color"],
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.8
     }
   });
 
@@ -321,7 +341,7 @@ function applyBasemapLanguage(map: MapLibreMap, language: Language) {
   const layers = map.getStyle()?.layers ?? [];
 
   layers.forEach((layer) => {
-    if (layer.type !== "symbol" || layer.source === poiSourceId) {
+    if (layer.type !== "symbol" || layer.source === poiSourceId || layer.source === regionVoronoiSourceId) {
       return;
     }
 
@@ -449,7 +469,10 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     [regions, activeRegionIds]
   );
 
-  const regionVoronoiCollection = useMemo(() => buildRegionVoronoi(activeRegions), [activeRegions]);
+  const regionVoronoiCollection = useMemo(
+    () => buildRegionVoronoi(activeRegions, language),
+    [activeRegions, language]
+  );
 
   const regionPois = useMemo(
     () => pois.filter((poi) => activeRegionIds.includes(poi.regionId)),

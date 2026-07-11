@@ -65,6 +65,44 @@ export async function addStop(userId: string, poiId: string): Promise<Itinerary>
   return getOrCreateItinerary(userId);
 }
 
+export async function addStops(userId: string, poiIds: string[]): Promise<Itinerary> {
+  const itinerary = await prisma.itinerary.upsert({
+    where: { userId },
+    create: { userId, shareToken: generateShareToken() },
+    update: {}
+  });
+
+  const existingStops = await prisma.itineraryStop.findMany({ where: { itineraryId: itinerary.id } });
+  const existingPoiIds = new Set(existingStops.map((stop) => stop.poiId));
+  const targetDay = existingStops.reduce((max, stop) => Math.max(max, stop.day), 1);
+  let nextPosition =
+    existingStops.filter((stop) => stop.day === targetDay).reduce((max, stop) => Math.max(max, stop.position), -1) +
+    1;
+
+  const newPoiIds = poiIds.filter((poiId) => !existingPoiIds.has(poiId));
+  if (newPoiIds.length > 0) {
+    await prisma.itineraryStop.createMany({
+      data: newPoiIds.map((poiId) => ({
+        itineraryId: itinerary.id,
+        poiId,
+        day: targetDay,
+        position: nextPosition++
+      }))
+    });
+  }
+
+  return getOrCreateItinerary(userId);
+}
+
+export async function clearStops(userId: string): Promise<Itinerary> {
+  const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
+  if (itinerary) {
+    await prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id } });
+  }
+
+  return getOrCreateItinerary(userId);
+}
+
 export async function removeStop(userId: string, poiId: string): Promise<Itinerary> {
   const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
   if (itinerary) {

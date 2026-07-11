@@ -95,20 +95,26 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
-  const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | null>(null);
+  const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | "itinerary" | null>(null);
   const [dragPoiId, setDragPoiId] = useState<string | null>(null);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [generatorRegionId, setGeneratorRegionId] = useState("");
-  const [generatorDays, setGeneratorDays] = useState(2);
-  const [generatorHoursPerDay, setGeneratorHoursPerDay] = useState(6);
+  const [generatorDays, setGeneratorDays] = useState("2");
+  const [generatorHoursPerDay, setGeneratorHoursPerDay] = useState("6");
   const [generatorSource, setGeneratorSource] = useState<"favorites" | "recommended">("favorites");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
 
   const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
+
+  function clampDayCount(raw: string) {
+    const parsed = Number(raw);
+    if (!raw.trim() || Number.isNaN(parsed)) return 1;
+    return Math.min(14, Math.max(1, Math.round(parsed)));
+  }
 
   async function handleAddToItinerary(poiId: string) {
     const res = await fetch("/api/me/itinerary/stops", {
@@ -116,6 +122,22 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiId })
     });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleAddAllToItinerary() {
+    const poiIds = favoritePois.filter((poi) => !itineraryPoiIds.has(poi.id)).map((poi) => poi.id);
+    if (poiIds.length === 0) return;
+    const res = await fetch("/api/me/itinerary/stops", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poiIds })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleClearItinerary() {
+    const res = await fetch("/api/me/itinerary/stops", { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
@@ -180,8 +202,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           regionId: generatorRegionId,
-          days: generatorDays,
-          hoursPerDay: generatorHoursPerDay,
+          days: clampDayCount(generatorDays),
+          hoursPerDay: clampDayCount(generatorHoursPerDay),
           source: generatorSource
         })
       });
@@ -240,13 +262,15 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     router.push("/");
   }
 
-  function confirmPendingClear() {
+  async function confirmPendingClear() {
     if (pendingClear === "saved") {
       clearFavoritePois();
     } else if (pendingClear === "visited") {
       clearVisitedPois();
     } else if (pendingClear === "viewed") {
       clearViewedPois();
+    } else if (pendingClear === "itinerary") {
+      await handleClearItinerary();
     }
     setPendingClear(null);
   }
@@ -258,7 +282,18 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
         ? t.clearVisitedConfirm
         : pendingClear === "viewed"
           ? t.clearViewedConfirm
-          : null;
+          : pendingClear === "itinerary"
+            ? t.clearItineraryConfirm
+            : null;
+
+  const pendingClearLabel =
+    pendingClear === "saved"
+      ? t.clearSaved
+      : pendingClear === "visited"
+        ? t.clearVisited
+        : pendingClear === "itinerary"
+          ? t.clearItinerary
+          : t.clearViewed;
 
   async function handleSelectAvatar(avatarId: AvatarId) {
     const res = await fetch("/api/me/avatar", {
@@ -369,13 +404,24 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 {t.savedPlaces}
               </h2>
               {favoritePois.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setPendingClear("saved")}
-                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  {t.clearSaved}
-                </button>
+                <div className="flex items-center gap-3">
+                  {favoritePois.some((poi) => !itineraryPoiIds.has(poi.id)) && (
+                    <button
+                      type="button"
+                      onClick={handleAddAllToItinerary}
+                      className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      {t.addAllToItinerary}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setPendingClear("saved")}
+                    className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                  >
+                    {t.clearSaved}
+                  </button>
+                </div>
               )}
             </div>
             {favoritePois.length === 0 ? (
@@ -475,6 +521,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       <Share2 className="h-3 w-3" />
                       {isLinkCopied ? t.linkCopied : t.shareItinerary}
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingClear("itinerary")}
+                      className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      {t.clearItinerary}
+                    </button>
                   </>
                 )}
               </div>
@@ -511,7 +564,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       min={1}
                       max={14}
                       value={generatorDays}
-                      onChange={(e) => setGeneratorDays(Number(e.target.value) || 1)}
+                      onChange={(e) => setGeneratorDays(e.target.value)}
+                      onBlur={() => setGeneratorDays(String(clampDayCount(generatorDays)))}
                       className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
                     />
                   </label>
@@ -522,7 +576,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       min={1}
                       max={14}
                       value={generatorHoursPerDay}
-                      onChange={(e) => setGeneratorHoursPerDay(Number(e.target.value) || 1)}
+                      onChange={(e) => setGeneratorHoursPerDay(e.target.value)}
+                      onBlur={() => setGeneratorHoursPerDay(String(clampDayCount(generatorHoursPerDay)))}
                       className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
                     />
                   </label>
@@ -689,7 +744,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 {t.cancel}
               </Button>
               <Button type="button" size="sm" onClick={confirmPendingClear}>
-                {pendingClear === "saved" ? t.clearSaved : pendingClear === "visited" ? t.clearVisited : t.clearViewed}
+                {pendingClearLabel}
               </Button>
             </div>
           </div>

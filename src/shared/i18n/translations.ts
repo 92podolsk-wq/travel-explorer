@@ -103,8 +103,11 @@ type TranslationDictionary = {
     myItinerary: string;
     itineraryEmpty: string;
     addToItinerary: string;
+    addAllToItinerary: string;
     inItinerary: string;
     removeFromItinerary: string;
+    clearItinerary: string;
+    clearItineraryConfirm: string;
     shareItinerary: string;
     linkCopied: string;
     visitTime: string;
@@ -317,8 +320,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       myItinerary: "My itinerary",
       itineraryEmpty: "Add places from your favorites to build an itinerary.",
       addToItinerary: "Add to itinerary",
+      addAllToItinerary: "Add all to itinerary",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
+      clearItinerary: "Clear itinerary",
+      clearItineraryConfirm: "Remove all places from the itinerary? This can't be undone.",
       shareItinerary: "Share",
       linkCopied: "Link copied",
       visitTime: "Visiting",
@@ -529,8 +535,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       myItinerary: "Мой маршрут",
       itineraryEmpty: "Добавьте места из избранного, чтобы построить маршрут.",
       addToItinerary: "В маршрут",
+      addAllToItinerary: "Добавить все в маршрут",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
+      clearItinerary: "Очистить маршрут",
+      clearItineraryConfirm: "Удалить все места из маршрута? Это действие нельзя отменить.",
       shareItinerary: "Поделиться",
       linkCopied: "Ссылка скопирована",
       visitTime: "На месте",
@@ -740,8 +749,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       myItinerary: "自分のルート",
       itineraryEmpty: "お気に入りから場所を追加してルートを作成しましょう。",
       addToItinerary: "ルートに追加",
+      addAllToItinerary: "すべてルートに追加",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
+      clearItinerary: "ルートを消去",
+      clearItineraryConfirm: "ルートからすべての場所を削除しますか?この操作は元に戻せません。",
       shareItinerary: "共有",
       linkCopied: "リンクをコピーしました",
       visitTime: "滞在時間",

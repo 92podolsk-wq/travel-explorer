@@ -47,7 +47,7 @@ export function ExplorerSidebar() {
   const zoom = useExplorerStore((state) => state.zoom);
   const setActiveMode = useExplorerStore((state) => state.setActiveMode);
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
-  const selectPoi = useExplorerStore((state) => state.selectPoi);
+  const selectPoi = useExplorerStore((state) => state.selectPoiFromMap);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
   const toggleSeason = useExplorerStore((state) => state.toggleSeason);
   const userLocation = useExplorerStore((state) => state.userLocation);
@@ -64,6 +64,7 @@ export function ExplorerSidebar() {
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
+  const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
 
   async function handleNearMeClick() {
     if (sortByDistance) {
@@ -132,12 +133,25 @@ export function ExplorerSidebar() {
   return (
     <>
     <motion.aside
-      initial={{ opacity: 0, x: -18 }}
-      animate={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="absolute left-5 top-5 z-10 flex h-[calc(100%-2.5rem)] w-[min(370px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.82] shadow-panel backdrop-blur-xl"
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden rounded-t-2xl border-t border-white/70 bg-white/[0.92] shadow-panel backdrop-blur-xl transition-[height] duration-300 ease-out",
+        isMobileSheetExpanded ? "h-[85vh]" : "h-[236px]",
+        "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border lg:transition-none"
+      )}
     >
-      <div className="relative overflow-hidden border-b border-white/70 p-5">
+      <button
+        type="button"
+        onClick={() => setIsMobileSheetExpanded((value) => !value)}
+        aria-label={isMobileSheetExpanded ? t.app.hideDetails : t.app.showDetails}
+        className="flex w-full shrink-0 flex-col items-center gap-1 pb-1 pt-2.5 lg:hidden"
+      >
+        <span className="h-1 w-9 rounded-full bg-border" />
+      </button>
+
+      <div className="relative shrink-0 overflow-hidden border-b border-white/70 p-5">
         <SeigaihaWatermark className="-top-8 -right-8" />
         <div
           className="relative mb-3 flex w-fit items-center gap-2.5"
@@ -251,7 +265,7 @@ export function ExplorerSidebar() {
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
       </div>
 
-      <div className="hidden border-b border-white/70 p-4 sm:block">
+      <div className="hidden shrink-0 border-b border-white/70 p-4 sm:block">
         <div className="flex flex-wrap gap-2">
           {explorationModes.map((mode) => {
             const ModeIcon = getModeIcon(mode.icon);
@@ -282,7 +296,7 @@ export function ExplorerSidebar() {
         </div>
       </div>
 
-      <div className="border-b border-white/70 p-4 pt-3">
+      <div className="shrink-0 border-b border-white/70 p-4 pt-3">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {t.app.seasonFilter}
         </p>

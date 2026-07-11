@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -92,7 +92,21 @@ export function PoiDetails() {
   }
 
   return (
-    <div className="absolute right-5 top-5 z-10 hidden h-[calc(100%-2.5rem)] w-[400px] lg:block">
+    <div
+      className={cn(
+        "z-20 lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-5 lg:top-5 lg:z-10 lg:block lg:h-[calc(100%-2.5rem)] lg:w-[400px]",
+        isDetailsOpen ? "fixed inset-x-0 bottom-0 h-[85vh]" : "hidden"
+      )}
+    >
+      {isDetailsOpen && (
+        <button
+          type="button"
+          aria-label={t.app.hideDetails}
+          onClick={() => setDetailsOpen(false)}
+          className="fixed inset-0 z-10 bg-black/20 lg:hidden"
+        />
+      )}
+
       <motion.button
         type="button"
         aria-label={isDetailsOpen ? t.app.hideDetails : t.app.showDetails}
@@ -101,7 +115,7 @@ export function PoiDetails() {
         animate={{ right: isDetailsOpen ? "392px" : "-10px" }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
-          "absolute top-1/2 z-20 flex h-16 w-9 -translate-y-1/2 items-center justify-center rounded-l-full border text-primary shadow-panel backdrop-blur-xl transition-colors hover:bg-muted",
+          "absolute top-1/2 z-20 hidden h-16 w-9 -translate-y-1/2 items-center justify-center rounded-l-full border text-primary shadow-panel backdrop-blur-xl transition-colors hover:bg-muted lg:flex",
           isDetailsOpen ? "border-white/70 bg-white/90" : "border-white bg-white"
         )}
       >
@@ -116,8 +130,17 @@ export function PoiDetails() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 18 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute inset-0 flex flex-col overflow-hidden rounded-lg border border-white/70 bg-white/[0.84] shadow-panel backdrop-blur-xl"
+            className="absolute inset-0 z-20 flex flex-col overflow-hidden rounded-t-2xl border border-white/70 bg-white/[0.96] shadow-panel backdrop-blur-xl lg:rounded-lg lg:bg-white/[0.84]"
           >
+          <button
+            type="button"
+            aria-label={t.app.hideDetails}
+            onClick={() => setDetailsOpen(false)}
+            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
           <div className="relative m-3 h-64 shrink-0 overflow-hidden rounded-lg">
             <Image
               key={activePhoto?.id}

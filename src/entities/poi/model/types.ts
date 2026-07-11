@@ -10,7 +10,9 @@ export type PoiCategory =
   | "nature"
   | "viewpoint"
   | "market"
-  | "museum";
+  | "museum"
+  | "restaurant"
+  | "residential";
 
 export type PoiTag =
   | "must-visit"

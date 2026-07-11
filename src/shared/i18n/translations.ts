@@ -134,7 +134,7 @@ export const translations: Record<Language, TranslationDictionary> = {
   en: {
     app: {
       searchAria: "Search places",
-      searchPlaceholder: "Search Kyoto",
+      searchPlaceholder: "Search places",
       visible: "visible",
       saved: "saved",
       places: "places",
@@ -249,7 +249,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       nature: "nature",
       viewpoint: "viewpoint",
       market: "market",
-      museum: "museum"
+      museum: "museum",
+      restaurant: "restaurant",
+      residential: "residential"
     },
     tag: {
       "must-visit": "must visit",
@@ -340,7 +342,7 @@ export const translations: Record<Language, TranslationDictionary> = {
   ru: {
     app: {
       searchAria: "Поиск мест",
-      searchPlaceholder: "Поиск по Киото",
+      searchPlaceholder: "Поиск мест",
       visible: "видно",
       saved: "сохранено",
       places: "мест",
@@ -455,7 +457,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       nature: "природа",
       viewpoint: "видовая точка",
       market: "рынок",
-      museum: "музей"
+      museum: "музей",
+      restaurant: "ресторан",
+      residential: "жилой дом"
     },
     tag: {
       "must-visit": "обязательно",
@@ -546,7 +550,7 @@ export const translations: Record<Language, TranslationDictionary> = {
   ja: {
     app: {
       searchAria: "場所を検索",
-      searchPlaceholder: "京都を検索",
+      searchPlaceholder: "場所を検索",
       visible: "件表示中",
       saved: "件保存済み",
       places: "件",
@@ -661,7 +665,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       nature: "自然",
       viewpoint: "展望",
       market: "市場",
-      museum: "博物館"
+      museum: "博物館",
+      restaurant: "レストラン",
+      residential: "住宅"
     },
     tag: {
       "must-visit": "必見",

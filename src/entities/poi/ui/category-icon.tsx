@@ -1,4 +1,4 @@
-import { Building2, Church, Eye, Flower2, Landmark, Route, ShoppingBasket, Trees, University } from "lucide-react";
+import { Building2, Church, Eye, Flower2, Home, Landmark, Route, ShoppingBasket, Trees, University, UtensilsCrossed } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { PoiCategory } from "@/entities/poi/model/types";
 
@@ -11,5 +11,7 @@ export const categoryIcons: Record<PoiCategory, LucideIcon> = {
   nature: Trees,
   viewpoint: Eye,
   market: ShoppingBasket,
-  museum: University
+  museum: University,
+  restaurant: UtensilsCrossed,
+  residential: Home
 };

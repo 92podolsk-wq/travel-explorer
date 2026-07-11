@@ -330,6 +330,22 @@ function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {
   ];
 }
 
+const desktopBreakpointPx = 1024;
+
+function getFitBoundsPadding(): { top: number; bottom: number; left: number; right: number } {
+  if (typeof window === "undefined") {
+    return { top: 70, bottom: 70, left: 70, right: 70 };
+  }
+
+  if (window.innerWidth >= desktopBreakpointPx) {
+    // Desktop: the sidebar floats top-left, so keep bounds clear of it instead of the bottom.
+    return { top: 60, bottom: 60, left: 420, right: 60 };
+  }
+
+  // Mobile: the collapsed bottom sheet covers ~236px plus the safe-area inset.
+  return { top: 40, bottom: 280, left: 40, right: 40 };
+}
+
 const languageToBasemapNameField: Record<Language, string> = {
   en: "name:en",
   ru: "name:ru",
@@ -616,7 +632,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
 
     if (regionChanged) {
       if (regionPois.length > 1) {
-        map.fitBounds(boundsFromPois(regionPois), { padding: 70, duration: 650, maxZoom: 15 });
+        map.fitBounds(boundsFromPois(regionPois), { padding: getFitBoundsPadding(), duration: 650, maxZoom: 15 });
       } else if (regionPois.length === 1) {
         map.easeTo({
           center: [regionPois[0].coordinates.lng, regionPois[0].coordinates.lat],
@@ -625,7 +641,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         });
       } else if (activeRegions.length > 0) {
         const bounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
-        map.fitBounds(bounds, { padding: 70, duration: 650 });
+        map.fitBounds(bounds, { padding: getFitBoundsPadding(), duration: 650 });
       }
       return;
     }

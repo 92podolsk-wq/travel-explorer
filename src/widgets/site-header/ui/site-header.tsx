@@ -198,7 +198,7 @@ export function SiteHeader() {
             />
             <div
               className={cn(
-                "fixed inset-x-3 top-[4.5rem] z-40 flex max-h-[70dvh] flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-white p-4 shadow-panel",
+                "fixed inset-x-3 top-[4.5rem] z-40 flex max-h-[70dvh] touch-pan-y flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-white p-4 shadow-panel",
                 "lg:absolute lg:inset-x-auto lg:left-1/2 lg:top-full lg:mt-2 lg:max-h-none lg:w-max lg:-translate-x-1/2 lg:overflow-visible lg:p-0"
               )}
             >

@@ -36,7 +36,7 @@ export function FavoritesPanel() {
   };
 
   return (
-    <div className="absolute left-1/2 top-6 z-10 hidden -translate-x-1/2 items-center gap-3 rounded-md border border-white/70 bg-white/[0.82] px-3 py-2 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-xl md:flex">
+    <div className="absolute left-1/2 top-6 z-10 hidden -translate-x-1/2 items-center gap-3 rounded-md border border-white/70 bg-white/[0.82] px-3 py-2 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-xl lg:flex">
       <span className="inline-flex items-center gap-1.5 text-foreground">
         <Bookmark className="h-3.5 w-3.5" />
         {favoritePois.length} {t.app.saved}

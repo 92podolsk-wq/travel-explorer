@@ -5,6 +5,8 @@ import { readExplorationModes } from "@/shared/server/exploration-modes-reposito
 import { readPublishedPois } from "@/shared/server/pois-repository";
 import { readPublishedRegions } from "@/shared/server/regions-repository";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const [pois, regions, countries, areas, explorationModes] = await Promise.all([
     readPublishedPois(),

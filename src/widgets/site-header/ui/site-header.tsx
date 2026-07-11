@@ -12,6 +12,7 @@ import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switc
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { CityIcon } from "@/shared/ui/city-icon";
+import { CountryFlagIcon } from "@/shared/ui/country-flag-icon";
 import { cn } from "@/shared/lib/cn";
 
 type CountryGroup = {
@@ -210,6 +211,7 @@ export function SiteHeader() {
                       </p>
                       <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
                         <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                        <CountryFlagIcon countryId={countryGroup.country.id} />
                         {countryGroup.country.nameByLanguage[language]}
                       </p>
                     </div>
@@ -241,6 +243,7 @@ export function SiteHeader() {
                         ) : (
                           <span className="h-3.5 w-3.5 shrink-0" />
                         )}
+                        <CountryFlagIcon countryId={countryGroup.country.id} />
                         {countryGroup.country.nameByLanguage[language]}
                       </button>
                     ))}

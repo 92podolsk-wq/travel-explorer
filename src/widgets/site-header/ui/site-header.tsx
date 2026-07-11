@@ -117,9 +117,14 @@ export function SiteHeader() {
               className="fixed inset-0 z-30 cursor-default"
               onClick={() => setIsMenuOpen(false)}
             />
-            <div className="absolute left-1/2 top-full z-40 mt-2 flex -translate-x-1/2 gap-8 rounded-lg border border-border bg-white p-4 shadow-panel">
+            <div
+              className={cn(
+                "fixed inset-x-3 top-[4.5rem] z-40 flex max-h-[70dvh] flex-col gap-4 overflow-y-auto rounded-lg border border-border bg-white p-4 shadow-panel",
+                "lg:absolute lg:inset-x-auto lg:left-1/2 lg:top-full lg:mt-2 lg:max-h-none lg:w-max lg:-translate-x-1/2 lg:flex-row lg:gap-8 lg:overflow-visible"
+              )}
+            >
               {countryGroups.map((countryGroup) => (
-                <div key={countryGroup.country.id} className="flex gap-8">
+                <div key={countryGroup.country.id} className="flex flex-col gap-3 lg:flex-row lg:gap-8">
                   <div>
                     <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                       {t.app.country}
@@ -133,7 +138,7 @@ export function SiteHeader() {
                     const isThisAreaActive = areaGroup.regions.every((region) => activeRegionIds.includes(region.id));
 
                     return (
-                      <div key={areaGroup.area.id} className="flex gap-8">
+                      <div key={areaGroup.area.id} className="flex flex-col gap-3 lg:flex-row lg:gap-8">
                         <div>
                           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                             {t.app.area}

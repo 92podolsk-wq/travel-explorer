@@ -6,6 +6,7 @@ import type { Country } from "@/entities/country/model/types";
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
+import type { SiteSettings } from "@/entities/site-setting/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
@@ -20,6 +21,7 @@ type ExplorerPageProps = {
   initialCountries: Country[];
   initialAreas: Area[];
   initialExplorationModes: ExplorationMode[];
+  initialSiteSettings: SiteSettings;
 };
 
 export function ExplorerPage({
@@ -27,7 +29,8 @@ export function ExplorerPage({
   initialRegions,
   initialCountries,
   initialAreas,
-  initialExplorationModes
+  initialExplorationModes,
+  initialSiteSettings
 }: ExplorerPageProps) {
   const setPois = useExplorerStore((state) => state.setPois);
   const setRegions = useExplorerStore((state) => state.setRegions);
@@ -50,7 +53,10 @@ export function ExplorerPage({
     <main className="flex h-dvh w-full flex-col overflow-hidden bg-muted">
       <SiteHeader />
       <div className="relative flex-1 overflow-hidden">
-        <ExplorerMap />
+        <ExplorerMap
+          initialMapStyleId={initialSiteSettings.mapStyleId}
+          initialProtomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+        />
         <ExplorerSidebar />
         <FavoritesPanel />
         <PoiDetails />

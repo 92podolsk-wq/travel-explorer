@@ -27,6 +27,7 @@ import { MediaLibraryTab } from "./media-library-tab";
 import { ReportsTab } from "./reports-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
+import { SiteSettingsTab } from "./site-settings-tab";
 
 type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" };
 
@@ -34,6 +35,7 @@ type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: st
 
 type Tab =
   | "dashboard"
+  | "settings"
   | "countries"
   | "areas"
   | "cities"
@@ -46,6 +48,7 @@ type Tab =
 
 const tabLabels: Record<Tab, string> = {
   dashboard: "Дашборд",
+  settings: "Настройки",
   countries: "Страны",
   areas: "Регионы",
   cities: "Города",
@@ -60,7 +63,7 @@ const tabLabels: Record<Tab, string> = {
 type TabGroup = "overview" | "content" | "community";
 
 const tabGroups: Record<TabGroup, Tab[]> = {
-  overview: ["dashboard"],
+  overview: ["dashboard", "settings"],
   content: ["countries", "areas", "cities", "locations", "media", "modes"],
   community: ["reports", "users", "accounts"]
 };
@@ -681,6 +684,8 @@ export function AdminPanel() {
       </div>
 
       {activeTab === "dashboard" && <DashboardTab />}
+
+      {activeTab === "settings" && <SiteSettingsTab />}
 
       {activeTab === "countries" && (
         <>

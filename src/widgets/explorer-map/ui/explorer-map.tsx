@@ -2,15 +2,23 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
-import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, Marker as MapLibreMarker } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  GeoJSONSource,
+  Map as MapLibreMap,
+  MapLayerMouseEvent,
+  Marker as MapLibreMarker,
+  StyleSpecification
+} from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
+import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
-import { baseMapStyleUrl } from "@/shared/map/base-map-style";
+import { buildProtomapsStyle, defaultMapStyleUrl, presetMapStyleUrl } from "@/shared/map/map-styles";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 
@@ -29,6 +37,7 @@ type PoiFeatureProperties = {
   selected: boolean;
   mustVisit: boolean;
   viewed: boolean;
+  favorite: boolean;
   category: PoiCategory;
 };
 
@@ -49,7 +58,8 @@ const emptyRouteCollection: RouteFeatureCollection = {
 function createPoiCollection(
   pois: Poi[],
   selectedPoiId: string,
-  viewedPoiIds: string[]
+  viewedPoiIds: string[],
+  favoritePoiIds: string[]
 ): PoiFeatureCollection {
   return {
     type: "FeatureCollection",
@@ -67,6 +77,7 @@ function createPoiCollection(
           selected: poi.id === selectedPoiId,
           mustVisit: poi.mustVisit,
           viewed: viewedPoiIds.includes(poi.id),
+          favorite: favoritePoiIds.includes(poi.id),
           category: poi.categories[0] ?? "district"
         }
       })
@@ -160,7 +171,7 @@ async function addPoiLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "selected"], true],
         "#287f72",
-        ["==", ["get", "viewed"], true],
+        ["all", ["==", ["get", "viewed"], true], ["==", ["get", "favorite"], false]],
         "#b0b0a8",
         categoryColorMatchExpression
       ],
@@ -168,19 +179,23 @@ async function addPoiLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "selected"], true],
         "#1d5c52",
+        ["==", ["get", "favorite"], true],
+        "#9d174d",
         "#ffffff"
       ],
       "circle-stroke-width": [
         "case",
         ["==", ["get", "selected"], true],
         4.5,
+        ["==", ["get", "favorite"], true],
+        3.5,
         3
       ],
       "circle-opacity": [
         "case",
         ["==", ["get", "selected"], true],
         1,
-        ["==", ["get", "viewed"], true],
+        ["all", ["==", ["get", "viewed"], true], ["==", ["get", "favorite"], false]],
         0.55,
         1
       ]
@@ -202,7 +217,7 @@ async function addPoiLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "selected"], true],
         1,
-        ["==", ["get", "viewed"], true],
+        ["all", ["==", ["get", "viewed"], true], ["==", ["get", "favorite"], false]],
         0.6,
         1
       ]
@@ -223,11 +238,36 @@ async function addPoiLayers(map: MapLibreMap) {
       "text-ignore-placement": false
     },
     paint: {
-      "text-color": ["case", ["==", ["get", "viewed"], true], "#9a9a92", "#23313d"],
+      "text-color": [
+        "case",
+        ["all", ["==", ["get", "viewed"], true], ["==", ["get", "favorite"], false]],
+        "#9a9a92",
+        "#23313d"
+      ],
       "text-halo-color": "#ffffff",
       "text-halo-width": 1.6
     }
   });
+}
+
+async function resolveMapStyle(
+  mapStyleId: MapStyleId,
+  protomapsPmtilesUrl: string | null
+): Promise<string | StyleSpecification> {
+  if (mapStyleId === "protomaps") {
+    if (!protomapsPmtilesUrl) {
+      console.warn("Protomaps style selected but no PMTiles URL is configured; falling back to default style.");
+      return defaultMapStyleUrl;
+    }
+
+    const { Protocol } = await import("pmtiles");
+    const maplibre = await import("maplibre-gl");
+    maplibre.addProtocol("pmtiles", new Protocol().tile);
+
+    return buildProtomapsStyle(protomapsPmtilesUrl);
+  }
+
+  return presetMapStyleUrl(mapStyleId) ?? defaultMapStyleUrl;
 }
 
 function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {
@@ -328,7 +368,12 @@ function mergeBounds(regions: Region[]): [[number, number], [number, number]] {
   );
 }
 
-export function ExplorerMap() {
+type ExplorerMapProps = {
+  initialMapStyleId: MapStyleId;
+  initialProtomapsPmtilesUrl: string | null;
+};
+
+export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: ExplorerMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
@@ -343,6 +388,7 @@ export function ExplorerMap() {
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
+  const favorites = useExplorerStore((state) => state.favorites);
   const hideViewedOnMap = useExplorerStore((state) => state.hideViewedOnMap);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const setZoom = useExplorerStore((state) => state.setZoom);
@@ -381,8 +427,8 @@ export function ExplorerMap() {
   );
 
   const poiCollection = useMemo(
-    () => createPoiCollection(visiblePois, selectedPoiId, viewedPoiIds),
-    [selectedPoiId, visiblePois, viewedPoiIds]
+    () => createPoiCollection(visiblePois, selectedPoiId, viewedPoiIds, favorites),
+    [selectedPoiId, visiblePois, viewedPoiIds, favorites]
   );
 
   useEffect(() => {
@@ -393,7 +439,10 @@ export function ExplorerMap() {
         return;
       }
 
-      const maplibre = await import("maplibre-gl");
+      const [maplibre, style] = await Promise.all([
+        import("maplibre-gl"),
+        resolveMapStyle(initialMapStyleId, initialProtomapsPmtilesUrl)
+      ]);
 
       if (!isMounted || !containerRef.current) {
         return;
@@ -404,7 +453,7 @@ export function ExplorerMap() {
 
       const map = new maplibre.Map({
         container: containerRef.current,
-        style: baseMapStyleUrl,
+        style,
         center: [initialRegion.center.lng, initialRegion.center.lat],
         zoom: initialRegion.defaultZoom,
         maxBounds: initialRegion.bounds,
@@ -454,6 +503,7 @@ export function ExplorerMap() {
       mapRef.current?.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectPoiFromMap, setZoom]);
 
   useEffect(() => {

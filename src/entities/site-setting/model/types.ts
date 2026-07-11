@@ -1,0 +1,20 @@
+export const mapStyleIds = [
+  "openfreemap-bright",
+  "openfreemap-liberty",
+  "carto-positron",
+  "carto-dark-matter",
+  "carto-voyager",
+  "protomaps"
+] as const;
+
+export type MapStyleId = (typeof mapStyleIds)[number];
+
+export type SiteSettings = {
+  mapStyleId: MapStyleId;
+  protomapsPmtilesUrl: string | null;
+};
+
+export type SiteSettingsInput = {
+  mapStyleId: MapStyleId;
+  protomapsPmtilesUrl?: string | null;
+};

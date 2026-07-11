@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { Loader2, MapPin, Search } from "lucide-react";
-import { baseMapStyleUrl } from "@/shared/map/base-map-style";
+import { defaultMapStyleUrl } from "@/shared/map/map-styles";
 import { searchPlaces, type GeocodeResult } from "@/shared/lib/admin-geocode";
 import { Input } from "@/shared/ui/input";
 
@@ -50,7 +50,7 @@ export function LocationMapPicker({ lat, lng, onChange, fallbackCenter, fallback
 
       const map = new maplibre.Map({
         container: containerRef.current,
-        style: baseMapStyleUrl,
+        style: defaultMapStyleUrl,
         center,
         zoom: hasValidPoint ? 15 : fallbackZoom,
         attributionControl: { compact: true }

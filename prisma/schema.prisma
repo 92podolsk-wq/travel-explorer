@@ -205,3 +205,10 @@ model ItineraryStop {
 
   @@unique([itineraryId, poiId])
 }
+
+model SiteSetting {
+  id                  String   @id @default("singleton")
+  mapStyleId          String   @default("openfreemap-bright")
+  protomapsPmtilesUrl String?
+  updatedAt           DateTime @updatedAt
+}

@@ -6,7 +6,6 @@ import { Download, ExternalLink } from "lucide-react";
 import type { Itinerary } from "@/entities/itinerary/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
 import { buildGoogleMapsUrl } from "@/features/favorites-export/lib/build-google-maps-url";
-import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 
 type TripViewProps = {
   itinerary: Itinerary;
@@ -28,7 +27,13 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
   return (
     <main className="min-h-dvh bg-muted">
       <header className="flex h-16 items-center gap-2.5 border-b border-border bg-white px-5 print:hidden">
-        <TravelKittenLogo className="h-9 w-9" />
+        <Image
+          src="/logo-icon.png"
+          alt="Travel Explorer"
+          width={36}
+          height={36}
+          className="h-9 w-9 rounded-full object-cover"
+        />
         <div>
           <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Общий маршрут</p>

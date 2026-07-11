@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Check, ChevronDown } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
@@ -11,7 +12,6 @@ import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switc
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { CityIcon } from "@/shared/ui/city-icon";
-import { TravelKittenLogo } from "@/shared/ui/travel-kitten-logo";
 import { cn } from "@/shared/lib/cn";
 
 type CountryGroup = {
@@ -68,7 +68,14 @@ export function SiteHeader() {
         onClick={() => router.push("/")}
         className="flex shrink-0 items-center gap-2.5 rounded-md transition hover:opacity-80"
       >
-        <TravelKittenLogo className="h-9 w-9 shrink-0" />
+        <Image
+          src="/logo-icon.png"
+          alt="Travel Explorer"
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 rounded-full object-cover"
+          priority
+        />
         <div className="hidden text-left leading-tight sm:block">
           <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">

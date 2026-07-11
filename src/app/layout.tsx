@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "Travel Explorer"
   },
   icons: {
-    icon: "/icon.svg",
+    icon: "/icon.png",
     apple: "/icons/apple-touch-icon.png"
   }
 };

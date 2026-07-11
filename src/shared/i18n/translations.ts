@@ -63,6 +63,8 @@ type TranslationDictionary = {
     swipeSkip: string;
     swipeProgress: string;
     swipeClose: string;
+    swipeContinueHint: string;
+    swipeContinueIn: string;
     cookieConsentText: string;
     cookieConsentAccept: string;
   };
@@ -196,6 +198,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeSkip: "Skip",
       swipeProgress: "{current} of {total}",
       swipeClose: "Close",
+      swipeContinueHint: "Keep swiping nearby",
+      swipeContinueIn: "{region} · {count} places",
       cookieConsentText:
         "We use cookies and local storage to remember your language and selected city, and to keep you signed in.",
       cookieConsentAccept: "Accept"
@@ -413,6 +417,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeSkip: "Пропустить",
       swipeProgress: "{current} из {total}",
       swipeClose: "Закрыть",
+      swipeContinueHint: "Продолжить в соседних городах",
+      swipeContinueIn: "{region} · {count} мест",
       cookieConsentText:
         "Мы используем куки и локальное хранилище, чтобы запоминать язык и выбранный город, а также сохранять вход в аккаунт.",
       cookieConsentAccept: "Принять"
@@ -630,6 +636,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeSkip: "スキップ",
       swipeProgress: "{total}件中{current}件目",
       swipeClose: "閉じる",
+      swipeContinueHint: "近くの街で続ける",
+      swipeContinueIn: "{region} ・ {count}件",
       cookieConsentText: "言語や選択した都市を記憶し、ログイン状態を保つためにクッキーとローカルストレージを使用しています。",
       cookieConsentAccept: "同意する"
     },

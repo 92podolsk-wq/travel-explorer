@@ -456,7 +456,6 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         style,
         center: [initialRegion.center.lng, initialRegion.center.lat],
         zoom: initialRegion.defaultZoom,
-        maxBounds: initialRegion.bounds,
         attributionControl: {
           compact: true
         }
@@ -505,18 +504,6 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectPoiFromMap, setZoom]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-
-    if (!map || !isMapReady || activeRegions.length === 0) {
-      return;
-    }
-
-    const regionBounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
-    map.setMaxBounds(undefined);
-    map.setMaxBounds(regionBounds);
-  }, [isMapReady, activeRegions]);
 
   useEffect(() => {
     const map = mapRef.current;

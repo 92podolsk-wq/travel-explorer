@@ -59,6 +59,7 @@ export function ExplorerSidebar() {
   const setSortByDistance = useExplorerStore((state) => state.setSortByDistance);
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
+  const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
@@ -91,6 +92,23 @@ export function ExplorerSidebar() {
   const activeRegion = findRegionById(regions, activeRegionIds[0]);
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
   const swipeCandidates = regionPois.filter((poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id));
+  const activeCountryId = areas.find((area) => area.id === activeRegion.areaId)?.countryId;
+  const neighboringSwipeRegions = activeCountryId
+    ? regions
+        .filter((region) => region.status === "published" && !activeRegionIds.includes(region.id))
+        .filter((region) => areas.find((area) => area.id === region.areaId)?.countryId === activeCountryId)
+        .map((region) => ({
+          id: region.id,
+          name: region.nameByLanguage[language] ?? region.name,
+          distance: haversineDistanceMeters(activeRegion.center, region.center),
+          count: pois.filter(
+            (poi) => poi.regionId === region.id && !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id)
+          ).length
+        }))
+        .filter((region) => region.count > 0)
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 5)
+    : [];
   const isAreaActive = activeRegionIds.length > 1;
   const activeArea = areas.find((area) => area.id === activeRegion.areaId);
   const headingText =
@@ -472,11 +490,14 @@ export function ExplorerSidebar() {
     </motion.aside>
     {isSwipeOpen && (
       <SwipeDiscoveryModal
+        key={activeRegionIds.join(",")}
         pois={swipeCandidates}
         language={language}
         onLike={toggleFavorite}
         onSkip={markPoiViewed}
         onClose={() => setIsSwipeOpen(false)}
+        neighboringRegions={neighboringSwipeRegions}
+        onSwitchRegion={setActiveRegion}
       />
     )}
     </>

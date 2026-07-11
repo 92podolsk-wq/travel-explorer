@@ -7,12 +7,16 @@ import type { Poi } from "@/entities/poi/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
 
+type NeighboringSwipeRegion = { id: string; name: string; count: number };
+
 type SwipeDiscoveryModalProps = {
   pois: Poi[];
   language: Language;
   onLike: (poiId: string) => void;
   onSkip: (poiId: string) => void;
   onClose: () => void;
+  neighboringRegions?: NeighboringSwipeRegion[];
+  onSwitchRegion?: (regionId: string) => void;
 };
 
 const SWIPE_THRESHOLD = 120;
@@ -165,7 +169,15 @@ function SwipeCard({
   );
 }
 
-export function SwipeDiscoveryModal({ pois, language, onLike, onSkip, onClose }: SwipeDiscoveryModalProps) {
+export function SwipeDiscoveryModal({
+  pois,
+  language,
+  onLike,
+  onSkip,
+  onClose,
+  neighboringRegions = [],
+  onSwitchRegion
+}: SwipeDiscoveryModalProps) {
   const t = getTranslations(language);
   const [deck] = useState(() => shuffle(pois));
   const [index, setIndex] = useState(0);
@@ -254,8 +266,27 @@ export function SwipeDiscoveryModal({ pois, language, onLike, onSkip, onClose }:
 
         <div className="relative h-[60dvh] w-full max-h-[34rem]">
           {!current ? (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-sm bg-white p-6 text-center shadow-panel">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-sm bg-white p-6 text-center shadow-panel">
               <p className="text-sm text-muted-foreground">{t.app.swipeEmpty}</p>
+              {neighboringRegions.length > 0 && (
+                <div className="flex w-full flex-col gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {t.app.swipeContinueHint}
+                  </p>
+                  {neighboringRegions.map((region) => (
+                    <button
+                      key={region.id}
+                      type="button"
+                      onClick={() => onSwitchRegion?.(region.id)}
+                      className="rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      {t.app.swipeContinueIn
+                        .replace("{region}", region.name)
+                        .replace("{count}", String(region.count))}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <>

@@ -98,6 +98,7 @@ export async function clearStops(userId: string): Promise<Itinerary> {
   const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
   if (itinerary) {
     await prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id } });
+    await prisma.itinerary.update({ where: { id: itinerary.id }, data: { title: "Мой маршрут" } });
   }
 
   return getOrCreateItinerary(userId);

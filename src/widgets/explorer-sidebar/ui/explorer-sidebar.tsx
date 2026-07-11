@@ -138,7 +138,7 @@ export function ExplorerSidebar() {
       transition={{ duration: 0.35, ease: "easeOut" }}
       className={cn(
         "fixed inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden rounded-t-2xl border-t border-white/70 bg-white/[0.92] shadow-panel backdrop-blur-xl transition-[height] duration-300 ease-out",
-        isMobileSheetExpanded ? "h-[85vh]" : "h-[236px]",
+        isMobileSheetExpanded ? "h-[85dvh]" : "h-[236px]",
         "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border lg:transition-none"
       )}
     >
@@ -332,7 +332,10 @@ export function ExplorerSidebar() {
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">
+      <div
+        className="min-h-0 flex-1 overflow-y-auto p-4"
+        style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="mb-3 flex items-center gap-3 px-1 text-xs font-medium text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             <Eye className="h-3.5 w-3.5" />

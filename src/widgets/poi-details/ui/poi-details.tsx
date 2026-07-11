@@ -95,7 +95,7 @@ export function PoiDetails() {
     <div
       className={cn(
         "z-20 lg:absolute lg:inset-x-auto lg:bottom-auto lg:right-5 lg:top-5 lg:z-10 lg:block lg:h-[calc(100%-2.5rem)] lg:w-[400px]",
-        isDetailsOpen ? "fixed inset-x-0 bottom-0 h-[85vh]" : "hidden"
+        isDetailsOpen ? "fixed inset-x-0 bottom-0 h-[85dvh]" : "hidden"
       )}
     >
       {isDetailsOpen && (
@@ -310,7 +310,10 @@ export function PoiDetails() {
           </div>
 
           {hasMultiplePlaces && (
-            <div className="flex shrink-0 items-center justify-between gap-2 border-t border-white/70 px-5 py-3">
+            <div
+              className="flex shrink-0 items-center justify-between gap-2 border-t border-white/70 px-5 py-3"
+              style={{ paddingBottom: currentUser ? undefined : "max(0.75rem, env(safe-area-inset-bottom))" }}
+            >
               <button
                 type="button"
                 onClick={() => goToOffset(-1)}
@@ -331,7 +334,10 @@ export function PoiDetails() {
           )}
 
           {currentUser && (
-            <div className="shrink-0 border-t border-white/70 px-5 py-3">
+            <div
+              className="shrink-0 border-t border-white/70 px-5 py-3"
+              style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+            >
               <button
                 type="button"
                 onClick={() => setIsReportOpen(true)}

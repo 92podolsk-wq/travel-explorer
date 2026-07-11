@@ -106,6 +106,8 @@ type TranslationDictionary = {
     addAllToItinerary: string;
     inItinerary: string;
     removeFromItinerary: string;
+    moveUp: string;
+    moveDown: string;
     clearItinerary: string;
     clearItineraryConfirm: string;
     shareItinerary: string;
@@ -323,6 +325,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "Add all to itinerary",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
+      moveUp: "Move up",
+      moveDown: "Move down",
       clearItinerary: "Clear itinerary",
       clearItineraryConfirm: "Remove all places from the itinerary? This can't be undone.",
       shareItinerary: "Share",
@@ -538,6 +542,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "Добавить все в маршрут",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
+      moveUp: "Переместить вверх",
+      moveDown: "Переместить вниз",
       clearItinerary: "Очистить маршрут",
       clearItineraryConfirm: "Удалить все места из маршрута? Это действие нельзя отменить.",
       shareItinerary: "Поделиться",
@@ -752,6 +758,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "すべてルートに追加",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
+      moveUp: "上に移動",
+      moveDown: "下に移動",
       clearItinerary: "ルートを消去",
       clearItineraryConfirm: "ルートからすべての場所を削除しますか?この操作は元に戻せません。",
       shareItinerary: "共有",

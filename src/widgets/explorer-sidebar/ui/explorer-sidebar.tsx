@@ -350,7 +350,7 @@ export function ExplorerSidebar() {
       </div>
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto p-4"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4"
         style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       >
         <div className="mb-3 flex items-center gap-3 px-1 text-xs font-medium text-muted-foreground">

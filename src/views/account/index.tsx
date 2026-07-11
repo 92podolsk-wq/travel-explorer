@@ -2,7 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, Check, Download, Eye, GripVertical, MapPin, Pencil, Route, Share2, Wand2, X } from "lucide-react";
+import {
+  Bookmark,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Eye,
+  GripVertical,
+  MapPin,
+  Pencil,
+  Route,
+  Share2,
+  Wand2,
+  X
+} from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
@@ -162,6 +176,18 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       body: JSON.stringify({ day, orderedPoiIds })
     });
     if (res.ok) setItinerary(await res.json());
+  }
+
+  function moveStopWithinDay(day: number, poiId: string, direction: -1 | 1) {
+    if (!itinerary) return;
+    const dayPoiIds = itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poi.id);
+    const index = dayPoiIds.indexOf(poiId);
+    const targetIndex = index + direction;
+    if (index === -1 || targetIndex < 0 || targetIndex >= dayPoiIds.length) return;
+
+    const reordered = [...dayPoiIds];
+    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+    handleReorderItinerary(day, reordered);
   }
 
   function handleItineraryDrop(targetPoiId: string) {
@@ -471,7 +497,10 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                     onBlur={() => handleRenameItinerary(titleDraft)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleRenameItinerary(titleDraft);
-                      if (e.key === "Escape") setIsEditingTitle(false);
+                      if (e.key === "Escape") {
+                        setTitleDraft(itinerary?.title ?? "");
+                        setIsEditingTitle(false);
+                      }
                     }}
                     className="rounded border border-primary/30 bg-white px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
                   />
@@ -609,7 +638,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       <div className="flex flex-col gap-2">
                         {itinerary.stops
                           .filter((stop) => stop.day === day)
-                          .map((stop) => (
+                          .map((stop, stopIndex, dayStops) => (
                             <div
                               key={stop.id}
                               draggable
@@ -621,9 +650,29 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                                 dragPoiId === stop.poi.id && "opacity-50"
                               )}
                             >
-                              <span className="cursor-grab text-muted-foreground">
+                              <span className="hidden cursor-grab text-muted-foreground sm:inline-flex">
                                 <GripVertical className="h-4 w-4" />
                               </span>
+                              <div className="flex flex-col">
+                                <button
+                                  type="button"
+                                  onClick={() => moveStopWithinDay(day, stop.poi.id, -1)}
+                                  disabled={stopIndex === 0}
+                                  aria-label={t.moveUp}
+                                  className="rounded p-0.5 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                                >
+                                  <ChevronUp className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveStopWithinDay(day, stop.poi.id, 1)}
+                                  disabled={stopIndex === dayStops.length - 1}
+                                  aria-label={t.moveDown}
+                                  className="rounded p-0.5 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                                >
+                                  <ChevronDown className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                               <div className="min-w-0 flex-1">
                                 <PoiRow
                                   poi={stop.poi}

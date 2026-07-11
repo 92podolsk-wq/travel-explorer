@@ -20,6 +20,7 @@ import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/transl
 import type { Language } from "@/shared/i18n/types";
 import { buildProtomapsStyle, defaultMapStyleUrl, presetMapStyleUrl } from "@/shared/map/map-styles";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
+import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 
 const poiSourceId = "travel-explorer-pois";
@@ -30,6 +31,9 @@ const poiLabelLayerId = "poi-labels";
 const routeSourceId = "travel-explorer-itinerary-route";
 const routeLayerId = "itinerary-route-line";
 const routeApproximateLayerId = "itinerary-route-line-approximate";
+const regionVoronoiSourceId = "travel-explorer-region-voronoi";
+const regionVoronoiFillLayerId = "region-voronoi-fill";
+const regionVoronoiLineLayerId = "region-voronoi-line";
 
 type PoiFeatureProperties = {
   id: string;
@@ -105,6 +109,33 @@ async function addPoiLayers(map: MapLibreMap) {
   }
 
   await registerCategoryMarkerIcons(map);
+
+  map.addSource(regionVoronoiSourceId, {
+    type: "geojson",
+    data: emptyRegionVoronoiCollection
+  });
+
+  map.addLayer({
+    id: regionVoronoiFillLayerId,
+    type: "fill",
+    source: regionVoronoiSourceId,
+    paint: {
+      "fill-color": ["get", "color"],
+      "fill-opacity": 0.14
+    }
+  });
+
+  map.addLayer({
+    id: regionVoronoiLineLayerId,
+    type: "line",
+    source: regionVoronoiSourceId,
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": ["get", "color"],
+      "line-width": 2,
+      "line-opacity": 0.7
+    }
+  });
 
   map.addSource(routeSourceId, {
     type: "geojson",
@@ -337,6 +368,16 @@ function setRouteSourceData(map: MapLibreMap, data: RouteFeatureCollection) {
   (source as GeoJSONSource).setData(data);
 }
 
+function setRegionVoronoiSourceData(map: MapLibreMap, data: RegionVoronoiCollection) {
+  const source = map.getSource(regionVoronoiSourceId);
+
+  if (!source) {
+    return;
+  }
+
+  (source as GeoJSONSource).setData(data);
+}
+
 async function fetchWalkingRouteCoordinates(coordinates: Poi["coordinates"][]): Promise<[number, number][] | null> {
   const coordStr = coordinates.map((c) => `${c.lng},${c.lat}`).join(";");
 
@@ -407,6 +448,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     () => regions.filter((region) => activeRegionIds.includes(region.id)),
     [regions, activeRegionIds]
   );
+
+  const regionVoronoiCollection = useMemo(() => buildRegionVoronoi(activeRegions), [activeRegions]);
 
   const regionPois = useMemo(
     () => pois.filter((poi) => activeRegionIds.includes(poi.regionId)),
@@ -514,6 +557,16 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
 
     setPoiSourceData(map, poiCollection);
   }, [isMapReady, poiCollection]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    setRegionVoronoiSourceData(map, regionVoronoiCollection);
+  }, [isMapReady, regionVoronoiCollection]);
 
   useEffect(() => {
     const map = mapRef.current;

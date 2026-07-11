@@ -251,7 +251,7 @@ export function ExplorerSidebar() {
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
       </div>
 
-      <div className="border-b border-white/70 p-4">
+      <div className="hidden border-b border-white/70 p-4 sm:block">
         <div className="flex flex-wrap gap-2">
           {explorationModes.map((mode) => {
             const ModeIcon = getModeIcon(mode.icon);

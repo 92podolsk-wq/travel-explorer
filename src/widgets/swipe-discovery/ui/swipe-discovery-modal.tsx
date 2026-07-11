@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { animate, motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
 import { Heart, X as XIcon } from "lucide-react";
 import type { Poi } from "@/entities/poi/model/types";
@@ -19,6 +19,13 @@ const SWIPE_THRESHOLD = 120;
 const FLY_OUT_DISTANCE = 560;
 const FALL_EASE: [number, number, number, number] = [0.5, 0, 0.9, 0.4];
 
+type CardJitter = {
+  rotate: number;
+  offsetX: number;
+  offsetY: number;
+  shadow: string;
+};
+
 function shuffle<T>(items: T[]): T[] {
   const arr = [...items];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -28,10 +35,54 @@ function shuffle<T>(items: T[]): T[] {
   return arr;
 }
 
+function hashString(input: string): number {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function jitterFor(id: string): CardJitter {
+  const base = hashString(id);
+  const r1 = seededRandom(base + 1);
+  const r2 = seededRandom(base + 2);
+  const r3 = seededRandom(base + 3);
+  const r4 = seededRandom(base + 4);
+
+  const magnitude = 3 + r1 * 4;
+  const rotate = r2 > 0.5 ? magnitude : -magnitude;
+  const offsetX = (r3 - 0.5) * 16;
+  const offsetY = (r4 - 0.5) * 12;
+  const shadowAlpha = (0.26 + r1 * 0.3).toFixed(2);
+  const shadowBlur = Math.round(28 + r2 * 30);
+  const shadowY = Math.round(12 + r3 * 16);
+
+  return {
+    rotate,
+    offsetX,
+    offsetY,
+    shadow: `0 ${shadowY}px ${shadowBlur}px -10px rgba(0,0,0,${shadowAlpha})`
+  };
+}
+
+function stackTransform(jitter: CardJitter, depth: number) {
+  const depthDrop = depth * 9;
+  const depthSway = depth * (depth % 2 === 0 ? 7 : -7);
+  return `translate(${jitter.offsetX + depthSway}px, ${jitter.offsetY + depthDrop}px) rotate(${jitter.rotate}deg)`;
+}
+
 function SwipeCard({
   poi,
   name,
   description,
+  jitter,
   x,
   y,
   onLike,
@@ -40,12 +91,13 @@ function SwipeCard({
   poi: Poi;
   name: string;
   description: string;
+  jitter: CardJitter;
   x: MotionValue<number>;
   y: MotionValue<number>;
   onLike: () => void;
   onSkip: () => void;
 }) {
-  const rotate = useTransform(x, [-320, 320], [-16, 16]);
+  const dragRotate = useTransform(x, [-320, 320], [jitter.rotate - 16, jitter.rotate + 16]);
   const likeOpacity = useTransform(x, [20, 130], [0, 1]);
   const skipOpacity = useTransform(x, [-130, -20], [1, 0]);
 
@@ -63,50 +115,53 @@ function SwipeCard({
   }
 
   return (
-    <motion.div
-      drag="x"
-      style={{ x, y, rotate }}
-      onDragEnd={handleDragEnd}
-      initial={{ scale: 0.92, opacity: 0, y: -90 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 26 }}
-      className="absolute inset-0 flex cursor-grab flex-col rounded-sm bg-white p-3 pb-[4.75rem] shadow-[0_18px_45px_-12px_rgba(0,0,0,0.45)] active:cursor-grabbing"
+    <div
+      style={{ transform: `translate(${jitter.offsetX}px, ${jitter.offsetY}px)` }}
+      className="absolute inset-0"
     >
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2px] bg-muted">
-        {poi.photos[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={poi.photos[0].url} alt="" className="h-full w-full select-none object-cover" draggable={false} />
-        ) : (
-          <div className="h-full w-full bg-muted" />
-        )}
+      <motion.div
+        drag="x"
+        style={{ x, y, rotate: dragRotate, boxShadow: jitter.shadow }}
+        onDragEnd={handleDragEnd}
+        initial={{ scale: 0.92, opacity: 0, y: -90 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        className="absolute inset-0 flex cursor-grab flex-col rounded-sm bg-white p-2.5 pb-24 active:cursor-grabbing"
+      >
+        <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2px] bg-muted">
+          {poi.photos[0] ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={poi.photos[0].url} alt="" className="h-full w-full select-none object-cover" draggable={false} />
+          ) : (
+            <div className="h-full w-full bg-muted" />
+          )}
 
-        {poi.mustVisit && (
-          <span className="absolute left-3 top-3 -rotate-2 rounded bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow">
-            Must Visit
-          </span>
-        )}
+          {poi.mustVisit && (
+            <span className="absolute left-3 top-3 -rotate-2 rounded bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow">
+              Must Visit
+            </span>
+          )}
 
-        <motion.div
-          style={{ opacity: likeOpacity }}
-          className="pointer-events-none absolute right-4 top-4 flex -rotate-12 items-center gap-1.5 rounded border-4 border-emerald-400 bg-white/10 px-3 py-1.5 text-lg font-black uppercase tracking-wide text-emerald-400 backdrop-blur-sm"
-        >
-          <Heart className="h-5 w-5 fill-current" />
-          Like
-        </motion.div>
-        <motion.div
-          style={{ opacity: skipOpacity }}
-          className="pointer-events-none absolute left-4 top-4 flex rotate-12 items-center gap-1.5 rounded border-4 border-red-400 bg-white/10 px-3 py-1.5 text-lg font-black uppercase tracking-wide text-red-400 backdrop-blur-sm"
-        >
-          <XIcon className="h-5 w-5" />
-          Skip
-        </motion.div>
-      </div>
+          <motion.div
+            style={{ opacity: likeOpacity, mixBlendMode: "multiply" }}
+            className="pointer-events-none absolute right-5 top-7 -rotate-[18deg] rounded-md border-[5px] border-emerald-600 bg-emerald-500/30 px-4 py-1.5 text-2xl font-black uppercase tracking-[0.15em] text-emerald-700"
+          >
+            Like
+          </motion.div>
+          <motion.div
+            style={{ opacity: skipOpacity, mixBlendMode: "multiply" }}
+            className="pointer-events-none absolute left-5 top-7 rotate-[18deg] rounded-md border-[5px] border-red-600 bg-red-500/30 px-4 py-1.5 text-2xl font-black uppercase tracking-[0.15em] text-red-700"
+          >
+            Skip
+          </motion.div>
+        </div>
 
-      <div className="flex shrink-0 flex-col justify-center gap-0.5 px-1 pt-3">
-        <p className="truncate text-base font-semibold text-neutral-800">{name}</p>
-        <p className="line-clamp-1 text-xs text-neutral-500">{description}</p>
-      </div>
-    </motion.div>
+        <div className="flex shrink-0 flex-col justify-center gap-0.5 px-1 pt-3">
+          <p className="truncate text-base font-semibold text-neutral-800">{name}</p>
+          <p className="line-clamp-1 text-xs text-neutral-500">{description}</p>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -115,16 +170,26 @@ export function SwipeDiscoveryModal({ pois, language, onLike, onSkip, onClose }:
   const [deck] = useState(() => shuffle(pois));
   const [index, setIndex] = useState(0);
 
+  const jitters = useMemo(() => {
+    const map = new Map<string, CardJitter>();
+    for (const poi of deck) {
+      map.set(poi.id, jitterFor(poi.id));
+    }
+    return map;
+  }, [deck]);
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const backdropColor = useTransform(
     x,
     [-260, 0, 260],
-    ["rgba(127,29,29,0.6)", "rgba(0,0,0,0.55)", "rgba(6,78,59,0.6)"]
+    ["rgba(115,20,20,0.68)", "rgba(0,0,0,0.62)", "rgba(4,68,52,0.68)"]
   );
 
   const current = deck[index];
   const next = deck[index + 1];
+  const next2 = deck[index + 2];
+  const next3 = deck[index + 3];
 
   useEffect(() => {
     x.set(0);
@@ -159,12 +224,18 @@ export function SwipeDiscoveryModal({ pois, language, onLike, onSkip, onClose }:
   const nameFor = (poi: Poi) => poi.nameByLanguage[language] ?? poi.name;
   const descriptionFor = (poi: Poi) => t.poi[poi.id]?.description ?? poi.description;
 
+  const backCards = [
+    { poi: next3, depth: 3, scale: 0.91, blur: 2, opacity: 0.6 },
+    { poi: next2, depth: 2, scale: 0.94, blur: 1, opacity: 0.78 },
+    { poi: next, depth: 1, scale: 0.97, blur: 0.5, opacity: 0.92 }
+  ];
+
   return (
     <>
       <motion.button
         type="button"
         aria-label={t.app.swipeClose}
-        className="fixed inset-0 z-40"
+        className="fixed inset-0 z-40 backdrop-blur-sm backdrop-saturate-50"
         style={{ backgroundColor: backdropColor }}
         onClick={onClose}
       />
@@ -188,21 +259,33 @@ export function SwipeDiscoveryModal({ pois, language, onLike, onSkip, onClose }:
             </div>
           ) : (
             <>
-              {next && (
-                <div className="absolute inset-0 rotate-2 scale-[0.94] rounded-sm bg-white p-3 pb-[4.75rem] opacity-80 shadow-xl">
-                  <div className="h-full w-full overflow-hidden rounded-[2px] bg-muted">
-                    {next.photos[0] && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={next.photos[0].url} alt="" className="h-full w-full object-cover" />
-                    )}
-                  </div>
-                </div>
+              {backCards.map(
+                ({ poi, depth, scale, blur, opacity }) =>
+                  poi && (
+                    <div
+                      key={poi.id}
+                      style={{
+                        transform: `${stackTransform(jitters.get(poi.id) ?? jitterFor(poi.id), depth)} scale(${scale})`,
+                        filter: blur > 0 ? `blur(${blur}px)` : undefined,
+                        opacity
+                      }}
+                      className="absolute inset-0 rounded-sm bg-white p-2.5 pb-24 shadow-[0_20px_40px_-14px_rgba(0,0,0,0.35)]"
+                    >
+                      <div className="h-full w-full overflow-hidden rounded-[2px] bg-muted">
+                        {poi.photos[0] && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={poi.photos[0].url} alt="" className="h-full w-full object-cover" />
+                        )}
+                      </div>
+                    </div>
+                  )
               )}
               <SwipeCard
                 key={current.id}
                 poi={current}
                 name={nameFor(current)}
                 description={descriptionFor(current)}
+                jitter={jitters.get(current.id) ?? jitterFor(current.id)}
                 x={x}
                 y={y}
                 onLike={handleLike}

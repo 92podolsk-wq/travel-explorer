@@ -22,6 +22,7 @@ import {
   Download,
   Eye,
   GripVertical,
+  ListPlus,
   MapPin,
   Pencil,
   Plus,
@@ -639,6 +640,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
   const [activeDragStop, setActiveDragStop] = useState<ItineraryStopWithPoi | null>(null);
   const [activeTab, setActiveTab] = useState<AccountTab>("route");
+  const [collapsedFavoriteRegionIds, setCollapsedFavoriteRegionIds] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -673,6 +675,32 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       body: JSON.stringify({ poiIds })
     });
     if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleAddRegionToItinerary(regionId: string) {
+    if (!itinerary) return;
+    const poiIds = favoritePois
+      .filter((poi) => poi.regionId === regionId && !itineraryPoiIds.has(poi.id))
+      .map((poi) => poi.id);
+    if (poiIds.length === 0) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ poiIds })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  function toggleFavoriteRegionCollapsed(regionId: string) {
+    setCollapsedFavoriteRegionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(regionId)) {
+        next.delete(regionId);
+      } else {
+        next.add(regionId);
+      }
+      return next;
+    });
   }
 
   async function handleClearItinerary() {
@@ -1026,6 +1054,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const viewedPois = pois.filter((poi) => viewedPoiIds.includes(poi.id));
   const visitedPois = pois.filter((poi) => visitedPoiIds.includes(poi.id));
   const maxDay = itinerary && itinerary.days.length > 0 ? Math.max(...itinerary.days.map((d) => d.day)) : 0;
+  const favoritesByRegion = regions
+    .map((region) => ({ regionId: region.id, pois: favoritePois.filter((poi) => poi.regionId === region.id) }))
+    .filter((group) => group.pois.length > 0);
 
   return (
     <main className="flex min-h-dvh flex-col bg-muted">
@@ -1145,32 +1176,73 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             {favoritePois.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noSavedPlaces}</p>
             ) : (
-              <div className="flex flex-col gap-2">
-                {favoritePois.map((poi) => {
-                  const isInItinerary = itineraryPoiIds.has(poi.id);
+              <div className="flex flex-col gap-3">
+                {favoritesByRegion.map(({ regionId, pois: regionPois }) => {
+                  const isCollapsed = collapsedFavoriteRegionIds.has(regionId);
+                  const hasAddable = regionPois.some((poi) => !itineraryPoiIds.has(poi.id));
                   return (
-                    <PoiRow
-                      key={poi.id}
-                      poi={poi}
-                      regionName={regionName(poi.regionId)}
-                      onSelect={() => goToPoi(poi.id)}
-                      action={
+                    <div key={regionId} className="flex flex-col gap-2 rounded-lg border border-border bg-white/[0.62] p-3">
+                      <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
-                          onClick={() =>
-                            isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
-                          }
-                          className={cn(
-                            "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
-                            isInItinerary
-                              ? "border-primary/40 bg-primary/10 text-primary"
-                              : "border-border text-muted-foreground hover:text-foreground"
-                          )}
+                          onClick={() => toggleFavoriteRegionCollapsed(regionId)}
+                          className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm font-semibold text-foreground"
                         >
-                          {isInItinerary ? t.inItinerary : t.addToItinerary}
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          <span className="truncate">{regionName(regionId)}</span>
+                          <span className="shrink-0 text-xs font-normal text-muted-foreground">
+                            ({regionPois.length})
+                          </span>
+                          <ChevronDown
+                            className={cn(
+                              "ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform",
+                              !isCollapsed && "rotate-180"
+                            )}
+                          />
                         </button>
-                      }
-                    />
+                        {hasAddable && (
+                          <button
+                            type="button"
+                            onClick={() => handleAddRegionToItinerary(regionId)}
+                            title={t.addRegionToItinerary}
+                            className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-primary"
+                          >
+                            <ListPlus className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      {!isCollapsed && (
+                        <div className="flex flex-col gap-2">
+                          {regionPois.map((poi) => {
+                            const isInItinerary = itineraryPoiIds.has(poi.id);
+                            return (
+                              <PoiRow
+                                key={poi.id}
+                                poi={poi}
+                                regionName={regionName(poi.regionId)}
+                                onSelect={() => goToPoi(poi.id)}
+                                action={
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
+                                    }
+                                    className={cn(
+                                      "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
+                                      isInItinerary
+                                        ? "border-primary/40 bg-primary/10 text-primary"
+                                        : "border-border text-muted-foreground hover:text-foreground"
+                                    )}
+                                  >
+                                    {isInItinerary ? t.inItinerary : t.addToItinerary}
+                                  </button>
+                                }
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>

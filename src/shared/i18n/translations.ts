@@ -110,6 +110,7 @@ type TranslationDictionary = {
     itineraryEmpty: string;
     addToItinerary: string;
     addAllToItinerary: string;
+    addRegionToItinerary: string;
     inItinerary: string;
     removeFromItinerary: string;
     clearItinerary: string;
@@ -358,6 +359,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       itineraryEmpty: "Add places from your favorites to build an itinerary.",
       addToItinerary: "Add to itinerary",
       addAllToItinerary: "Add all to itinerary",
+      addRegionToItinerary: "Add all in this region to itinerary",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
       clearItinerary: "Clear itinerary",
@@ -604,6 +606,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       itineraryEmpty: "Добавьте места из избранного, чтобы построить маршрут.",
       addToItinerary: "В маршрут",
       addAllToItinerary: "Добавить все в маршрут",
+      addRegionToItinerary: "Добавить все места этого региона в маршрут",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
       clearItinerary: "Очистить маршрут",
@@ -849,6 +852,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       itineraryEmpty: "お気に入りから場所を追加してルートを作成しましょう。",
       addToItinerary: "ルートに追加",
       addAllToItinerary: "すべてルートに追加",
+      addRegionToItinerary: "この地域の場所をすべてルートに追加",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
       clearItinerary: "ルートを消去",

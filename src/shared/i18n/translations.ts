@@ -122,6 +122,7 @@ type TranslationDictionary = {
     favoritesProgressViewAll: string;
     favoritesProgressPlacesUnit: string;
     favoritesMapOpen: string;
+    removeFromFavorites: string;
     inItinerary: string;
     removeFromItinerary: string;
     clearItinerary: string;
@@ -382,6 +383,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       favoritesProgressViewAll: "View all regions",
       favoritesProgressPlacesUnit: "places",
       favoritesMapOpen: "Open map",
+      removeFromFavorites: "Remove from saved",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
       clearItinerary: "Clear itinerary",
@@ -640,6 +642,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       favoritesProgressViewAll: "Смотреть все регионы",
       favoritesProgressPlacesUnit: "мест",
       favoritesMapOpen: "Открыть карту",
+      removeFromFavorites: "Убрать из избранного",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
       clearItinerary: "Очистить маршрут",
@@ -897,6 +900,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       favoritesProgressViewAll: "すべての地域を見る",
       favoritesProgressPlacesUnit: "件",
       favoritesMapOpen: "地図を開く",
+      removeFromFavorites: "保存済みから削除",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
       clearItinerary: "ルートを消去",

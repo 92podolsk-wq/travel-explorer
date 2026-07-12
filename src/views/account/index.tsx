@@ -610,6 +610,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const pois = useExplorerStore((state) => state.pois);
   const regions = useExplorerStore((state) => state.regions);
   const favorites = useExplorerStore((state) => state.favorites);
+  const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
@@ -1339,20 +1340,30 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                                 regionName={regionName(poi.regionId)}
                                 onSelect={() => goToPoi(poi.id)}
                                 action={
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
-                                    }
-                                    className={cn(
-                                      "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
-                                      isInItinerary
-                                        ? "border-primary/40 bg-primary/10 text-primary"
-                                        : "border-border text-muted-foreground hover:text-foreground"
-                                    )}
-                                  >
-                                    {isInItinerary ? t.inItinerary : t.addToItinerary}
-                                  </button>
+                                  <div className="flex shrink-0 items-center gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
+                                      }
+                                      className={cn(
+                                        "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
+                                        isInItinerary
+                                          ? "border-primary/40 bg-primary/10 text-primary"
+                                          : "border-border text-muted-foreground hover:text-foreground"
+                                      )}
+                                    >
+                                      {isInItinerary ? t.inItinerary : t.addToItinerary}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleFavorite(poi.id)}
+                                      title={t.removeFromFavorites}
+                                      className="rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
                                 }
                               />
                             );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, Sparkles, Star, SunMedium, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, MapPin, Sparkles, Star, SunMedium, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -142,14 +142,20 @@ export function PoiDetails() {
           </button>
 
           <div className="relative m-3 h-64 shrink-0 overflow-hidden rounded-lg">
-            <Image
-              key={activePhoto?.id}
-              src={activePhoto?.url}
-              alt={activePhoto?.alt ?? poiName}
-              width={760}
-              height={448}
-              className="h-full w-full object-cover"
-            />
+            {activePhoto ? (
+              <Image
+                key={activePhoto.id}
+                src={activePhoto.url}
+                alt={activePhoto.alt ?? poiName}
+                width={760}
+                height={448}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+                <MapPin className="h-8 w-8" />
+              </div>
+            )}
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 via-black/[0.22] to-transparent" />
             {activePhoto?.author && (
               <span className="absolute bottom-1.5 right-3 text-[10px] font-medium text-white/70">
@@ -295,10 +301,11 @@ export function PoiDetails() {
               <div className="flex flex-wrap gap-2">
                 {selectedPoi.categories.map((category) => {
                   const CategoryIcon = categoryIcons[category];
+                  if (!CategoryIcon) return null;
                   return (
                     <Badge key={category} className="gap-1">
                       <CategoryIcon className="h-3 w-3" />
-                      {t.category[category]}
+                      {t.category[category] ?? category}
                     </Badge>
                   );
                 })}

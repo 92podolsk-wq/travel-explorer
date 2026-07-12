@@ -12,7 +12,8 @@ export type PoiCategory =
   | "market"
   | "museum"
   | "restaurant"
-  | "residential";
+  | "residential"
+  | "landmark";
 
 export type PoiTag =
   | "must-visit"

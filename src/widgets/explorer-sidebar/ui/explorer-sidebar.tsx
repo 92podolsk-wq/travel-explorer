@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Layers, LocateFixed, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Layers, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -444,13 +444,19 @@ export function ExplorerSidebar() {
                 )}
               >
                 <div className="flex gap-3">
-                  <Image
-                    src={poi.photos[0]?.url}
-                    alt={poi.photos[0]?.alt ?? poi.nameByLanguage[language] ?? poi.name}
-                    width={64}
-                    height={64}
-                    className="h-[72px] w-[72px] rounded-md object-cover"
-                  />
+                  {poi.photos[0]?.url ? (
+                    <Image
+                      src={poi.photos[0].url}
+                      alt={poi.photos[0].alt ?? poi.nameByLanguage[language] ?? poi.name}
+                      width={64}
+                      height={64}
+                      className="h-[72px] w-[72px] rounded-md object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="truncate text-[15px] font-semibold">{poi.nameByLanguage[language] ?? poi.name}</h2>

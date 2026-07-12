@@ -11,7 +11,8 @@ export const poiCategories: PoiCategory[] = [
   "market",
   "museum",
   "restaurant",
-  "residential"
+  "residential",
+  "landmark"
 ];
 
 export const poiTags: PoiTag[] = [

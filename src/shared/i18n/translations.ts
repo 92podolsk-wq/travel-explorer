@@ -292,7 +292,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       market: "market",
       museum: "museum",
       restaurant: "restaurant",
-      residential: "residential"
+      residential: "residential",
+      landmark: "landmark"
     },
     tag: {
       "must-visit": "must visit",
@@ -533,7 +534,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       market: "рынок",
       museum: "музей",
       restaurant: "ресторан",
-      residential: "жилой дом"
+      residential: "жилой дом",
+      landmark: "достопримечательность"
     },
     tag: {
       "must-visit": "обязательно",
@@ -773,7 +775,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       market: "市場",
       museum: "博物館",
       restaurant: "レストラン",
-      residential: "住宅"
+      residential: "住宅",
+      landmark: "ランドマーク"
     },
     tag: {
       "must-visit": "必見",

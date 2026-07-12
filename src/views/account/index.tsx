@@ -456,14 +456,12 @@ function ItineraryDayCard({
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs">
             <span className="font-medium text-muted-foreground">{t.lunchToggleLabel}:</span>
             <select
-              value={lunchEnabled === null ? "auto" : lunchEnabled ? "on" : "off"}
+              value={lunchEnabled ? "on" : "off"}
               onChange={(e) => {
-                const value = e.target.value;
-                onUpdateDayConfig({ lunchEnabled: value === "auto" ? null : value === "on" });
+                onUpdateDayConfig({ lunchEnabled: e.target.value === "on" });
               }}
               className="h-6 rounded border border-border bg-white px-1 text-xs outline-none"
             >
-              <option value="auto">{dict.app.auto}</option>
               <option value="on">{dict.app.on}</option>
               <option value="off">{dict.app.off}</option>
             </select>

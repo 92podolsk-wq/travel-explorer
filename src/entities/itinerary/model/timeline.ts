@@ -14,7 +14,6 @@ export type DayTimelineEntry =
 
 export const LUNCH_DURATION_MINUTES = 60;
 export const LUNCH_THRESHOLD_MINUTES = 12 * 60;
-const MIN_STOPS_FOR_LUNCH = 3;
 
 export type LunchOptions = { enabled: boolean | null; startMinutes?: number; durationMinutes?: number };
 
@@ -29,10 +28,9 @@ export function buildDayTimeline(
   let lunchInserted = false;
 
   const lunch = options?.lunch;
-  const heuristicLunch = lunch === undefined || lunch.enabled === null || lunch.enabled === undefined;
-  const shouldInsertLunch = heuristicLunch ? stops.length >= MIN_STOPS_FOR_LUNCH : lunch!.enabled === true;
-  const lunchThresholdMinutes = (!heuristicLunch && lunch?.startMinutes != null) ? lunch.startMinutes : LUNCH_THRESHOLD_MINUTES;
-  const lunchDurationMinutes = (!heuristicLunch && lunch?.durationMinutes != null) ? lunch.durationMinutes : LUNCH_DURATION_MINUTES;
+  const shouldInsertLunch = lunch?.enabled === true;
+  const lunchThresholdMinutes = lunch?.startMinutes ?? LUNCH_THRESHOLD_MINUTES;
+  const lunchDurationMinutes = lunch?.durationMinutes ?? LUNCH_DURATION_MINUTES;
 
   function maybeInsertLunch() {
     if (!shouldInsertLunch || lunchInserted || cursor < lunchThresholdMinutes) {

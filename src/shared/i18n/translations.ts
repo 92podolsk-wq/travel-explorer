@@ -149,6 +149,9 @@ type TranslationDictionary = {
     lunchToggleLabel: string;
     lunchStartTime: string;
     lunchDuration: string;
+    tabRoute: string;
+    tabSaved: string;
+    tabHistory: string;
   };
   report: {
     cta: string;
@@ -393,7 +396,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayStartTime: "Day starts at",
       lunchToggleLabel: "Lunch break",
       lunchStartTime: "Lunch at",
-      lunchDuration: "Lunch duration"
+      lunchDuration: "Lunch duration",
+      tabRoute: "Route",
+      tabSaved: "Saved",
+      tabHistory: "History"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -636,7 +642,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayStartTime: "Начало дня в",
       lunchToggleLabel: "Обеденный перерыв",
       lunchStartTime: "Обед в",
-      lunchDuration: "Длительность обеда"
+      lunchDuration: "Длительность обеда",
+      tabRoute: "Маршрут",
+      tabSaved: "Избранное",
+      tabHistory: "История"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -878,7 +887,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayStartTime: "開始時刻",
       lunchToggleLabel: "昼食休憩",
       lunchStartTime: "昼食の時刻",
-      lunchDuration: "昼食の長さ"
+      lunchDuration: "昼食の長さ",
+      tabRoute: "旅程",
+      tabSaved: "お気に入り",
+      tabHistory: "履歴"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

@@ -76,6 +76,8 @@ type DayConfigPatch = Partial<{
   lunchDurationMinutes: number | null;
 }>;
 
+type AccountTab = "route" | "saved" | "history";
+
 type AccountPageProps = {
   initialPois: Poi[];
   initialRegions: Region[];
@@ -636,6 +638,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [isAddingDay, setIsAddingDay] = useState(false);
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
   const [activeDragStop, setActiveDragStop] = useState<ItineraryStopWithPoi | null>(null);
+  const [activeTab, setActiveTab] = useState<AccountTab>("route");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -1088,7 +1091,31 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             </section>
           )}
 
-          <section className="flex flex-col gap-3">
+          <div className="flex gap-1.5 rounded-lg border border-border bg-white/[0.62] p-1">
+            {(
+              [
+                { id: "route", label: t.tabRoute },
+                { id: "saved", label: t.tabSaved },
+                { id: "history", label: t.tabHistory }
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-2 text-sm font-semibold transition",
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <section className={cn("flex flex-col gap-3", activeTab !== "saved" && "hidden")}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                 <Bookmark className="h-4 w-4 text-primary" />
@@ -1150,7 +1177,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
+          <section className={cn("flex flex-col gap-3", activeTab !== "route" && "hidden")}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                 <Route className="h-4 w-4 shrink-0 text-primary" />
@@ -1382,7 +1409,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
+          <section className={cn("flex flex-col gap-3", activeTab !== "history" && "hidden")}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                 <MapPin className="h-4 w-4 text-primary" />
@@ -1409,7 +1436,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             )}
           </section>
 
-          <section className="flex flex-col gap-3">
+          <section className={cn("flex flex-col gap-3", activeTab !== "history" && "hidden")}>
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                 <Eye className="h-4 w-4 text-primary" />

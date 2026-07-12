@@ -110,6 +110,18 @@ type TranslationDictionary = {
     addToItinerary: string;
     addAllToItinerary: string;
     addRegionToItinerary: string;
+    favoritesStatsSaved: string;
+    favoritesStatsRegions: string;
+    favoritesStatsDays: string;
+    favoritesStatsDaysHint: string;
+    favoritesStatsDaysUnit: string;
+    favoritesCtaTitle: string;
+    favoritesCtaBody: string;
+    favoritesCtaButton: string;
+    favoritesProgressTitle: string;
+    favoritesProgressViewAll: string;
+    favoritesProgressPlacesUnit: string;
+    favoritesMapOpen: string;
     inItinerary: string;
     removeFromItinerary: string;
     clearItinerary: string;
@@ -358,6 +370,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       addToItinerary: "Add to itinerary",
       addAllToItinerary: "Add all to itinerary",
       addRegionToItinerary: "Add all in this region to itinerary",
+      favoritesStatsSaved: "Places saved",
+      favoritesStatsRegions: "Regions",
+      favoritesStatsDays: "Enough for a trip",
+      favoritesStatsDaysHint: "Estimated from average visit time at {hoursPerDay}h of sightseeing per day",
+      favoritesStatsDaysUnit: "days",
+      favoritesCtaTitle: "Great!",
+      favoritesCtaBody: "You have enough places for a {days}-day trip.",
+      favoritesCtaButton: "Build itinerary",
+      favoritesProgressTitle: "Progress by region",
+      favoritesProgressViewAll: "View all regions",
+      favoritesProgressPlacesUnit: "places",
+      favoritesMapOpen: "Open map",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
       clearItinerary: "Clear itinerary",
@@ -604,6 +628,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       addToItinerary: "В маршрут",
       addAllToItinerary: "Добавить все в маршрут",
       addRegionToItinerary: "Добавить все места этого региона в маршрут",
+      favoritesStatsSaved: "Сохранено мест",
+      favoritesStatsRegions: "Региона",
+      favoritesStatsDays: "Хватит на поездку",
+      favoritesStatsDaysHint: "Оценка по среднему времени посещения места и {hoursPerDay} ч осмотра в день",
+      favoritesStatsDaysUnit: "дня",
+      favoritesCtaTitle: "Отлично!",
+      favoritesCtaBody: "У вас достаточно мест для путешествия на {days} дня.",
+      favoritesCtaButton: "Составить маршрут",
+      favoritesProgressTitle: "Прогресс по регионам",
+      favoritesProgressViewAll: "Смотреть все регионы",
+      favoritesProgressPlacesUnit: "мест",
+      favoritesMapOpen: "Открыть карту",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
       clearItinerary: "Очистить маршрут",
@@ -849,6 +885,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       addToItinerary: "ルートに追加",
       addAllToItinerary: "すべてルートに追加",
       addRegionToItinerary: "この地域の場所をすべてルートに追加",
+      favoritesStatsSaved: "保存した場所",
+      favoritesStatsRegions: "地域",
+      favoritesStatsDays: "旅行に十分な日数",
+      favoritesStatsDaysHint: "平均滞在時間と1日あたり{hoursPerDay}時間の観光時間から算出",
+      favoritesStatsDaysUnit: "日間",
+      favoritesCtaTitle: "素晴らしい!",
+      favoritesCtaBody: "{days}日間の旅行に十分な場所があります。",
+      favoritesCtaButton: "旅程を作成",
+      favoritesProgressTitle: "地域別の進捗",
+      favoritesProgressViewAll: "すべての地域を見る",
+      favoritesProgressPlacesUnit: "件",
+      favoritesMapOpen: "地図を開く",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
       clearItinerary: "ルートを消去",

@@ -19,10 +19,13 @@ import {
   Bookmark,
   Check,
   ChevronDown,
+  ChevronRight,
   Download,
   Eye,
   GripVertical,
+  Info,
   ListPlus,
+  Map as MapIcon,
   MapPin,
   Pencil,
   Plus,
@@ -64,10 +67,12 @@ import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
+import { FavoritesMap } from "@/widgets/favorites-map/ui/favorites-map";
 import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
 const DEFAULT_DAY_START_MINUTES = 540; // 09:00
+const FAVORITES_TRIP_HOURS_PER_DAY = 6;
 
 type DayConfigPatch = Partial<{
   title: string;
@@ -702,6 +707,11 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     });
   }
 
+  function handleGoToGenerateItinerary() {
+    setActiveTab("route");
+    setIsGeneratorOpen(true);
+  }
+
   async function handleClearItinerary() {
     if (!itinerary) return;
     const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, { method: "DELETE" });
@@ -1056,6 +1066,14 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const favoritesByRegion = regions
     .map((region) => ({ regionId: region.id, pois: favoritePois.filter((poi) => poi.regionId === region.id) }))
     .filter((group) => group.pois.length > 0);
+  const favoritesTotalMinutes = favoritePois.reduce((sum, poi) => sum + poi.durationMinutes, 0);
+  const favoritesTripDays =
+    favoritePois.length > 0 ? Math.max(1, Math.ceil(favoritesTotalMinutes / (FAVORITES_TRIP_HOURS_PER_DAY * 60))) : 0;
+  const favoritesRegionProgress = favoritesByRegion.map(({ regionId, pois: regionPois }) => {
+    const totalInRegion = pois.filter((poi) => poi.regionId === regionId).length;
+    const percent = totalInRegion > 0 ? Math.round((regionPois.length / totalInRegion) * 100) : 0;
+    return { regionId, count: regionPois.length, percent };
+  });
 
   return (
     <main className="flex min-h-dvh flex-col bg-muted">
@@ -1172,6 +1190,106 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 </div>
               )}
             </div>
+            {favoritePois.length > 0 && (
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-4 rounded-lg border border-border bg-white/[0.78] p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-6">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Bookmark className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="text-xl font-bold text-foreground">{favoritePois.length}</div>
+                        <div className="text-xs text-muted-foreground">{t.favoritesStatsSaved}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-600">
+                        <MapIcon className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="text-xl font-bold text-foreground">{favoritesByRegion.length}</div>
+                        <div className="text-xs text-muted-foreground">{t.favoritesStatsRegions}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500/10 text-violet-600">
+                        <Route className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="text-xl font-bold text-foreground">
+                          {favoritesTripDays}{" "}
+                          <span className="text-xs font-normal text-muted-foreground">{t.favoritesStatsDaysUnit}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {t.favoritesStatsDays}
+                          <span title={t.favoritesStatsDaysHint.replace("{hoursPerDay}", String(FAVORITES_TRIP_HOURS_PER_DAY))}>
+                            <Info className="h-3 w-3" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg bg-primary/5 p-3 sm:max-w-xs">
+                    <Sparkles className="h-5 w-5 shrink-0 text-primary" />
+                    <div className="flex-1 text-xs">
+                      <div className="font-semibold text-foreground">{t.favoritesCtaTitle}</div>
+                      <div className="text-muted-foreground">
+                        {t.favoritesCtaBody.replace("{days}", String(favoritesTripDays))}
+                      </div>
+                    </div>
+                    <Button type="button" size="sm" onClick={handleGoToGenerateItinerary} className="shrink-0">
+                      {t.favoritesCtaButton}
+                    </Button>
+                  </div>
+                </div>
+
+                {favoritesRegionProgress.length > 0 && (
+                  <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-white/[0.78] p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                        <MapPin className="h-3.5 w-3.5 text-primary" />
+                        {t.favoritesProgressTitle}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => router.push("/")}
+                        className="flex items-center gap-0.5 text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        {t.favoritesProgressViewAll}
+                        <ChevronRight className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {favoritesRegionProgress.map(({ regionId, count, percent }) => (
+                        <div key={regionId} className="flex items-center gap-3 text-xs">
+                          <span className="w-16 shrink-0 truncate font-medium text-foreground">{regionName(regionId)}</span>
+                          <span className="w-14 shrink-0 text-muted-foreground">
+                            {count} {t.favoritesProgressPlacesUnit}
+                          </span>
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-primary"
+                              style={{ width: `${Math.min(100, percent)}%` }}
+                            />
+                          </div>
+                          <span className="w-9 shrink-0 text-right text-muted-foreground">{percent}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <FavoritesMap
+                  pois={favoritePois}
+                  mapStyleId={initialSiteSettings.mapStyleId}
+                  protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+                  onSelectPoi={goToPoi}
+                  onOpenFullMap={() => router.push("/")}
+                  openMapLabel={t.favoritesMapOpen}
+                />
+              </div>
+            )}
             {favoritePois.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.noSavedPlaces}</p>
             ) : (

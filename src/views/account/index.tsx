@@ -1,45 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bookmark,
   Check,
   ChevronDown,
-  ChevronUp,
   Download,
   Eye,
-  GripVertical,
   MapPin,
   Pencil,
+  Plus,
   Route,
   Share2,
+  Sparkles,
+  Trash2,
   Wand2,
   X
 } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
+import { buildDayTimeline, formatMinutesAsTime } from "@/entities/itinerary/model/timeline";
+import type { ItineraryStopWithPoi } from "@/entities/itinerary/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
+import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
 import { avatarIds } from "@/entities/user/model/avatars";
 import type { User } from "@/entities/user/model/types";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
+
+type Translations = ReturnType<typeof getTranslations>;
+import { estimateTransitionMinutes, sequenceByNearestNeighbor } from "@/shared/lib/itinerary-planner";
+import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
+import { fetchWalkingRoute, type WalkingRoute } from "@/shared/lib/osrm-route";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
+import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
+
+const DAY_START_MINUTES = 540; // 09:00
 
 type AccountPageProps = {
   initialPois: Poi[];
   initialRegions: Region[];
   initialCountries: Country[];
   initialAreas: Area[];
+  initialSiteSettings: SiteSettings;
 };
+
+function PoiThumbnail({ poi, className }: { poi: Poi; className?: string }) {
+  const thumbnail = poi.photos[0]?.url;
+
+  return thumbnail ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={thumbnail} alt={poi.name} className={cn("shrink-0 rounded object-cover", className)} />
+  ) : (
+    <div className={cn("flex shrink-0 items-center justify-center rounded bg-muted text-muted-foreground", className)}>
+      <MapPin className="h-5 w-5" />
+    </div>
+  );
+}
 
 function PoiRow({
   poi,
@@ -52,18 +78,10 @@ function PoiRow({
   onSelect: () => void;
   action?: React.ReactNode;
 }) {
-  const thumbnail = poi.photos[0]?.url;
-
   return (
     <div className="flex w-full items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
       <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        {thumbnail ? (
-          <img src={thumbnail} alt={poi.name} className="h-12 w-12 shrink-0 rounded object-cover" />
-        ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
-            <MapPin className="h-5 w-5" />
-          </div>
-        )}
+        <PoiThumbnail poi={poi} className="h-12 w-12" />
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">{poi.name}</p>
           <p className="truncate text-xs text-muted-foreground">{regionName}</p>
@@ -74,7 +92,272 @@ function PoiRow({
   );
 }
 
-export function AccountPage({ initialPois, initialRegions, initialCountries, initialAreas }: AccountPageProps) {
+function ItineraryTimelineRow({
+  stop,
+  arrivalMinutes,
+  departureMinutes,
+  regionName,
+  onSelect,
+  onRemove,
+  onMoveToDay,
+  maxDay,
+  t
+}: {
+  stop: ItineraryStopWithPoi;
+  arrivalMinutes: number;
+  departureMinutes: number;
+  regionName: string;
+  onSelect: () => void;
+  onRemove: () => void;
+  onMoveToDay: (day: number) => void;
+  maxDay: number;
+  t: Translations["auth"];
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
+      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <PoiThumbnail poi={stop.poi} className="h-12 w-12" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-foreground">{stop.poi.name}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {formatMinutesAsTime(arrivalMinutes)}–{formatMinutesAsTime(departureMinutes)} · {regionName}
+          </p>
+        </div>
+      </button>
+      <div className="flex shrink-0 items-center gap-1">
+        <select
+          value={stop.day}
+          onChange={(e) => onMoveToDay(Number(e.target.value))}
+          className="h-7 rounded border border-border bg-white px-1 text-xs outline-none"
+        >
+          {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
+            <option key={d} value={d}>
+              {t.dayLabel.replace("{n}", String(d))}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={t.removeFromItinerary}
+          className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ItineraryDayCard({
+  day,
+  title,
+  stops,
+  route,
+  mapStyleId,
+  protomapsPmtilesUrl,
+  onRenameDay,
+  onOptimizeDay,
+  isOptimizing,
+  onRequestRemoveDay,
+  regionName,
+  goToPoi,
+  onRemoveStop,
+  onMoveStopToDay,
+  maxDay,
+  t,
+  dict,
+  defaultExpanded
+}: {
+  day: number;
+  title: string | null;
+  stops: ItineraryStopWithPoi[];
+  route: WalkingRoute | null;
+  mapStyleId: SiteSettings["mapStyleId"];
+  protomapsPmtilesUrl: string | null;
+  onRenameDay: (title: string) => void;
+  onOptimizeDay: () => void;
+  isOptimizing: boolean;
+  onRequestRemoveDay: () => void;
+  regionName: (regionId: string) => string;
+  goToPoi: (poiId: string) => void;
+  onRemoveStop: (poiId: string) => void;
+  onMoveStopToDay: (poiId: string, day: number) => void;
+  maxDay: number;
+  t: Translations["auth"];
+  dict: Translations;
+  defaultExpanded: boolean;
+}) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(title ?? "");
+
+  const pois = stops.map((stop) => stop.poi);
+  const summary = computeItinerarySummary(pois);
+
+  const { entries, endMinutes } = useMemo(() => {
+    if (pois.length === 0) {
+      return { entries: [], endMinutes: DAY_START_MINUTES };
+    }
+    const legMinutes =
+      route?.legDurationsMinutes ??
+      pois.slice(0, -1).map((poi, i) => estimateTransitionMinutes(haversineDistanceMeters(poi.coordinates, pois[i + 1].coordinates)));
+    return buildDayTimeline(pois, legMinutes, DAY_START_MINUTES);
+  }, [pois, route]);
+
+  const displayTitle = title || t.dayLabel.replace("{n}", String(day));
+
+  return (
+    <div className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {isEditingTitle ? (
+            <input
+              autoFocus
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={() => {
+                setIsEditingTitle(false);
+                onRenameDay(titleDraft);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setIsEditingTitle(false);
+                  onRenameDay(titleDraft);
+                }
+                if (e.key === "Escape") {
+                  setTitleDraft(title ?? "");
+                  setIsEditingTitle(false);
+                }
+              }}
+              placeholder={t.renameDayPlaceholder}
+              className="w-full rounded border border-primary/30 bg-white px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setTitleDraft(title ?? "");
+                setIsEditingTitle(true);
+              }}
+              className="flex items-center gap-1.5 text-sm font-semibold text-foreground transition hover:text-primary"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t.dayLabel.replace("{n}", String(day))}
+              </span>
+              {displayTitle}
+              <Pencil className="h-3 w-3 shrink-0 text-muted-foreground" />
+            </button>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t.dayPlaceCount.replace("{count}", String(pois.length))}
+            {pois.length > 0 && (
+              <>
+                {" · "}
+                {t.dayWalkingDistance.replace("{distance}", formatDistance(summary.walkingDistanceMeters))}
+                {" · "}
+                {summary.totalMinutes} {dict.app.minutesShort}
+              </>
+            )}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          {pois.length > 1 && (
+            <button
+              type="button"
+              onClick={onOptimizeDay}
+              disabled={isOptimizing}
+              title={t.optimizeDay}
+              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:text-primary disabled:opacity-40"
+            >
+              <Sparkles className={cn("h-4 w-4", isOptimizing && "animate-pulse")} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onRequestRemoveDay}
+            title={t.removeDay}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsExpanded((value) => !value)}
+            aria-expanded={isExpanded}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition hover:text-foreground"
+          >
+            <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+          </button>
+        </div>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-3 flex flex-col gap-3">
+          {pois.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t.dayEmptyPlaceholder}</p>
+          ) : (
+            <>
+              <ItineraryDayMap
+                stops={pois}
+                lineCoordinates={route?.lineCoordinates ?? null}
+                mapStyleId={mapStyleId}
+                protomapsPmtilesUrl={protomapsPmtilesUrl}
+              />
+              <div className="flex flex-col gap-1.5">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {formatMinutesAsTime(DAY_START_MINUTES)} {t.dayStart}
+                </p>
+                {entries.map((entry, index) => {
+                  if (entry.type === "stop") {
+                    const stop = stops.find((s) => s.poi.id === entry.poi.id);
+                    if (!stop) return null;
+                    return (
+                      <ItineraryTimelineRow
+                        key={stop.id}
+                        stop={stop}
+                        arrivalMinutes={entry.arrivalMinutes}
+                        departureMinutes={entry.departureMinutes}
+                        regionName={regionName(stop.poi.regionId)}
+                        onSelect={() => goToPoi(stop.poi.id)}
+                        onRemove={() => onRemoveStop(stop.poi.id)}
+                        onMoveToDay={(targetDay) => onMoveStopToDay(stop.poi.id, targetDay)}
+                        maxDay={maxDay}
+                        t={t}
+                      />
+                    );
+                  }
+
+                  if (entry.type === "travel") {
+                    return (
+                      <p key={`travel-${index}`} className="pl-1 text-xs text-muted-foreground">
+                        {entry.minutes} {dict.app.minutesShort} ({formatDistance(entry.meters)})
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <p
+                      key={`lunch-${index}`}
+                      className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
+                    >
+                      {formatMinutesAsTime(entry.startMinutes)} {t.lunchBreak} · {entry.minutes} {dict.app.minutesShort}
+                    </p>
+                  );
+                })}
+                <p className="text-xs font-medium text-muted-foreground">
+                  {formatMinutesAsTime(endMinutes)} {t.dayEnd}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function AccountPage({ initialPois, initialRegions, initialCountries, initialAreas, initialSiteSettings }: AccountPageProps) {
   const router = useRouter();
   const setPois = useExplorerStore((state) => state.setPois);
   const setRegions = useExplorerStore((state) => state.setRegions);
@@ -110,7 +393,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | "itinerary" | null>(null);
-  const [dragPoiId, setDragPoiId] = useState<string | null>(null);
+  const [pendingRemoveDay, setPendingRemoveDay] = useState<number | null>(null);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -121,6 +404,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [generatorSource, setGeneratorSource] = useState<"favorites" | "recommended">("favorites");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatorError, setGeneratorError] = useState<string | null>(null);
+  const [dayRoutes, setDayRoutes] = useState<Record<number, WalkingRoute | null>>({});
+  const [isAddingDay, setIsAddingDay] = useState(false);
+  const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
 
   const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
 
@@ -178,40 +464,42 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
-  function moveStopWithinDay(day: number, poiId: string, direction: -1 | 1) {
+  async function handleOptimizeDay(day: number) {
     if (!itinerary) return;
-    const dayPoiIds = itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poi.id);
-    const index = dayPoiIds.indexOf(poiId);
-    const targetIndex = index + direction;
-    if (index === -1 || targetIndex < 0 || targetIndex >= dayPoiIds.length) return;
-
-    const reordered = [...dayPoiIds];
-    [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
-    handleReorderItinerary(day, reordered);
+    setOptimizingDay(day);
+    try {
+      const dayPois = itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poi);
+      const ordered = sequenceByNearestNeighbor(dayPois);
+      await handleReorderItinerary(day, ordered.map((poi) => poi.id));
+    } finally {
+      setOptimizingDay(null);
+    }
   }
 
-  function handleItineraryDrop(targetPoiId: string) {
-    if (!dragPoiId || dragPoiId === targetPoiId || !itinerary) {
-      setDragPoiId(null);
-      return;
+  async function handleAddDay() {
+    setIsAddingDay(true);
+    try {
+      const res = await fetch("/api/me/itinerary/days", { method: "POST" });
+      if (res.ok) setItinerary(await res.json());
+    } finally {
+      setIsAddingDay(false);
     }
+  }
 
-    const dragStop = itinerary.stops.find((stop) => stop.poi.id === dragPoiId);
-    const targetStop = itinerary.stops.find((stop) => stop.poi.id === targetPoiId);
-    if (!dragStop || !targetStop || dragStop.day !== targetStop.day) {
-      setDragPoiId(null);
-      return;
-    }
+  async function handleRemoveDay(day: number) {
+    const res = await fetch(`/api/me/itinerary/days/${day}`, { method: "DELETE" });
+    if (res.ok) setItinerary(await res.json());
+  }
 
-    const dayPoiIds = itinerary.stops.filter((stop) => stop.day === dragStop.day).map((stop) => stop.poi.id);
-    const fromIndex = dayPoiIds.indexOf(dragPoiId);
-    const toIndex = dayPoiIds.indexOf(targetPoiId);
-    const reordered = [...dayPoiIds];
-    reordered.splice(fromIndex, 1);
-    reordered.splice(toIndex, 0, dragPoiId);
-
-    setDragPoiId(null);
-    handleReorderItinerary(dragStop.day, reordered);
+  async function handleRenameDay(day: number, title: string) {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    const res = await fetch(`/api/me/itinerary/days/${day}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: trimmed })
+    });
+    if (res.ok) setItinerary(await res.json());
   }
 
   async function handleGenerateItinerary() {
@@ -230,7 +518,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           regionId: generatorRegionId,
           days: clampDayCount(generatorDays),
           hoursPerDay: clampDayCount(generatorHoursPerDay),
-          source: generatorSource
+          source: generatorSource,
+          language
         })
       });
 
@@ -335,6 +624,38 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     }
   }
 
+  const daySignature = itinerary
+    ? itinerary.days
+        .map((d) => `${d.day}:${itinerary.stops.filter((s) => s.day === d.day).map((s) => s.poi.id).join(",")}`)
+        .join("|")
+    : "";
+
+  useEffect(() => {
+    if (!itinerary || itinerary.days.length === 0) {
+      setDayRoutes({});
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      const entries = await Promise.all(
+        itinerary.days.map(async (d) => {
+          const dayPois = itinerary.stops.filter((s) => s.day === d.day).map((s) => s.poi);
+          if (dayPois.length < 2) return [d.day, null] as const;
+          const route = await fetchWalkingRoute(dayPois.map((poi) => poi.coordinates));
+          return [d.day, route] as const;
+        })
+      );
+      if (!cancelled) setDayRoutes(Object.fromEntries(entries));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [daySignature]);
+
   if (authStatus === "loading") {
     return (
       <main className="flex min-h-dvh flex-col bg-muted">
@@ -358,6 +679,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const favoritePois = pois.filter((poi) => favorites.includes(poi.id));
   const viewedPois = pois.filter((poi) => viewedPoiIds.includes(poi.id));
   const visitedPois = pois.filter((poi) => visitedPoiIds.includes(poi.id));
+  const maxDay = itinerary && itinerary.days.length > 0 ? Math.max(...itinerary.days.map((d) => d.day)) : 0;
 
   return (
     <main className="flex min-h-dvh flex-col bg-muted">
@@ -623,102 +945,38 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               </div>
             )}
 
-            {!itinerary || itinerary.stops.length === 0 ? (
+            {!itinerary || itinerary.days.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.itineraryEmpty}</p>
             ) : (
-              <>
-                {(() => {
-                  const days = [...new Set(itinerary.stops.map((stop) => stop.day))].sort((a, b) => a - b);
-                  const maxDay = Math.max(...days);
-                  return days.map((day) => (
-                    <div key={day} className="flex flex-col gap-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {t.dayLabel.replace("{n}", String(day))}
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {itinerary.stops
-                          .filter((stop) => stop.day === day)
-                          .map((stop, stopIndex, dayStops) => (
-                            <div
-                              key={stop.id}
-                              draggable
-                              onDragStart={() => setDragPoiId(stop.poi.id)}
-                              onDragOver={(event) => event.preventDefault()}
-                              onDrop={() => handleItineraryDrop(stop.poi.id)}
-                              className={cn(
-                                "flex items-center gap-1.5 transition",
-                                dragPoiId === stop.poi.id && "opacity-50"
-                              )}
-                            >
-                              <span className="hidden cursor-grab text-muted-foreground sm:inline-flex">
-                                <GripVertical className="h-4 w-4" />
-                              </span>
-                              <div className="flex flex-col">
-                                <button
-                                  type="button"
-                                  onClick={() => moveStopWithinDay(day, stop.poi.id, -1)}
-                                  disabled={stopIndex === 0}
-                                  aria-label={t.moveUp}
-                                  className="rounded p-0.5 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                >
-                                  <ChevronUp className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => moveStopWithinDay(day, stop.poi.id, 1)}
-                                  disabled={stopIndex === dayStops.length - 1}
-                                  aria-label={t.moveDown}
-                                  className="rounded p-0.5 text-muted-foreground transition hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                                >
-                                  <ChevronDown className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <PoiRow
-                                  poi={stop.poi}
-                                  regionName={regionName(stop.poi.regionId)}
-                                  onSelect={() => goToPoi(stop.poi.id)}
-                                  action={
-                                    <div className="flex items-center gap-1">
-                                      <select
-                                        value={stop.day}
-                                        onChange={(e) => handleMoveStopToDay(stop.poi.id, Number(e.target.value))}
-                                        className="h-7 rounded border border-border bg-white px-1 text-xs outline-none"
-                                      >
-                                        {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
-                                          <option key={d} value={d}>
-                                            {t.dayLabel.replace("{n}", String(d))}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveFromItinerary(stop.poi.id)}
-                                        aria-label={t.removeFromItinerary}
-                                        className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  }
-                                />
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  ));
-                })()}
-                {(() => {
-                  const summary = computeItinerarySummary(itinerary.stops.map((stop) => stop.poi));
-                  return (
-                    <p className="text-xs text-muted-foreground">
-                      {t.visitTime} {summary.visitMinutes} {dict.app.minutesShort} · {t.walkingTime}{" "}
-                      {summary.walkingMinutes} {dict.app.minutesShort}
-                    </p>
-                  );
-                })()}
-              </>
+              <div className="flex flex-col gap-3">
+                {itinerary.days.map((dayInfo, index) => (
+                  <ItineraryDayCard
+                    key={dayInfo.day}
+                    day={dayInfo.day}
+                    title={dayInfo.title}
+                    stops={itinerary.stops.filter((stop) => stop.day === dayInfo.day)}
+                    route={dayRoutes[dayInfo.day] ?? null}
+                    mapStyleId={initialSiteSettings.mapStyleId}
+                    protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+                    onRenameDay={(title) => handleRenameDay(dayInfo.day, title)}
+                    onOptimizeDay={() => handleOptimizeDay(dayInfo.day)}
+                    isOptimizing={optimizingDay === dayInfo.day}
+                    onRequestRemoveDay={() => setPendingRemoveDay(dayInfo.day)}
+                    regionName={regionName}
+                    goToPoi={goToPoi}
+                    onRemoveStop={handleRemoveFromItinerary}
+                    onMoveStopToDay={handleMoveStopToDay}
+                    maxDay={maxDay}
+                    t={t}
+                    dict={dict}
+                    defaultExpanded={index === 0}
+                  />
+                ))}
+                <Button type="button" variant="outline" onClick={handleAddDay} disabled={isAddingDay} className="gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  {t.addDay}
+                </Button>
+              </div>
             )}
           </section>
 
@@ -794,6 +1052,35 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
               </Button>
               <Button type="button" size="sm" onClick={confirmPendingClear}>
                 {pendingClearLabel}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {pendingRemoveDay !== null && (
+        <>
+          <button
+            type="button"
+            aria-label="Close"
+            className="fixed inset-0 z-40 bg-black/20"
+            onClick={() => setPendingRemoveDay(null)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+            <p className="text-sm text-foreground">{t.removeDayConfirm}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPendingRemoveDay(null)}>
+                {t.cancel}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={async () => {
+                  await handleRemoveDay(pendingRemoveDay);
+                  setPendingRemoveDay(null);
+                }}
+              >
+                {t.removeDay}
               </Button>
             </div>
           </div>

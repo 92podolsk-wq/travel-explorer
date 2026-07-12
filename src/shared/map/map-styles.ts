@@ -73,3 +73,23 @@ export async function buildProtomapsStyle(pmtilesUrl: string): Promise<StyleSpec
     layers: layers("protomaps", namedFlavor("light"), { lang: "en" })
   };
 }
+
+export async function resolveMapStyle(
+  mapStyleId: MapStyleId,
+  protomapsPmtilesUrl: string | null
+): Promise<string | StyleSpecification> {
+  if (mapStyleId === "protomaps") {
+    if (!protomapsPmtilesUrl) {
+      console.warn("Protomaps style selected but no PMTiles URL is configured; falling back to default style.");
+      return defaultMapStyleUrl;
+    }
+
+    const { Protocol } = await import("pmtiles");
+    const maplibre = await import("maplibre-gl");
+    maplibre.addProtocol("pmtiles", new Protocol().tile);
+
+    return buildProtomapsStyle(protomapsPmtilesUrl);
+  }
+
+  return presetMapStyleUrl(mapStyleId) ?? defaultMapStyleUrl;
+}

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { planItineraryDays } from "@/shared/lib/itinerary-planner";
+import type { Language } from "@/shared/i18n/types";
 import { generateItinerary } from "@/shared/server/itineraries-repository";
 import { readPublishedPois } from "@/shared/server/pois-repository";
 import { readPublishedRegions } from "@/shared/server/regions-repository";
 import { getCurrentUser } from "@/shared/server/user-auth";
 import { getUserPoiState } from "@/shared/server/user-pois-repository";
+
+const supportedLanguages: Language[] = ["en", "ru", "ja"];
 
 const MAX_DAYS = 14;
 const MAX_HOURS_PER_DAY = 14;
@@ -20,11 +23,15 @@ export async function POST(request: Request) {
     days?: number;
     hoursPerDay?: number;
     source?: "favorites" | "recommended";
+    language?: string;
   };
 
   const regionId = body.regionId;
   const days = Math.min(MAX_DAYS, Math.max(1, Math.round(body.days ?? 0)));
   const hoursPerDay = Math.min(MAX_HOURS_PER_DAY, Math.max(1, Math.round(body.hoursPerDay ?? 0)));
+  const language: Language = supportedLanguages.includes(body.language as Language)
+    ? (body.language as Language)
+    : "en";
 
   if (!regionId || !days || !hoursPerDay) {
     return NextResponse.json({ error: "regionId, days and hoursPerDay are required" }, { status: 400 });
@@ -46,7 +53,7 @@ export async function POST(request: Request) {
     candidates = favoritesInRegion.length > 0 ? favoritesInRegion : regionPois;
   }
 
-  const plan = planItineraryDays(candidates, days, hoursPerDay * 60);
+  const plan = planItineraryDays(candidates, days, hoursPerDay * 60, language);
   const title = `${region.name} · ${days} дн.`;
 
   return NextResponse.json(await generateItinerary(user.id, plan, title));

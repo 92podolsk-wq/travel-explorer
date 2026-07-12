@@ -7,8 +7,7 @@ import type {
   GeoJSONSource,
   Map as MapLibreMap,
   MapLayerMouseEvent,
-  Marker as MapLibreMarker,
-  StyleSpecification
+  Marker as MapLibreMarker
 } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
@@ -18,7 +17,7 @@ import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
-import { buildProtomapsStyle, defaultMapStyleUrl, presetMapStyleUrl } from "@/shared/map/map-styles";
+import { resolveMapStyle } from "@/shared/map/map-styles";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -299,26 +298,6 @@ async function addPoiLayers(map: MapLibreMap) {
       "text-halo-width": 1.6
     }
   });
-}
-
-async function resolveMapStyle(
-  mapStyleId: MapStyleId,
-  protomapsPmtilesUrl: string | null
-): Promise<string | StyleSpecification> {
-  if (mapStyleId === "protomaps") {
-    if (!protomapsPmtilesUrl) {
-      console.warn("Protomaps style selected but no PMTiles URL is configured; falling back to default style.");
-      return defaultMapStyleUrl;
-    }
-
-    const { Protocol } = await import("pmtiles");
-    const maplibre = await import("maplibre-gl");
-    maplibre.addProtocol("pmtiles", new Protocol().tile);
-
-    return buildProtomapsStyle(protomapsPmtilesUrl);
-  }
-
-  return presetMapStyleUrl(mapStyleId) ?? defaultMapStyleUrl;
 }
 
 function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {

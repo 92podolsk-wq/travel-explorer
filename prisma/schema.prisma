@@ -192,6 +192,7 @@ model Itinerary {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   stops      ItineraryStop[]
+  days       ItineraryDay[]
 }
 
 model ItineraryStop {
@@ -204,6 +205,16 @@ model ItineraryStop {
   position    Int
 
   @@unique([itineraryId, poiId])
+}
+
+model ItineraryDay {
+  id          String    @id @default(cuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  day         Int
+  title       String?
+
+  @@unique([itineraryId, day])
 }
 
 model SiteSetting {

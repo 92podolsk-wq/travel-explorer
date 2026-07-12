@@ -108,14 +108,10 @@ type TranslationDictionary = {
     addAllToItinerary: string;
     inItinerary: string;
     removeFromItinerary: string;
-    moveUp: string;
-    moveDown: string;
     clearItinerary: string;
     clearItineraryConfirm: string;
     shareItinerary: string;
     linkCopied: string;
-    visitTime: string;
-    walkingTime: string;
     dayLabel: string;
     generateItinerary: string;
     generateItineraryDays: string;
@@ -126,6 +122,17 @@ type TranslationDictionary = {
     generateItineraryConfirm: string;
     generateItineraryEmpty: string;
     downloadPdf: string;
+    dayStart: string;
+    dayEnd: string;
+    lunchBreak: string;
+    addDay: string;
+    removeDay: string;
+    removeDayConfirm: string;
+    optimizeDay: string;
+    dayPlaceCount: string;
+    dayWalkingDistance: string;
+    dayEmptyPlaceholder: string;
+    renameDayPlaceholder: string;
   };
   report: {
     cta: string;
@@ -329,14 +336,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "Add all to itinerary",
       inItinerary: "In itinerary",
       removeFromItinerary: "Remove",
-      moveUp: "Move up",
-      moveDown: "Move down",
       clearItinerary: "Clear itinerary",
       clearItineraryConfirm: "Remove all places from the itinerary? This can't be undone.",
       shareItinerary: "Share",
       linkCopied: "Link copied",
-      visitTime: "Visiting",
-      walkingTime: "Walking",
       dayLabel: "Day {n}",
       generateItinerary: "Auto-generate",
       generateItineraryDays: "Days",
@@ -346,7 +349,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       generateItinerarySubmit: "Generate",
       generateItineraryConfirm: "This will replace your current itinerary. Continue?",
       generateItineraryEmpty: "No places found for these settings.",
-      downloadPdf: "Download PDF"
+      downloadPdf: "Download PDF",
+      dayStart: "Start of day",
+      dayEnd: "End of day",
+      lunchBreak: "Lunch",
+      addDay: "Add day",
+      removeDay: "Remove day",
+      removeDayConfirm: "Remove this day and all its stops? This can't be undone.",
+      optimizeDay: "Optimize",
+      dayPlaceCount: "{count} places",
+      dayWalkingDistance: "{distance} walking",
+      dayEmptyPlaceholder: "No stops yet — add places from your favorites.",
+      renameDayPlaceholder: "Day title"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -548,14 +562,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "Добавить все в маршрут",
       inItinerary: "В маршруте",
       removeFromItinerary: "Убрать",
-      moveUp: "Переместить вверх",
-      moveDown: "Переместить вниз",
       clearItinerary: "Очистить маршрут",
       clearItineraryConfirm: "Удалить все места из маршрута? Это действие нельзя отменить.",
       shareItinerary: "Поделиться",
       linkCopied: "Ссылка скопирована",
-      visitTime: "На месте",
-      walkingTime: "В пути",
       dayLabel: "День {n}",
       generateItinerary: "Автосоставить маршрут",
       generateItineraryDays: "Дней",
@@ -565,7 +575,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       generateItinerarySubmit: "Составить",
       generateItineraryConfirm: "Это заменит текущий маршрут. Продолжить?",
       generateItineraryEmpty: "Не нашлось мест под эти настройки.",
-      downloadPdf: "Скачать PDF"
+      downloadPdf: "Скачать PDF",
+      dayStart: "Начало дня",
+      dayEnd: "Конец дня",
+      lunchBreak: "Обед",
+      addDay: "Добавить день",
+      removeDay: "Удалить день",
+      removeDayConfirm: "Удалить этот день и все его точки? Это действие нельзя отменить.",
+      optimizeDay: "Оптимизировать",
+      dayPlaceCount: "{count} мест",
+      dayWalkingDistance: "{distance} пешком",
+      dayEmptyPlaceholder: "Пока нет точек — добавьте места из избранного.",
+      renameDayPlaceholder: "Название дня"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -766,14 +787,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       addAllToItinerary: "すべてルートに追加",
       inItinerary: "ルートに追加済み",
       removeFromItinerary: "削除",
-      moveUp: "上に移動",
-      moveDown: "下に移動",
       clearItinerary: "ルートを消去",
       clearItineraryConfirm: "ルートからすべての場所を削除しますか?この操作は元に戻せません。",
       shareItinerary: "共有",
       linkCopied: "リンクをコピーしました",
-      visitTime: "滞在時間",
-      walkingTime: "移動時間",
       dayLabel: "{n}日目",
       generateItinerary: "ルートを自動作成",
       generateItineraryDays: "日数",
@@ -783,7 +800,18 @@ export const translations: Record<Language, TranslationDictionary> = {
       generateItinerarySubmit: "作成する",
       generateItineraryConfirm: "現在のルートは置き換えられます。続けますか?",
       generateItineraryEmpty: "この条件に合う場所が見つかりませんでした。",
-      downloadPdf: "PDFをダウンロード"
+      downloadPdf: "PDFをダウンロード",
+      dayStart: "開始",
+      dayEnd: "終了",
+      lunchBreak: "昼食",
+      addDay: "日を追加",
+      removeDay: "日を削除",
+      removeDayConfirm: "この日とすべての立ち寄り先を削除しますか?この操作は元に戻せません。",
+      optimizeDay: "最適化",
+      dayPlaceCount: "{count}件",
+      dayWalkingDistance: "徒歩{distance}",
+      dayEmptyPlaceholder: "まだ立ち寄り先がありません。お気に入りから追加してください。",
+      renameDayPlaceholder: "この日のタイトル"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

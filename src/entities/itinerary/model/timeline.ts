@@ -87,3 +87,12 @@ export function timeInputValueToMinutes(value: string): number {
   const [hours, mins] = value.split(":").map(Number);
   return hours * 60 + mins;
 }
+
+export function formatDurationLabel(minutes: number, hoursShort: string, minutesShort: string): string {
+  const total = Math.max(0, Math.round(minutes));
+  const hours = Math.floor(total / 60);
+  const mins = total % 60;
+  if (hours === 0) return `${mins} ${minutesShort}`;
+  if (mins === 0) return `${hours} ${hoursShort}`;
+  return `${hours} ${hoursShort} ${mins} ${minutesShort}`;
+}

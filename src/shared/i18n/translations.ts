@@ -22,6 +22,7 @@ type TranslationDictionary = {
     bestTime: string;
     signals: string;
     minutesShort: string;
+    hoursShort: string;
     language: string;
     region: string;
     country: string;
@@ -179,6 +180,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       bestTime: "Best Time",
       signals: "Signals",
       minutesShort: "m",
+      hoursShort: "h",
       language: "Language",
       region: "Region",
       country: "Country",
@@ -421,6 +423,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       bestTime: "Лучшее время",
       signals: "Признаки",
       minutesShort: "мин",
+      hoursShort: "ч",
       language: "Язык",
       region: "Регион",
       country: "Страна",
@@ -663,6 +666,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       bestTime: "おすすめの時間",
       signals: "特徴",
       minutesShort: "分",
+      hoursShort: "時間",
       language: "言語",
       region: "地域",
       country: "国",

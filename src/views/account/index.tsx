@@ -39,6 +39,7 @@ import {
   LUNCH_DURATION_MINUTES,
   LUNCH_THRESHOLD_MINUTES,
   buildDayTimeline,
+  formatDurationLabel,
   formatMinutesAsTime,
   minutesToTimeInputValue,
   timeInputValueToMinutes
@@ -152,7 +153,7 @@ function ItineraryTimelineRow({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
   const [isEditingDuration, setIsEditingDuration] = useState(false);
-  const [durationDraft, setDurationDraft] = useState(String(durationMinutes));
+  const [departureDraft, setDepartureDraft] = useState(minutesToTimeInputValue(departureMinutes));
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -160,11 +161,12 @@ function ItineraryTimelineRow({
     opacity: isDragging ? 0.4 : 1
   };
 
-  function commitDuration() {
+  function commitDeparture() {
     setIsEditingDuration(false);
-    const parsed = Number(durationDraft);
-    if (!Number.isFinite(parsed)) return;
-    onSetDuration(Math.min(600, Math.max(5, Math.round(parsed))));
+    const departureValue = timeInputValueToMinutes(departureDraft);
+    let newDuration = departureValue - (arrivalMinutes % 1440);
+    if (newDuration <= 0) newDuration += 1440;
+    onSetDuration(Math.min(600, Math.max(5, Math.round(newDuration))));
   }
 
   return (
@@ -193,46 +195,44 @@ function ItineraryTimelineRow({
         >
           {stop.poi.name}
         </button>
-        <p className="truncate text-xs text-muted-foreground">
-          {formatMinutesAsTime(arrivalMinutes)}–{formatMinutesAsTime(departureMinutes)} · {regionName}
-        </p>
-        <div className="mt-0.5 flex items-center gap-1.5">
+        <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+          <span>{formatMinutesAsTime(arrivalMinutes)}–</span>
           {isEditingDuration ? (
-            <>
-              <input
-                autoFocus
-                type="number"
-                min={5}
-                max={600}
-                step={5}
-                value={durationDraft}
-                onChange={(e) => setDurationDraft(e.target.value)}
-                onBlur={commitDuration}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") commitDuration();
-                  if (e.key === "Escape") {
-                    setDurationDraft(String(durationMinutes));
-                    setIsEditingDuration(false);
-                  }
-                }}
-                className="h-6 w-16 rounded border border-primary/30 bg-white px-1 text-xs outline-none focus:ring-2 focus:ring-ring/25"
-              />
-              <span className="text-[11px] text-muted-foreground">{dict.app.minutesShort}</span>
-            </>
+            <input
+              autoFocus
+              type="time"
+              value={departureDraft}
+              onChange={(e) => setDepartureDraft(e.target.value)}
+              onBlur={commitDeparture}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitDeparture();
+                if (e.key === "Escape") {
+                  setDepartureDraft(minutesToTimeInputValue(departureMinutes));
+                  setIsEditingDuration(false);
+                }
+              }}
+              className="h-6 rounded border border-primary/30 bg-white px-1 text-xs outline-none focus:ring-2 focus:ring-ring/25"
+            />
           ) : (
             <button
               type="button"
               onClick={() => {
-                setDurationDraft(String(durationMinutes));
+                setDepartureDraft(minutesToTimeInputValue(departureMinutes));
                 setIsEditingDuration(true);
               }}
-              className="text-[11px] text-muted-foreground hover:text-primary"
+              className="hover:text-primary"
             >
-              {t.stopDuration}: {durationMinutes} {dict.app.minutesShort}
-              {isDurationOverridden && ` · ${t.stopDurationCustom}`}
+              {formatMinutesAsTime(departureMinutes)}
             </button>
           )}
-          {isDurationOverridden && !isEditingDuration && (
+          <span className="truncate">· {regionName}</span>
+        </div>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          <span className="text-[11px] text-muted-foreground">
+            {t.stopDuration}: {formatDurationLabel(durationMinutes, dict.app.hoursShort, dict.app.minutesShort)}
+            {isDurationOverridden && ` · ${t.stopDurationCustom}`}
+          </span>
+          {isDurationOverridden && (
             <button
               type="button"
               onClick={() => onSetDuration(null)}
@@ -411,7 +411,7 @@ function ItineraryDayCard({
                 {" · "}
                 {t.dayWalkingDistance.replace("{distance}", formatDistance(summary.walkingDistanceMeters))}
                 {" · "}
-                {summary.totalMinutes} {dict.app.minutesShort}
+                {formatDurationLabel(summary.totalMinutes, dict.app.hoursShort, dict.app.minutesShort)}
               </>
             )}
           </p>

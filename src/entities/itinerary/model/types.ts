@@ -5,11 +5,16 @@ export type ItineraryStopWithPoi = {
   day: number;
   position: number;
   poi: Poi;
+  durationOverrideMinutes: number | null;
 };
 
 export type ItineraryDayInfo = {
   day: number;
   title: string | null;
+  startMinutes: number | null;
+  lunchEnabled: boolean | null;
+  lunchStartMinutes: number | null;
+  lunchDurationMinutes: number | null;
 };
 
 export type Itinerary = {
@@ -18,4 +23,9 @@ export type Itinerary = {
   shareToken: string;
   stops: ItineraryStopWithPoi[];
   days: ItineraryDayInfo[];
+};
+
+export type ItinerarySummary = {
+  id: string;
+  title: string;
 };

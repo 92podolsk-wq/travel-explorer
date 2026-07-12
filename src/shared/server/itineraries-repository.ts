@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { Itinerary } from "@/entities/itinerary/model/types";
+import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
 import type { PlannedDay } from "@/shared/lib/itinerary-planner";
 import { toPoi, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
@@ -7,9 +7,13 @@ import { prisma } from "./prisma-client";
 const stopInclude = { poi: { include: { photos: true } } } as const;
 const itineraryInclude = { stops: { include: stopInclude }, days: true } as const;
 
+const MAX_ITINERARIES_PER_USER = 3;
+
 type ItineraryRow = Awaited<
   ReturnType<typeof prisma.itinerary.findFirstOrThrow<{ include: typeof itineraryInclude }>>
 >;
+
+export class ItineraryLimitError extends Error {}
 
 function toItinerary(row: ItineraryRow): Itinerary {
   return {
@@ -18,8 +22,23 @@ function toItinerary(row: ItineraryRow): Itinerary {
     shareToken: row.shareToken,
     stops: [...row.stops]
       .sort((a, b) => (a.day !== b.day ? a.day - b.day : a.position - b.position))
-      .map((stop) => ({ id: stop.id, day: stop.day, position: stop.position, poi: toPoi(stop.poi as PoiRow) })),
-    days: [...row.days].sort((a, b) => a.day - b.day).map((d) => ({ day: d.day, title: d.title }))
+      .map((stop) => ({
+        id: stop.id,
+        day: stop.day,
+        position: stop.position,
+        poi: toPoi(stop.poi as PoiRow),
+        durationOverrideMinutes: stop.durationOverrideMinutes
+      })),
+    days: [...row.days]
+      .sort((a, b) => a.day - b.day)
+      .map((d) => ({
+        day: d.day,
+        title: d.title,
+        startMinutes: d.startMinutes,
+        lunchEnabled: d.lunchEnabled,
+        lunchStartMinutes: d.lunchStartMinutes,
+        lunchDurationMinutes: d.lunchDurationMinutes
+      }))
   };
 }
 
@@ -44,9 +63,15 @@ async function backfillMissingDays(itineraryId: string, stopDays: number[], exis
   return true;
 }
 
-async function loadItinerary(where: { userId: string } | { shareToken: string }): Promise<ItineraryRow | null> {
-  const row = await prisma.itinerary.findUnique({ where, include: itineraryInclude });
-  if (!row) return null;
+async function loadItinerary(where: { id: string; userId: string } | { shareToken: string }): Promise<ItineraryRow | null> {
+  const row =
+    "shareToken" in where
+      ? await prisma.itinerary.findUnique({ where: { shareToken: where.shareToken }, include: itineraryInclude })
+      : await prisma.itinerary.findUnique({ where: { id: where.id }, include: itineraryInclude });
+
+  if (!row || ("userId" in where && row.userId !== where.userId)) {
+    return null;
+  }
 
   const backfilled = await backfillMissingDays(
     row.id,
@@ -58,64 +83,82 @@ async function loadItinerary(where: { userId: string } | { shareToken: string })
     return row;
   }
 
-  return prisma.itinerary.findUnique({ where, include: itineraryInclude });
+  return loadItinerary(where);
 }
 
-export async function getOrCreateItinerary(userId: string): Promise<Itinerary> {
-  const existing = await loadItinerary({ userId });
-  if (existing) {
-    return toItinerary(existing);
+export async function getItinerary(userId: string, itineraryId: string): Promise<Itinerary | null> {
+  const row = await loadItinerary({ id: itineraryId, userId });
+  return row ? toItinerary(row) : null;
+}
+
+export async function listItineraries(userId: string): Promise<ItinerarySummary[]> {
+  return prisma.itinerary.findMany({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, title: true }
+  });
+}
+
+export async function createItinerary(userId: string, title?: string): Promise<Itinerary> {
+  const count = await prisma.itinerary.count({ where: { userId } });
+  if (count >= MAX_ITINERARIES_PER_USER) {
+    throw new ItineraryLimitError();
   }
 
   const created = await prisma.itinerary.create({
-    data: { userId, shareToken: generateShareToken() },
+    data: { userId, shareToken: generateShareToken(), ...(title ? { title } : {}) },
     include: itineraryInclude
   });
 
   return toItinerary(created);
 }
 
-export async function addStop(userId: string, poiId: string): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.upsert({
-    where: { userId },
-    create: { userId, shareToken: generateShareToken() },
-    update: {}
-  });
+export async function deleteItinerary(userId: string, itineraryId: string): Promise<boolean> {
+  const owned = await prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { userId: true } });
+  if (!owned || owned.userId !== userId) {
+    return false;
+  }
 
-  const existingStops = await prisma.itineraryStop.findMany({ where: { itineraryId: itinerary.id } });
-  const targetDay = existingStops.reduce((max, stop) => Math.max(max, stop.day), 1);
-  const maxPosition = existingStops
+  await prisma.itinerary.delete({ where: { id: itineraryId } });
+  return true;
+}
+
+export async function addStop(userId: string, itineraryId: string, poiId: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
+
+  const targetDay = itinerary.stops.reduce((max, stop) => Math.max(max, stop.day), 1);
+  const maxPosition = itinerary.stops
     .filter((stop) => stop.day === targetDay)
     .reduce((max, stop) => Math.max(max, stop.position), -1);
 
   await prisma.itineraryStop.upsert({
-    where: { itineraryId_poiId: { itineraryId: itinerary.id, poiId } },
-    create: { itineraryId: itinerary.id, poiId, day: targetDay, position: maxPosition + 1 },
+    where: { itineraryId_poiId: { itineraryId, poiId } },
+    create: { itineraryId, poiId, day: targetDay, position: maxPosition + 1 },
     update: {}
   });
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function addStops(userId: string, poiIds: string[]): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.upsert({
-    where: { userId },
-    create: { userId, shareToken: generateShareToken() },
-    update: {}
-  });
+export async function addStops(userId: string, itineraryId: string, poiIds: string[]): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
 
-  const existingStops = await prisma.itineraryStop.findMany({ where: { itineraryId: itinerary.id } });
-  const existingPoiIds = new Set(existingStops.map((stop) => stop.poiId));
-  const targetDay = existingStops.reduce((max, stop) => Math.max(max, stop.day), 1);
+  const existingPoiIds = new Set(itinerary.stops.map((stop) => stop.poiId));
+  const targetDay = itinerary.stops.reduce((max, stop) => Math.max(max, stop.day), 1);
   let nextPosition =
-    existingStops.filter((stop) => stop.day === targetDay).reduce((max, stop) => Math.max(max, stop.position), -1) +
-    1;
+    itinerary.stops.filter((stop) => stop.day === targetDay).reduce((max, stop) => Math.max(max, stop.position), -1) + 1;
 
   const newPoiIds = poiIds.filter((poiId) => !existingPoiIds.has(poiId));
   if (newPoiIds.length > 0) {
     await prisma.itineraryStop.createMany({
       data: newPoiIds.map((poiId) => ({
-        itineraryId: itinerary.id,
+        itineraryId,
         poiId,
         day: targetDay,
         position: nextPosition++
@@ -123,33 +166,41 @@ export async function addStops(userId: string, poiIds: string[]): Promise<Itiner
     });
   }
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function clearStops(userId: string): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
-  if (itinerary) {
-    await prisma.$transaction([
-      prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id } }),
-      prisma.itineraryDay.deleteMany({ where: { itineraryId: itinerary.id } }),
-      prisma.itinerary.update({ where: { id: itinerary.id }, data: { title: "Мой маршрут" } })
-    ]);
+export async function clearStops(userId: string, itineraryId: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
   }
 
-  return getOrCreateItinerary(userId);
+  await prisma.$transaction([
+    prisma.itineraryStop.deleteMany({ where: { itineraryId } }),
+    prisma.itineraryDay.deleteMany({ where: { itineraryId } }),
+    prisma.itinerary.update({ where: { id: itineraryId }, data: { title: "Мой маршрут" } })
+  ]);
+
+  return getItinerary(userId, itineraryId);
 }
 
-export async function removeStop(userId: string, poiId: string): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
-  if (itinerary) {
-    await prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id, poiId } });
+export async function removeStop(userId: string, itineraryId: string, poiId: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
   }
 
-  return getOrCreateItinerary(userId);
+  await prisma.itineraryStop.deleteMany({ where: { itineraryId, poiId } });
+  return getItinerary(userId, itineraryId);
 }
 
-export async function reorderDayStops(userId: string, day: number, orderedPoiIds: string[]): Promise<Itinerary | null> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId }, include: { stops: true } });
+export async function reorderDayStops(
+  userId: string,
+  itineraryId: string,
+  day: number,
+  orderedPoiIds: string[]
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
@@ -162,17 +213,22 @@ export async function reorderDayStops(userId: string, day: number, orderedPoiIds
   await prisma.$transaction(
     orderedPoiIds.map((poiId, index) =>
       prisma.itineraryStop.update({
-        where: { itineraryId_poiId: { itineraryId: itinerary.id, poiId } },
+        where: { itineraryId_poiId: { itineraryId, poiId } },
         data: { position: index }
       })
     )
   );
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function moveStopToDay(userId: string, poiId: string, day: number): Promise<Itinerary | null> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId }, include: { stops: true } });
+export async function updateStop(
+  userId: string,
+  itineraryId: string,
+  poiId: string,
+  patch: { day?: number; durationOverrideMinutes?: number | null }
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
@@ -182,101 +238,148 @@ export async function moveStopToDay(userId: string, poiId: string, day: number):
     return null;
   }
 
-  const maxPosition = itinerary.stops
-    .filter((s) => s.day === day && s.poiId !== poiId)
-    .reduce((max, s) => Math.max(max, s.position), -1);
+  const data: { day?: number; position?: number; durationOverrideMinutes?: number | null } = {};
+  if (patch.day != null && patch.day !== stop.day) {
+    const maxPosition = itinerary.stops
+      .filter((s) => s.day === patch.day && s.poiId !== poiId)
+      .reduce((max, s) => Math.max(max, s.position), -1);
+    data.day = patch.day;
+    data.position = maxPosition + 1;
+  }
+  if (patch.durationOverrideMinutes !== undefined) {
+    data.durationOverrideMinutes = patch.durationOverrideMinutes;
+  }
 
   await prisma.itineraryStop.update({
-    where: { itineraryId_poiId: { itineraryId: itinerary.id, poiId } },
-    data: { day, position: maxPosition + 1 }
+    where: { itineraryId_poiId: { itineraryId, poiId } },
+    data
   });
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function generateItinerary(userId: string, plan: PlannedDay[], title?: string): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.upsert({
-    where: { userId },
-    create: { userId, shareToken: generateShareToken(), ...(title ? { title } : {}) },
-    update: title ? { title } : {}
-  });
+export async function moveStopToDayWithOrder(
+  userId: string,
+  itineraryId: string,
+  poiId: string,
+  day: number,
+  orderedPoiIds: string[]
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
+
+  const stop = itinerary.stops.find((s) => s.poiId === poiId);
+  if (!stop) {
+    return null;
+  }
+
+  await prisma.$transaction([
+    prisma.itineraryStop.update({ where: { itineraryId_poiId: { itineraryId, poiId } }, data: { day } }),
+    ...orderedPoiIds.map((id, index) =>
+      prisma.itineraryStop.update({
+        where: { itineraryId_poiId: { itineraryId, poiId: id } },
+        data: { position: index }
+      })
+    )
+  ]);
+
+  return getItinerary(userId, itineraryId);
+}
+
+export async function generateItinerary(
+  userId: string,
+  itineraryId: string,
+  plan: PlannedDay[],
+  title?: string
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
 
   const stopData = plan.flatMap((planDay, dayIndex) =>
-    planDay.pois.map((poi, position) => ({ itineraryId: itinerary.id, poiId: poi.id, day: dayIndex + 1, position }))
+    planDay.pois.map((poi, position) => ({ itineraryId, poiId: poi.id, day: dayIndex + 1, position }))
   );
   const dayData = plan.map((planDay, dayIndex) => ({
-    itineraryId: itinerary.id,
+    itineraryId,
     day: dayIndex + 1,
     title: planDay.suggestedTitle
   }));
 
   await prisma.$transaction([
-    prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id } }),
-    prisma.itineraryDay.deleteMany({ where: { itineraryId: itinerary.id } }),
+    prisma.itineraryStop.deleteMany({ where: { itineraryId } }),
+    prisma.itineraryDay.deleteMany({ where: { itineraryId } }),
     ...(stopData.length > 0 ? [prisma.itineraryStop.createMany({ data: stopData })] : []),
-    ...(dayData.length > 0 ? [prisma.itineraryDay.createMany({ data: dayData })] : [])
+    ...(dayData.length > 0 ? [prisma.itineraryDay.createMany({ data: dayData })] : []),
+    ...(title ? [prisma.itinerary.update({ where: { id: itineraryId }, data: { title } })] : [])
   ]);
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function renameItinerary(userId: string, title: string): Promise<Itinerary> {
-  await prisma.itinerary.upsert({
-    where: { userId },
-    create: { userId, title, shareToken: generateShareToken() },
-    update: { title }
-  });
+export async function renameItinerary(userId: string, itineraryId: string, title: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
 
-  return getOrCreateItinerary(userId);
+  await prisma.itinerary.update({ where: { id: itineraryId }, data: { title } });
+  return getItinerary(userId, itineraryId);
 }
 
-export async function addDay(userId: string): Promise<Itinerary> {
-  const itinerary = await prisma.itinerary.upsert({
-    where: { userId },
-    create: { userId, shareToken: generateShareToken() },
-    update: {}
-  });
-
-  const [stops, days] = await Promise.all([
-    prisma.itineraryStop.findMany({ where: { itineraryId: itinerary.id } }),
-    prisma.itineraryDay.findMany({ where: { itineraryId: itinerary.id } })
-  ]);
+export async function addDay(userId: string, itineraryId: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
 
   const nextDay =
-    Math.max(0, ...stops.map((stop) => stop.day), ...days.map((day) => day.day)) + 1;
+    Math.max(0, ...itinerary.stops.map((stop) => stop.day), ...itinerary.days.map((day) => day.day)) + 1;
 
-  await prisma.itineraryDay.create({ data: { itineraryId: itinerary.id, day: nextDay, title: null } });
-
-  return getOrCreateItinerary(userId);
+  await prisma.itineraryDay.create({ data: { itineraryId, day: nextDay, title: null } });
+  return getItinerary(userId, itineraryId);
 }
 
-export async function removeDay(userId: string, day: number): Promise<Itinerary | null> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
+export async function removeDay(userId: string, itineraryId: string, day: number): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
   await prisma.$transaction([
-    prisma.itineraryStop.deleteMany({ where: { itineraryId: itinerary.id, day } }),
-    prisma.itineraryDay.deleteMany({ where: { itineraryId: itinerary.id, day } })
+    prisma.itineraryStop.deleteMany({ where: { itineraryId, day } }),
+    prisma.itineraryDay.deleteMany({ where: { itineraryId, day } })
   ]);
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
-export async function renameDay(userId: string, day: number, title: string): Promise<Itinerary | null> {
-  const itinerary = await prisma.itinerary.findUnique({ where: { userId } });
+export async function updateDay(
+  userId: string,
+  itineraryId: string,
+  day: number,
+  patch: {
+    title?: string;
+    startMinutes?: number | null;
+    lunchEnabled?: boolean | null;
+    lunchStartMinutes?: number | null;
+    lunchDurationMinutes?: number | null;
+  }
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
   await prisma.itineraryDay.upsert({
-    where: { itineraryId_day: { itineraryId: itinerary.id, day } },
-    create: { itineraryId: itinerary.id, day, title },
-    update: { title }
+    where: { itineraryId_day: { itineraryId, day } },
+    create: { itineraryId, day, title: patch.title ?? null, ...patch },
+    update: patch
   });
 
-  return getOrCreateItinerary(userId);
+  return getItinerary(userId, itineraryId);
 }
 
 export async function getItineraryByShareToken(token: string): Promise<Itinerary | null> {

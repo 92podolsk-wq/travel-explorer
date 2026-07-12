@@ -125,7 +125,7 @@ model User {
   viewedPois   ViewedPoi[]
   visitedPois  VisitedPoi[]
   poiReports   PoiReport[]
-  itinerary    Itinerary?
+  itineraries  Itinerary[]
 }
 
 model Session {
@@ -185,7 +185,7 @@ model PoiReport {
 
 model Itinerary {
   id         String          @id @default(cuid())
-  userId     String          @unique
+  userId     String
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   title      String          @default("Мой маршрут")
   shareToken String          @unique
@@ -193,26 +193,33 @@ model Itinerary {
   updatedAt  DateTime        @updatedAt
   stops      ItineraryStop[]
   days       ItineraryDay[]
+
+  @@index([userId])
 }
 
 model ItineraryStop {
-  id          String    @id @default(cuid())
-  itineraryId String
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  poiId       String
-  poi         Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
-  day         Int       @default(1)
-  position    Int
+  id                      String    @id @default(cuid())
+  itineraryId             String
+  itinerary               Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  poiId                   String
+  poi                     Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  day                     Int       @default(1)
+  position                Int
+  durationOverrideMinutes Int?
 
   @@unique([itineraryId, poiId])
 }
 
 model ItineraryDay {
-  id          String    @id @default(cuid())
-  itineraryId String
-  itinerary   Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  day         Int
-  title       String?
+  id                   String    @id @default(cuid())
+  itineraryId          String
+  itinerary            Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  day                  Int
+  title                String?
+  startMinutes         Int?
+  lunchEnabled         Boolean?
+  lunchStartMinutes    Int?
+  lunchDurationMinutes Int?
 
   @@unique([itineraryId, day])
 }

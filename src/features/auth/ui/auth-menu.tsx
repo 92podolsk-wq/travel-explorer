@@ -18,6 +18,8 @@ export function AuthMenu() {
   const authStatus = useExplorerStore((state) => state.authStatus);
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const setItinerary = useExplorerStore((state) => state.setItinerary);
+  const setItineraries = useExplorerStore((state) => state.setItineraries);
+  const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
   const t = getTranslations(language).auth;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -81,6 +83,8 @@ export function AuthMenu() {
     await fetch("/api/auth/logout", { method: "POST" });
     hydrateAuth(null);
     setItinerary(null);
+    setItineraries([]);
+    setActiveItineraryId(null);
     setIsUserMenuOpen(false);
   }
 

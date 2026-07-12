@@ -11,7 +11,7 @@ import type { Region } from "@/entities/region/model/types";
 import { seedExplorationModes } from "@/entities/exploration-mode/model/exploration-modes";
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { User, UserPoiState } from "@/entities/user/model/types";
-import type { Itinerary } from "@/entities/itinerary/model/types";
+import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
 import type { Language } from "@/shared/i18n/types";
 
 function firstPoiIdForRegion(pois: Poi[], regionId: string) {
@@ -47,6 +47,8 @@ type ExplorerState = {
   locationError: string | null;
   sortByDistance: boolean;
   itinerary: Itinerary | null;
+  itineraries: ItinerarySummary[];
+  activeItineraryId: string | null;
   currentUser: User | null;
   authStatus: "loading" | "guest" | "authenticated";
   hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
@@ -79,6 +81,8 @@ type ExplorerState = {
   setLocationError: (error: string | null) => void;
   setSortByDistance: (value: boolean) => void;
   setItinerary: (itinerary: Itinerary | null) => void;
+  setItineraries: (list: ItinerarySummary[]) => void;
+  setActiveItineraryId: (id: string | null) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>()(
@@ -108,6 +112,8 @@ export const useExplorerStore = create<ExplorerState>()(
   locationError: null,
   sortByDistance: false,
   itinerary: null,
+  itineraries: [],
+  activeItineraryId: null,
   currentUser: null,
   authStatus: "loading",
   hydrateAuth: (user, poiState) =>
@@ -235,11 +241,17 @@ export const useExplorerStore = create<ExplorerState>()(
   setIsLocatingUser: (value) => set({ isLocatingUser: value }),
   setLocationError: (error) => set({ locationError: error }),
   setSortByDistance: (value) => set({ sortByDistance: value }),
-  setItinerary: (itinerary) => set({ itinerary })
+  setItinerary: (itinerary) => set({ itinerary }),
+  setItineraries: (list) => set({ itineraries: list }),
+  setActiveItineraryId: (id) => set({ activeItineraryId: id })
     }),
     {
       name: "travel-explorer-settings",
-      partialize: (state) => ({ language: state.language, activeRegionIds: state.activeRegionIds })
+      partialize: (state) => ({
+        language: state.language,
+        activeRegionIds: state.activeRegionIds,
+        activeItineraryId: state.activeItineraryId
+      })
     }
   )
 );

@@ -14,7 +14,7 @@ type TripViewProps = {
 
 export function TripView({ itinerary, autoPrint }: TripViewProps) {
   const pois = itinerary.stops.map((stop) => stop.poi);
-  const summary = computeItinerarySummary(pois);
+  const summary = computeItinerarySummary(itinerary.stops);
   const mapsUrl = buildGoogleMapsUrl(pois);
   const days = [...new Set(itinerary.stops.map((stop) => stop.day))].sort((a, b) => a - b);
 
@@ -94,7 +94,9 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-foreground">{stop.poi.name}</p>
                         <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{stop.poi.description}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{stop.poi.durationMinutes} мин на месте</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {stop.durationOverrideMinutes ?? stop.poi.durationMinutes} мин на месте
+                        </p>
                       </div>
                     </div>
                   ))}

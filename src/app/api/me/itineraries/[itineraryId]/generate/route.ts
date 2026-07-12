@@ -12,12 +12,15 @@ const supportedLanguages: Language[] = ["en", "ru", "ja"];
 const MAX_DAYS = 14;
 const MAX_HOURS_PER_DAY = 14;
 
-export async function POST(request: Request) {
+type RouteParams = { params: Promise<{ itineraryId: string }> };
+
+export async function POST(request: Request, { params }: RouteParams) {
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { itineraryId } = await params;
   const body = (await request.json()) as {
     regionId?: string;
     days?: number;
@@ -56,5 +59,10 @@ export async function POST(request: Request) {
   const plan = planItineraryDays(candidates, days, hoursPerDay * 60, language);
   const title = `${region.name} · ${days} дн.`;
 
-  return NextResponse.json(await generateItinerary(user.id, plan, title));
+  const result = await generateItinerary(user.id, itineraryId, plan, title);
+  if (!result) {
+    return NextResponse.json({ error: "Itinerary not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(result);
 }

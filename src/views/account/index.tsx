@@ -3,11 +3,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent
+} from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   Bookmark,
   Check,
   ChevronDown,
   Download,
   Eye,
+  GripVertical,
   MapPin,
   Pencil,
   Plus,
@@ -21,7 +35,14 @@ import {
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
-import { buildDayTimeline, formatMinutesAsTime } from "@/entities/itinerary/model/timeline";
+import {
+  LUNCH_DURATION_MINUTES,
+  LUNCH_THRESHOLD_MINUTES,
+  buildDayTimeline,
+  formatMinutesAsTime,
+  minutesToTimeInputValue,
+  timeInputValueToMinutes
+} from "@/entities/itinerary/model/timeline";
 import type { ItineraryStopWithPoi } from "@/entities/itinerary/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
@@ -44,7 +65,15 @@ import { cn } from "@/shared/lib/cn";
 import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
-const DAY_START_MINUTES = 540; // 09:00
+const DEFAULT_DAY_START_MINUTES = 540; // 09:00
+
+type DayConfigPatch = Partial<{
+  title: string;
+  startMinutes: number | null;
+  lunchEnabled: boolean | null;
+  lunchStartMinutes: number | null;
+  lunchDurationMinutes: number | null;
+}>;
 
 type AccountPageProps = {
   initialPois: Poi[];
@@ -96,34 +125,125 @@ function ItineraryTimelineRow({
   stop,
   arrivalMinutes,
   departureMinutes,
+  durationMinutes,
+  isDurationOverridden,
   regionName,
   onSelect,
   onRemove,
   onMoveToDay,
+  onSetDuration,
   maxDay,
-  t
+  t,
+  dict
 }: {
   stop: ItineraryStopWithPoi;
   arrivalMinutes: number;
   departureMinutes: number;
+  durationMinutes: number;
+  isDurationOverridden: boolean;
   regionName: string;
   onSelect: () => void;
   onRemove: () => void;
   onMoveToDay: (day: number) => void;
+  onSetDuration: (minutes: number | null) => void;
   maxDay: number;
   t: Translations["auth"];
+  dict: Translations;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
+  const [isEditingDuration, setIsEditingDuration] = useState(false);
+  const [durationDraft, setDurationDraft] = useState(String(durationMinutes));
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1
+  };
+
+  function commitDuration() {
+    setIsEditingDuration(false);
+    const parsed = Number(durationDraft);
+    if (!Number.isFinite(parsed)) return;
+    onSetDuration(Math.min(600, Math.max(5, Math.round(parsed))));
+  }
+
   return (
-    <div className="flex items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
-      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <PoiThumbnail poi={stop.poi} className="h-12 w-12" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">{stop.poi.name}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {formatMinutesAsTime(arrivalMinutes)}–{formatMinutesAsTime(departureMinutes)} · {regionName}
-          </p>
-        </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label="Drag"
+        className="flex h-7 w-7 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground active:cursor-grabbing"
+      >
+        <GripVertical className="h-4 w-4" />
       </button>
+      <button type="button" onClick={onSelect} className="shrink-0">
+        <PoiThumbnail poi={stop.poi} className="h-12 w-12" />
+      </button>
+      <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={onSelect}
+          className="block truncate text-left text-sm font-semibold text-foreground hover:text-primary"
+        >
+          {stop.poi.name}
+        </button>
+        <p className="truncate text-xs text-muted-foreground">
+          {formatMinutesAsTime(arrivalMinutes)}–{formatMinutesAsTime(departureMinutes)} · {regionName}
+        </p>
+        <div className="mt-0.5 flex items-center gap-1.5">
+          {isEditingDuration ? (
+            <>
+              <input
+                autoFocus
+                type="number"
+                min={5}
+                max={600}
+                step={5}
+                value={durationDraft}
+                onChange={(e) => setDurationDraft(e.target.value)}
+                onBlur={commitDuration}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitDuration();
+                  if (e.key === "Escape") {
+                    setDurationDraft(String(durationMinutes));
+                    setIsEditingDuration(false);
+                  }
+                }}
+                className="h-6 w-16 rounded border border-primary/30 bg-white px-1 text-xs outline-none focus:ring-2 focus:ring-ring/25"
+              />
+              <span className="text-[11px] text-muted-foreground">{dict.app.minutesShort}</span>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setDurationDraft(String(durationMinutes));
+                setIsEditingDuration(true);
+              }}
+              className="text-[11px] text-muted-foreground hover:text-primary"
+            >
+              {t.stopDuration}: {durationMinutes} {dict.app.minutesShort}
+              {isDurationOverridden && ` · ${t.stopDurationCustom}`}
+            </button>
+          )}
+          {isDurationOverridden && !isEditingDuration && (
+            <button
+              type="button"
+              onClick={() => onSetDuration(null)}
+              title={t.resetDuration}
+              className="text-[10px] text-muted-foreground underline-offset-2 hover:underline"
+            >
+              {t.resetDuration}
+            </button>
+          )}
+        </div>
+      </div>
       <div className="flex shrink-0 items-center gap-1">
         <select
           value={stop.day}
@@ -156,7 +276,12 @@ function ItineraryDayCard({
   route,
   mapStyleId,
   protomapsPmtilesUrl,
+  startMinutes,
+  lunchEnabled,
+  lunchStartMinutes,
+  lunchDurationMinutes,
   onRenameDay,
+  onUpdateDayConfig,
   onOptimizeDay,
   isOptimizing,
   onRequestRemoveDay,
@@ -164,6 +289,7 @@ function ItineraryDayCard({
   goToPoi,
   onRemoveStop,
   onMoveStopToDay,
+  onSetStopDuration,
   maxDay,
   t,
   dict,
@@ -175,7 +301,12 @@ function ItineraryDayCard({
   route: WalkingRoute | null;
   mapStyleId: SiteSettings["mapStyleId"];
   protomapsPmtilesUrl: string | null;
+  startMinutes: number | null;
+  lunchEnabled: boolean | null;
+  lunchStartMinutes: number | null;
+  lunchDurationMinutes: number | null;
   onRenameDay: (title: string) => void;
+  onUpdateDayConfig: (patch: DayConfigPatch) => void;
   onOptimizeDay: () => void;
   isOptimizing: boolean;
   onRequestRemoveDay: () => void;
@@ -183,32 +314,56 @@ function ItineraryDayCard({
   goToPoi: (poiId: string) => void;
   onRemoveStop: (poiId: string) => void;
   onMoveStopToDay: (poiId: string, day: number) => void;
+  onSetStopDuration: (poiId: string, minutes: number | null) => void;
   maxDay: number;
   t: Translations["auth"];
   dict: Translations;
   defaultExpanded: boolean;
 }) {
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: `day-${day}` });
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(title ?? "");
+  const [isEditingStart, setIsEditingStart] = useState(false);
+  const [startDraft, setStartDraft] = useState("");
 
   const pois = stops.map((stop) => stop.poi);
-  const summary = computeItinerarySummary(pois);
+  const summary = computeItinerarySummary(stops);
+  const effectiveStart = startMinutes ?? DEFAULT_DAY_START_MINUTES;
 
   const { entries, endMinutes } = useMemo(() => {
     if (pois.length === 0) {
-      return { entries: [], endMinutes: DAY_START_MINUTES };
+      return { entries: [], endMinutes: effectiveStart };
     }
     const legMinutes =
       route?.legDurationsMinutes ??
       pois.slice(0, -1).map((poi, i) => estimateTransitionMinutes(haversineDistanceMeters(poi.coordinates, pois[i + 1].coordinates)));
-    return buildDayTimeline(pois, legMinutes, DAY_START_MINUTES);
-  }, [pois, route]);
+    return buildDayTimeline(pois, legMinutes, effectiveStart, {
+      durationOverridesMinutes: stops.map((s) => s.durationOverrideMinutes),
+      lunch: {
+        enabled: lunchEnabled,
+        startMinutes: lunchStartMinutes ?? undefined,
+        durationMinutes: lunchDurationMinutes ?? undefined
+      }
+    });
+  }, [pois, route, effectiveStart, stops, lunchEnabled, lunchStartMinutes, lunchDurationMinutes]);
 
   const displayTitle = title || t.dayLabel.replace("{n}", String(day));
 
+  function commitStart() {
+    setIsEditingStart(false);
+    if (!startDraft) return;
+    onUpdateDayConfig({ startMinutes: timeInputValueToMinutes(startDraft) });
+  }
+
   return (
-    <div className="rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm">
+    <div
+      ref={setDroppableRef}
+      className={cn(
+        "rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition",
+        isOver && "ring-2 ring-primary/50"
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {isEditingTitle ? (
@@ -294,6 +449,45 @@ function ItineraryDayCard({
 
       {isExpanded && (
         <div className="mt-3 flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs">
+            <span className="font-medium text-muted-foreground">{t.lunchToggleLabel}:</span>
+            <select
+              value={lunchEnabled === null ? "auto" : lunchEnabled ? "on" : "off"}
+              onChange={(e) => {
+                const value = e.target.value;
+                onUpdateDayConfig({ lunchEnabled: value === "auto" ? null : value === "on" });
+              }}
+              className="h-6 rounded border border-border bg-white px-1 text-xs outline-none"
+            >
+              <option value="auto">{dict.app.auto}</option>
+              <option value="on">{dict.app.on}</option>
+              <option value="off">{dict.app.off}</option>
+            </select>
+            {lunchEnabled === true && (
+              <>
+                <span className="text-muted-foreground">{t.lunchStartTime}</span>
+                <input
+                  type="time"
+                  value={minutesToTimeInputValue(lunchStartMinutes ?? LUNCH_THRESHOLD_MINUTES)}
+                  onChange={(e) =>
+                    onUpdateDayConfig({ lunchStartMinutes: timeInputValueToMinutes(e.target.value) })
+                  }
+                  className="h-6 rounded border border-border bg-white px-1 text-xs outline-none"
+                />
+                <span className="text-muted-foreground">{t.lunchDuration}</span>
+                <input
+                  type="number"
+                  min={15}
+                  max={180}
+                  step={15}
+                  value={lunchDurationMinutes ?? LUNCH_DURATION_MINUTES}
+                  onChange={(e) => onUpdateDayConfig({ lunchDurationMinutes: Number(e.target.value) })}
+                  className="h-6 w-14 rounded border border-border bg-white px-1 text-xs outline-none"
+                />
+              </>
+            )}
+          </div>
+
           {pois.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t.dayEmptyPlaceholder}</p>
           ) : (
@@ -305,46 +499,75 @@ function ItineraryDayCard({
                 protomapsPmtilesUrl={protomapsPmtilesUrl}
               />
               <div className="flex flex-col gap-1.5">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {formatMinutesAsTime(DAY_START_MINUTES)} {t.dayStart}
-                </p>
-                {entries.map((entry, index) => {
-                  if (entry.type === "stop") {
-                    const stop = stops.find((s) => s.poi.id === entry.poi.id);
-                    if (!stop) return null;
-                    return (
-                      <ItineraryTimelineRow
-                        key={stop.id}
-                        stop={stop}
-                        arrivalMinutes={entry.arrivalMinutes}
-                        departureMinutes={entry.departureMinutes}
-                        regionName={regionName(stop.poi.regionId)}
-                        onSelect={() => goToPoi(stop.poi.id)}
-                        onRemove={() => onRemoveStop(stop.poi.id)}
-                        onMoveToDay={(targetDay) => onMoveStopToDay(stop.poi.id, targetDay)}
-                        maxDay={maxDay}
-                        t={t}
-                      />
-                    );
-                  }
+                {isEditingStart ? (
+                  <input
+                    autoFocus
+                    type="time"
+                    value={startDraft}
+                    onChange={(e) => setStartDraft(e.target.value)}
+                    onBlur={commitStart}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitStart();
+                      if (e.key === "Escape") setIsEditingStart(false);
+                    }}
+                    className="w-fit rounded border border-primary/30 bg-white px-1.5 py-0.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartDraft(minutesToTimeInputValue(effectiveStart));
+                      setIsEditingStart(true);
+                    }}
+                    className="w-fit text-xs font-medium text-muted-foreground hover:text-primary"
+                    title={t.dayStartTime}
+                  >
+                    {formatMinutesAsTime(effectiveStart)} {t.dayStart}
+                  </button>
+                )}
+                <SortableContext items={stops.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+                  {entries.map((entry, index) => {
+                    if (entry.type === "stop") {
+                      const stop = stops.find((s) => s.poi.id === entry.poi.id);
+                      if (!stop) return null;
+                      return (
+                        <ItineraryTimelineRow
+                          key={stop.id}
+                          stop={stop}
+                          arrivalMinutes={entry.arrivalMinutes}
+                          departureMinutes={entry.departureMinutes}
+                          durationMinutes={entry.durationMinutes}
+                          isDurationOverridden={entry.isDurationOverridden}
+                          regionName={regionName(stop.poi.regionId)}
+                          onSelect={() => goToPoi(stop.poi.id)}
+                          onRemove={() => onRemoveStop(stop.poi.id)}
+                          onMoveToDay={(targetDay) => onMoveStopToDay(stop.poi.id, targetDay)}
+                          onSetDuration={(minutes) => onSetStopDuration(stop.poi.id, minutes)}
+                          maxDay={maxDay}
+                          t={t}
+                          dict={dict}
+                        />
+                      );
+                    }
 
-                  if (entry.type === "travel") {
+                    if (entry.type === "travel") {
+                      return (
+                        <p key={`travel-${index}`} className="pl-1 text-xs text-muted-foreground">
+                          {entry.minutes} {dict.app.minutesShort} ({formatDistance(entry.meters)})
+                        </p>
+                      );
+                    }
+
                     return (
-                      <p key={`travel-${index}`} className="pl-1 text-xs text-muted-foreground">
-                        {entry.minutes} {dict.app.minutesShort} ({formatDistance(entry.meters)})
+                      <p
+                        key={`lunch-${index}`}
+                        className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
+                      >
+                        {formatMinutesAsTime(entry.startMinutes)} {t.lunchBreak} · {entry.minutes} {dict.app.minutesShort}
                       </p>
                     );
-                  }
-
-                  return (
-                    <p
-                      key={`lunch-${index}`}
-                      className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700"
-                    >
-                      {formatMinutesAsTime(entry.startMinutes)} {t.lunchBreak} · {entry.minutes} {dict.app.minutesShort}
-                    </p>
-                  );
-                })}
+                  })}
+                </SortableContext>
                 <p className="text-xs font-medium text-muted-foreground">
                   {formatMinutesAsTime(endMinutes)} {t.dayEnd}
                 </p>
@@ -389,11 +612,16 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const clearVisitedPois = useExplorerStore((state) => state.clearVisitedPois);
   const itinerary = useExplorerStore((state) => state.itinerary);
   const setItinerary = useExplorerStore((state) => state.setItinerary);
+  const itineraries = useExplorerStore((state) => state.itineraries);
+  const setItineraries = useExplorerStore((state) => state.setItineraries);
+  const activeItineraryId = useExplorerStore((state) => state.activeItineraryId);
+  const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | "itinerary" | null>(null);
   const [pendingRemoveDay, setPendingRemoveDay] = useState<number | null>(null);
+  const [pendingDeleteItinerary, setPendingDeleteItinerary] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
@@ -407,6 +635,12 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [dayRoutes, setDayRoutes] = useState<Record<number, WalkingRoute | null>>({});
   const [isAddingDay, setIsAddingDay] = useState(false);
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
+  const [activeDragStop, setActiveDragStop] = useState<ItineraryStopWithPoi | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
 
   const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
 
@@ -417,7 +651,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   async function handleAddToItinerary(poiId: string) {
-    const res = await fetch("/api/me/itinerary/stops", {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiId })
@@ -426,9 +661,10 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   async function handleAddAllToItinerary() {
+    if (!itinerary) return;
     const poiIds = favoritePois.filter((poi) => !itineraryPoiIds.has(poi.id)).map((poi) => poi.id);
     if (poiIds.length === 0) return;
-    const res = await fetch("/api/me/itinerary/stops", {
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiIds })
@@ -437,17 +673,20 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   async function handleClearItinerary() {
-    const res = await fetch("/api/me/itinerary/stops", { method: "DELETE" });
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
   async function handleRemoveFromItinerary(poiId: string) {
-    const res = await fetch(`/api/me/itinerary/stops/${poiId}`, { method: "DELETE" });
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
   async function handleMoveStopToDay(poiId: string, day: number) {
-    const res = await fetch(`/api/me/itinerary/stops/${poiId}`, {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day })
@@ -455,8 +694,19 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
+  async function handleSetStopDuration(poiId: string, minutes: number | null) {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ durationOverrideMinutes: minutes })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
   async function handleReorderItinerary(day: number, orderedPoiIds: string[]) {
-    const res = await fetch("/api/me/itinerary/reorder", {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day, orderedPoiIds })
@@ -477,9 +727,10 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   async function handleAddDay() {
+    if (!itinerary) return;
     setIsAddingDay(true);
     try {
-      const res = await fetch("/api/me/itinerary/days", { method: "POST" });
+      const res = await fetch(`/api/me/itineraries/${itinerary.id}/days`, { method: "POST" });
       if (res.ok) setItinerary(await res.json());
     } finally {
       setIsAddingDay(false);
@@ -487,31 +738,37 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   async function handleRemoveDay(day: number) {
-    const res = await fetch(`/api/me/itinerary/days/${day}`, { method: "DELETE" });
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, { method: "DELETE" });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function updateDayConfig(day: number, patch: DayConfigPatch) {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch)
+    });
     if (res.ok) setItinerary(await res.json());
   }
 
   async function handleRenameDay(day: number, title: string) {
     const trimmed = title.trim();
     if (!trimmed) return;
-    const res = await fetch(`/api/me/itinerary/days/${day}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: trimmed })
-    });
-    if (res.ok) setItinerary(await res.json());
+    await updateDayConfig(day, { title: trimmed });
   }
 
   async function handleGenerateItinerary() {
-    if (!generatorRegionId) return;
-    if (itinerary && itinerary.stops.length > 0 && !window.confirm(t.generateItineraryConfirm)) {
+    if (!generatorRegionId || !itinerary) return;
+    if (itinerary.stops.length > 0 && !window.confirm(t.generateItineraryConfirm)) {
       return;
     }
 
     setGeneratorError(null);
     setIsGenerating(true);
     try {
-      const res = await fetch("/api/me/itinerary/generate", {
+      const res = await fetch(`/api/me/itineraries/${itinerary.id}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -535,6 +792,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       }
 
       setItinerary(result);
+      setItineraries(itineraries.map((i) => (i.id === result.id ? { id: result.id, title: result.title } : i)));
       setIsGeneratorOpen(false);
     } finally {
       setIsGenerating(false);
@@ -551,12 +809,16 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     setIsEditingTitle(false);
     if (!trimmed || !itinerary || trimmed === itinerary.title) return;
 
-    const res = await fetch("/api/me/itinerary", {
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed })
     });
-    if (res.ok) setItinerary(await res.json());
+    if (res.ok) {
+      const result = await res.json();
+      setItinerary(result);
+      setItineraries(itineraries.map((i) => (i.id === result.id ? { id: result.id, title: result.title } : i)));
+    }
   }
 
   async function handleShareItinerary() {
@@ -565,6 +827,41 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     await navigator.clipboard.writeText(url);
     setIsLinkCopied(true);
     setTimeout(() => setIsLinkCopied(false), 2000);
+  }
+
+  async function handleSwitchItinerary(id: string) {
+    setActiveItineraryId(id);
+    const res = await fetch(`/api/me/itineraries/${id}`);
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleCreateItinerary() {
+    if (itineraries.length >= 3) return;
+    const res = await fetch("/api/me/itineraries", { method: "POST" });
+    if (res.ok) {
+      const created = await res.json();
+      setItineraries([...itineraries, { id: created.id, title: created.title }]);
+      setActiveItineraryId(created.id);
+      setItinerary(created);
+    }
+  }
+
+  async function handleDeleteItinerary() {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}`, { method: "DELETE" });
+    if (res.ok) {
+      const remaining = itineraries.filter((i) => i.id !== itinerary.id);
+      setItineraries(remaining);
+      const nextId = remaining[0]?.id ?? null;
+      setActiveItineraryId(nextId);
+      if (nextId) {
+        const nextRes = await fetch(`/api/me/itineraries/${nextId}`);
+        setItinerary(nextRes.ok ? await nextRes.json() : null);
+      } else {
+        setItinerary(null);
+      }
+    }
+    setPendingDeleteItinerary(false);
   }
 
   function regionName(regionId: string) {
@@ -625,7 +922,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   }
 
   const daySignature = itinerary
-    ? itinerary.days
+    ? itinerary.id +
+      "|" +
+      itinerary.days
         .map((d) => `${d.day}:${itinerary.stops.filter((s) => s.day === d.day).map((s) => s.poi.id).join(",")}`)
         .join("|")
     : "";
@@ -655,6 +954,50 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daySignature]);
+
+  function handleDragStart(event: DragStartEvent) {
+    const stop = itinerary?.stops.find((s) => s.id === event.active.id) ?? null;
+    setActiveDragStop(stop);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    setActiveDragStop(null);
+    const { active, over } = event;
+    if (!over || !itinerary) return;
+
+    const activeStop = itinerary.stops.find((s) => s.id === active.id);
+    if (!activeStop) return;
+
+    const overId = String(over.id);
+    const overIsDayContainer = overId.startsWith("day-");
+    const targetDay = overIsDayContainer
+      ? Number(overId.replace("day-", ""))
+      : itinerary.stops.find((s) => s.id === over.id)?.day;
+    if (targetDay == null) return;
+
+    const targetSiblingPoiIds = itinerary.stops
+      .filter((s) => s.day === targetDay && s.id !== activeStop.id)
+      .sort((a, b) => a.position - b.position)
+      .map((s) => s.poi.id);
+
+    const overStop = overIsDayContainer ? null : itinerary.stops.find((s) => s.id === over.id);
+    const insertIndex = overStop ? targetSiblingPoiIds.indexOf(overStop.poi.id) : targetSiblingPoiIds.length;
+
+    const orderedPoiIds = [...targetSiblingPoiIds];
+    orderedPoiIds.splice(insertIndex === -1 ? targetSiblingPoiIds.length : insertIndex, 0, activeStop.poi.id);
+
+    setItinerary({
+      ...itinerary,
+      stops: itinerary.stops.map((s) => (s.id === activeStop.id ? { ...s, day: targetDay } : s))
+    });
+
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${activeStop.poi.id}/move`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ day: targetDay, orderedPoiIds })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
 
   if (authStatus === "loading") {
     return (
@@ -841,7 +1184,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 )}
               </h2>
               <div className="flex items-center gap-3">
-                {regions.length > 0 && (
+                {regions.length > 0 && itinerary && (
                   <button
                     type="button"
                     onClick={() => {
@@ -883,6 +1226,42 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 )}
               </div>
             </div>
+
+            {itineraries.length > 0 && (
+              <div className="flex items-center gap-2">
+                <select
+                  aria-label={t.switchItinerary}
+                  value={activeItineraryId ?? ""}
+                  onChange={(e) => {
+                    if (e.target.value === "__new__") {
+                      handleCreateItinerary();
+                    } else {
+                      handleSwitchItinerary(e.target.value);
+                    }
+                  }}
+                  className="h-7 rounded border border-border bg-white px-1.5 text-xs outline-none"
+                >
+                  {itineraries.map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.title}
+                    </option>
+                  ))}
+                  <option value="__new__" disabled={itineraries.length >= 3}>
+                    {itineraries.length >= 3 ? t.maxItinerariesReached : t.newItinerary}
+                  </option>
+                </select>
+                {itinerary && itineraries.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeleteItinerary(true)}
+                    title={t.deleteItinerary}
+                    className="text-muted-foreground transition hover:text-red-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
 
             {isGeneratorOpen && (
               <div className="flex flex-col gap-2.5 rounded-md border border-border bg-white/[0.78] p-3">
@@ -948,35 +1327,58 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             {!itinerary || itinerary.days.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t.itineraryEmpty}</p>
             ) : (
-              <div className="flex flex-col gap-3">
-                {itinerary.days.map((dayInfo, index) => (
-                  <ItineraryDayCard
-                    key={dayInfo.day}
-                    day={dayInfo.day}
-                    title={dayInfo.title}
-                    stops={itinerary.stops.filter((stop) => stop.day === dayInfo.day)}
-                    route={dayRoutes[dayInfo.day] ?? null}
-                    mapStyleId={initialSiteSettings.mapStyleId}
-                    protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
-                    onRenameDay={(title) => handleRenameDay(dayInfo.day, title)}
-                    onOptimizeDay={() => handleOptimizeDay(dayInfo.day)}
-                    isOptimizing={optimizingDay === dayInfo.day}
-                    onRequestRemoveDay={() => setPendingRemoveDay(dayInfo.day)}
-                    regionName={regionName}
-                    goToPoi={goToPoi}
-                    onRemoveStop={handleRemoveFromItinerary}
-                    onMoveStopToDay={handleMoveStopToDay}
-                    maxDay={maxDay}
-                    t={t}
-                    dict={dict}
-                    defaultExpanded={index === 0}
-                  />
-                ))}
-                <Button type="button" variant="outline" onClick={handleAddDay} disabled={isAddingDay} className="gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  {t.addDay}
-                </Button>
-              </div>
+              <DndContext
+                sensors={sensors}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragCancel={() => setActiveDragStop(null)}
+              >
+                <div className="flex flex-col gap-3">
+                  {itinerary.days.map((dayInfo, index) => (
+                    <ItineraryDayCard
+                      key={dayInfo.day}
+                      day={dayInfo.day}
+                      title={dayInfo.title}
+                      stops={itinerary.stops.filter((stop) => stop.day === dayInfo.day)}
+                      route={dayRoutes[dayInfo.day] ?? null}
+                      mapStyleId={initialSiteSettings.mapStyleId}
+                      protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+                      startMinutes={dayInfo.startMinutes}
+                      lunchEnabled={dayInfo.lunchEnabled}
+                      lunchStartMinutes={dayInfo.lunchStartMinutes}
+                      lunchDurationMinutes={dayInfo.lunchDurationMinutes}
+                      onRenameDay={(title) => handleRenameDay(dayInfo.day, title)}
+                      onUpdateDayConfig={(patch) => updateDayConfig(dayInfo.day, patch)}
+                      onOptimizeDay={() => handleOptimizeDay(dayInfo.day)}
+                      isOptimizing={optimizingDay === dayInfo.day}
+                      onRequestRemoveDay={() => setPendingRemoveDay(dayInfo.day)}
+                      regionName={regionName}
+                      goToPoi={goToPoi}
+                      onRemoveStop={handleRemoveFromItinerary}
+                      onMoveStopToDay={handleMoveStopToDay}
+                      onSetStopDuration={handleSetStopDuration}
+                      maxDay={maxDay}
+                      t={t}
+                      dict={dict}
+                      defaultExpanded={index === 0}
+                    />
+                  ))}
+                  <Button type="button" variant="outline" onClick={handleAddDay} disabled={isAddingDay} className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    {t.addDay}
+                  </Button>
+                </div>
+                <DragOverlay>
+                  {activeDragStop ? (
+                    <div className="flex items-center gap-3 rounded-md border border-primary/40 bg-white p-2.5 shadow-panel">
+                      <PoiThumbnail poi={activeDragStop.poi} className="h-10 w-10" />
+                      <p className="max-w-[10rem] truncate text-sm font-semibold text-foreground">
+                        {activeDragStop.poi.name}
+                      </p>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             )}
           </section>
 
@@ -1081,6 +1483,28 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 }}
               >
                 {t.removeDay}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {pendingDeleteItinerary && (
+        <>
+          <button
+            type="button"
+            aria-label="Close"
+            className="fixed inset-0 z-40 bg-black/20"
+            onClick={() => setPendingDeleteItinerary(false)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+            <p className="text-sm text-foreground">{t.deleteItineraryConfirm}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => setPendingDeleteItinerary(false)}>
+                {t.cancel}
+              </Button>
+              <Button type="button" size="sm" onClick={handleDeleteItinerary}>
+                {t.deleteItinerary}
               </Button>
             </div>
           </div>

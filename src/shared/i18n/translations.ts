@@ -67,6 +67,9 @@ type TranslationDictionary = {
     swipeContinueIn: string;
     cookieConsentText: string;
     cookieConsentAccept: string;
+    auto: string;
+    on: string;
+    off: string;
   };
   poi: Record<string, PoiCopy>;
   category: Record<PoiCategory, string>;
@@ -133,6 +136,18 @@ type TranslationDictionary = {
     dayWalkingDistance: string;
     dayEmptyPlaceholder: string;
     renameDayPlaceholder: string;
+    newItinerary: string;
+    deleteItinerary: string;
+    deleteItineraryConfirm: string;
+    maxItinerariesReached: string;
+    switchItinerary: string;
+    stopDuration: string;
+    stopDurationCustom: string;
+    resetDuration: string;
+    dayStartTime: string;
+    lunchToggleLabel: string;
+    lunchStartTime: string;
+    lunchDuration: string;
   };
   report: {
     cta: string;
@@ -209,7 +224,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeContinueIn: "{region} · {count} places",
       cookieConsentText:
         "We use cookies and local storage to remember your language and selected city, and to keep you signed in.",
-      cookieConsentAccept: "Accept"
+      cookieConsentAccept: "Accept",
+      auto: "Auto",
+      on: "On",
+      off: "Off"
     },
     poi: {
       "fushimi-inari": {
@@ -360,7 +378,19 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayPlaceCount: "{count} places",
       dayWalkingDistance: "{distance} walking",
       dayEmptyPlaceholder: "No stops yet — add places from your favorites.",
-      renameDayPlaceholder: "Day title"
+      renameDayPlaceholder: "Day title",
+      newItinerary: "+ New itinerary",
+      deleteItinerary: "Delete itinerary",
+      deleteItineraryConfirm: "Delete this itinerary? This can't be undone.",
+      maxItinerariesReached: "You've reached the limit of 3 itineraries.",
+      switchItinerary: "Switch itinerary",
+      stopDuration: "Duration",
+      stopDurationCustom: "Custom",
+      resetDuration: "Reset to default",
+      dayStartTime: "Day starts at",
+      lunchToggleLabel: "Lunch break",
+      lunchStartTime: "Lunch at",
+      lunchDuration: "Lunch duration"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -435,7 +465,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeContinueIn: "{region} · {count} мест",
       cookieConsentText:
         "Мы используем куки и локальное хранилище, чтобы запоминать язык и выбранный город, а также сохранять вход в аккаунт.",
-      cookieConsentAccept: "Принять"
+      cookieConsentAccept: "Принять",
+      auto: "Авто",
+      on: "Вкл",
+      off: "Выкл"
     },
     poi: {
       "fushimi-inari": {
@@ -586,7 +619,19 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayPlaceCount: "{count} мест",
       dayWalkingDistance: "{distance} пешком",
       dayEmptyPlaceholder: "Пока нет точек — добавьте места из избранного.",
-      renameDayPlaceholder: "Название дня"
+      renameDayPlaceholder: "Название дня",
+      newItinerary: "+ Новый маршрут",
+      deleteItinerary: "Удалить маршрут",
+      deleteItineraryConfirm: "Удалить этот маршрут? Это действие нельзя отменить.",
+      maxItinerariesReached: "Достигнут лимит в 3 маршрута.",
+      switchItinerary: "Переключить маршрут",
+      stopDuration: "Длительность",
+      stopDurationCustom: "Своё",
+      resetDuration: "Сбросить по умолчанию",
+      dayStartTime: "Начало дня в",
+      lunchToggleLabel: "Обеденный перерыв",
+      lunchStartTime: "Обед в",
+      lunchDuration: "Длительность обеда"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -660,7 +705,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       swipeContinueHint: "近くの街で続ける",
       swipeContinueIn: "{region} ・ {count}件",
       cookieConsentText: "言語や選択した都市を記憶し、ログイン状態を保つためにクッキーとローカルストレージを使用しています。",
-      cookieConsentAccept: "同意する"
+      cookieConsentAccept: "同意する",
+      auto: "自動",
+      on: "オン",
+      off: "オフ"
     },
     poi: {
       "fushimi-inari": {
@@ -811,7 +859,19 @@ export const translations: Record<Language, TranslationDictionary> = {
       dayPlaceCount: "{count}件",
       dayWalkingDistance: "徒歩{distance}",
       dayEmptyPlaceholder: "まだ立ち寄り先がありません。お気に入りから追加してください。",
-      renameDayPlaceholder: "この日のタイトル"
+      renameDayPlaceholder: "この日のタイトル",
+      newItinerary: "+ 新しい旅程",
+      deleteItinerary: "旅程を削除",
+      deleteItineraryConfirm: "この旅程を削除しますか?この操作は元に戻せません。",
+      maxItinerariesReached: "旅程は最大3件までです。",
+      switchItinerary: "旅程を切り替え",
+      stopDuration: "滞在時間",
+      stopDurationCustom: "カスタム",
+      resetDuration: "デフォルトに戻す",
+      dayStartTime: "開始時刻",
+      lunchToggleLabel: "昼食休憩",
+      lunchStartTime: "昼食の時刻",
+      lunchDuration: "昼食の長さ"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

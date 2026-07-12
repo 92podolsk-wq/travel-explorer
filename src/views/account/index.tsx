@@ -338,10 +338,11 @@ function ItineraryDayCard({
     if (pois.length === 0) {
       return { entries: [], endMinutes: effectiveStart };
     }
-    const legMinutes =
-      route?.legDurationsMinutes ??
-      pois.slice(0, -1).map((poi, i) => estimateTransitionMinutes(haversineDistanceMeters(poi.coordinates, pois[i + 1].coordinates)));
-    return buildDayTimeline(pois, legMinutes, effectiveStart, {
+    const legs = pois.slice(0, -1).map((poi, i) => {
+      const meters = route?.legDistancesMeters?.[i] ?? haversineDistanceMeters(poi.coordinates, pois[i + 1].coordinates);
+      return { meters, minutes: estimateTransitionMinutes(meters) };
+    });
+    return buildDayTimeline(pois, legs, effectiveStart, {
       durationOverridesMinutes: stops.map((s) => s.durationOverrideMinutes),
       lunch: {
         enabled: lunchEnabled,

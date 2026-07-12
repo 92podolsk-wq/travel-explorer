@@ -1,5 +1,4 @@
 import type { Poi } from "@/entities/poi/model/types";
-import { haversineDistanceMeters } from "@/shared/lib/geo";
 
 export type DayTimelineEntry =
   | {
@@ -21,7 +20,7 @@ export type LunchOptions = { enabled: boolean | null; startMinutes?: number; dur
 
 export function buildDayTimeline(
   stops: Poi[],
-  legDurationsMinutes: number[],
+  legs: { minutes: number; meters: number }[],
   dayStartMinutes = 540,
   options?: { durationOverridesMinutes?: (number | null)[]; lunch?: LunchOptions }
 ): { entries: DayTimelineEntry[]; endMinutes: number } {
@@ -61,10 +60,9 @@ export function buildDayTimeline(
     maybeInsertLunch();
 
     if (index < stops.length - 1) {
-      const meters = haversineDistanceMeters(poi.coordinates, stops[index + 1].coordinates);
-      const minutes = Math.round(legDurationsMinutes[index] ?? 0);
-      entries.push({ type: "travel", minutes, meters });
-      cursor += minutes;
+      const leg = legs[index] ?? { minutes: 0, meters: 0 };
+      entries.push({ type: "travel", minutes: leg.minutes, meters: leg.meters });
+      cursor += leg.minutes;
       maybeInsertLunch();
     }
   });

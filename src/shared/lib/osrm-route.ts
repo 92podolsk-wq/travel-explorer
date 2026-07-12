@@ -2,13 +2,13 @@ import type { Coordinates } from "@/entities/poi/model/types";
 
 export type WalkingRoute = {
   lineCoordinates: [number, number][];
-  legDurationsMinutes: number[];
+  legDistancesMeters: number[];
 };
 
 type OsrmResponse = {
   routes?: Array<{
     geometry?: { coordinates?: [number, number][] };
-    legs?: Array<{ duration?: number }>;
+    legs?: Array<{ distance?: number }>;
   }>;
 };
 
@@ -36,7 +36,7 @@ export async function fetchWalkingRoute(coordinates: Coordinates[]): Promise<Wal
 
     return {
       lineCoordinates,
-      legDurationsMinutes: legs.map((leg) => (leg.duration ?? 0) / 60)
+      legDistancesMeters: legs.map((leg) => leg.distance ?? 0)
     };
   } catch {
     return null;

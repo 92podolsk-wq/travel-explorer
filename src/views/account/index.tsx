@@ -647,6 +647,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [activeTab, setActiveTab] = useState<AccountTab>("route");
   const [collapsedFavoriteRegionIds, setCollapsedFavoriteRegionIds] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "saved" || tab === "history" || tab === "route") {
+      setActiveTab(tab);
+    }
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })

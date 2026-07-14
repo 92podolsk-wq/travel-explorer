@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bookmark, CheckCircle2, Eye, MapPin, Minus, Plus } from "lucide-react";
 import type {
   ExpressionSpecification,
@@ -430,6 +431,7 @@ type ExplorerMapProps = {
 };
 
 export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: ExplorerMapProps) {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
@@ -723,7 +725,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="pointer-events-none absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-white/70 bg-white/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl md:flex">
+      <div className="absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-white/70 bg-white/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl md:flex">
         <span className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
             <MapPin className="h-4 w-4" />
@@ -731,20 +733,32 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           {visiblePois.length} {t.app.places}
         </span>
         <div className="h-5 w-px bg-border" />
-        <span className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/account?tab=saved")}
+          className="flex items-center gap-2 transition hover:text-primary"
+        >
           <Bookmark className="h-4 w-4" />
           {favorites.length} {t.app.saved}
-        </span>
+        </button>
         <div className="h-5 w-px bg-border" />
-        <span className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/account?tab=history")}
+          className="flex items-center gap-2 transition hover:text-primary"
+        >
           <Eye className="h-4 w-4" />
           {viewedPoiIds.length} {t.app.viewed}
-        </span>
+        </button>
         <div className="h-5 w-px bg-border" />
-        <span className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => router.push("/account?tab=history")}
+          className="flex items-center gap-2 transition hover:text-primary"
+        >
           <CheckCircle2 className="h-4 w-4" />
           {visitedPoiIds.length} {t.app.visited.toLowerCase()}
-        </span>
+        </button>
       </div>
       <div className="absolute bottom-5 left-[402px] z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
         <button

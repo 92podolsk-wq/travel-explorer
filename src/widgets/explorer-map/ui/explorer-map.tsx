@@ -28,6 +28,8 @@ const poiHitLayerId = "poi-hit-area";
 const poiCircleLayerId = "poi-circles";
 const poiIconLayerId = "poi-icons";
 const poiLabelLayerId = "poi-labels";
+const poiClusterCircleLayerId = "poi-cluster-circles";
+const poiClusterCountLayerId = "poi-cluster-counts";
 const routeSourceId = "travel-explorer-itinerary-route";
 const routeLayerId = "itinerary-route-line";
 const routeApproximateLayerId = "itinerary-route-line-approximate";
@@ -191,13 +193,46 @@ async function addPoiLayers(map: MapLibreMap) {
 
   map.addSource(poiSourceId, {
     type: "geojson",
-    data: emptyPoiCollection
+    data: emptyPoiCollection,
+    cluster: true,
+    clusterMaxZoom: 14,
+    clusterRadius: 50
+  });
+
+  map.addLayer({
+    id: poiClusterCircleLayerId,
+    type: "circle",
+    source: poiSourceId,
+    filter: ["has", "point_count"],
+    paint: {
+      "circle-color": "#287f72",
+      "circle-opacity": 0.9,
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#ffffff",
+      "circle-radius": ["step", ["get", "point_count"], 16, 5, 20, 15, 24, 30, 28]
+    }
+  });
+
+  map.addLayer({
+    id: poiClusterCountLayerId,
+    type: "symbol",
+    source: poiSourceId,
+    filter: ["has", "point_count"],
+    layout: {
+      "text-field": ["get", "point_count"],
+      "text-size": 13,
+      "text-font": ["Noto Sans Bold"],
+      "text-allow-overlap": true,
+      "text-ignore-placement": true
+    },
+    paint: { "text-color": "#ffffff" }
   });
 
   map.addLayer({
     id: poiHitLayerId,
     type: "circle",
     source: poiSourceId,
+    filter: ["!", ["has", "point_count"]],
     paint: {
       "circle-radius": 24,
       "circle-color": "rgba(0, 0, 0, 0)",
@@ -209,6 +244,7 @@ async function addPoiLayers(map: MapLibreMap) {
     id: poiCircleLayerId,
     type: "circle",
     source: poiSourceId,
+    filter: ["!", ["has", "point_count"]],
     paint: {
       "circle-radius": [
         "case",
@@ -257,6 +293,7 @@ async function addPoiLayers(map: MapLibreMap) {
     id: poiIconLayerId,
     type: "symbol",
     source: poiSourceId,
+    filter: ["!", ["has", "point_count"]],
     layout: {
       "icon-image": ["concat", "poi-icon-", ["get", "category"]],
       "icon-size": ["case", ["==", ["get", "selected"], true], 0.95, 0.72],
@@ -280,6 +317,7 @@ async function addPoiLayers(map: MapLibreMap) {
     type: "symbol",
     source: poiSourceId,
     minzoom: 12,
+    filter: ["!", ["has", "point_count"]],
     layout: {
       "text-field": ["get", "name"],
       "text-size": 12,
@@ -533,6 +571,23 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         }
       };
 
+      const handleClusterClick = (event: MapLayerMouseEvent) => {
+        const feature = event.features?.[0];
+        const clusterId = feature?.properties?.cluster_id;
+        const source = map.getSource(poiSourceId);
+        if (clusterId == null || !source || !("getClusterExpansionZoom" in source)) return;
+
+        (
+          source as unknown as {
+            getClusterExpansionZoom: (id: number, cb: (err: unknown, zoom: number) => void) => void;
+          }
+        ).getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err) return;
+          const coordinates = (feature!.geometry as Point).coordinates as [number, number];
+          map.easeTo({ center: coordinates, zoom });
+        });
+      };
+
       const setPointerCursor = () => {
         map.getCanvas().style.cursor = "pointer";
       };
@@ -551,6 +606,9 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           map.on("click", poiHitLayerId, handlePoiClick);
           map.on("mouseenter", poiHitLayerId, setPointerCursor);
           map.on("mouseleave", poiHitLayerId, resetCursor);
+          map.on("click", poiClusterCircleLayerId, handleClusterClick);
+          map.on("mouseenter", poiClusterCircleLayerId, setPointerCursor);
+          map.on("mouseleave", poiClusterCircleLayerId, resetCursor);
           setZoom(map.getZoom());
           setIsMapReady(true);
         });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Bookmark, MapPin, Minus, Plus } from "lucide-react";
 import type {
   ExpressionSpecification,
   GeoJSONSource,
@@ -722,8 +722,18 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="pointer-events-none absolute left-[402px] top-6 hidden rounded-md border border-white/70 bg-white/[0.82] px-3 py-2 text-xs font-medium text-muted-foreground shadow-soft backdrop-blur-xl md:block">
-        Zoom {zoom.toFixed(1)} / {visiblePois.length} {t.app.places}
+      <div className="pointer-events-none absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-white/70 bg-white/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl md:flex">
+        <span className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
+            <MapPin className="h-4 w-4" />
+          </span>
+          {visiblePois.length} {t.app.places}
+        </span>
+        <div className="h-5 w-px bg-border" />
+        <span className="flex items-center gap-2">
+          <Bookmark className="h-4 w-4" />
+          {favorites.length} {t.app.saved}
+        </span>
       </div>
       <div className="absolute bottom-5 left-[402px] z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
         <button

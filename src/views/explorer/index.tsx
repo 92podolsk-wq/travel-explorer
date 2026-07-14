@@ -12,7 +12,6 @@ import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { WelcomePage } from "@/views/welcome";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
-import { FavoritesPanel } from "@/widgets/favorites-panel/ui/favorites-panel";
 import { PoiDetails } from "@/widgets/poi-details/ui/poi-details";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
@@ -69,7 +68,6 @@ export function ExplorerPage({
           initialProtomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
         />
         <ExplorerSidebar />
-        <FavoritesPanel />
         <PoiDetails />
       </div>
     </main>

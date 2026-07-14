@@ -1,6 +1,6 @@
 import type { Language } from "@/shared/i18n/types";
 import type { PublishStatus } from "@/entities/region/model/types";
-import type { Difficulty, Photo, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
+import type { Difficulty, Photo, Poi, PoiCategory, PoiInput, PoiTag, Season } from "@/entities/poi/model/types";
 import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
@@ -62,7 +62,6 @@ export function toPoi(row: PoiRow): Poi {
     difficulty: row.difficulty as Difficulty,
     durationMinutes: row.durationMinutes,
     importance: row.importance,
-    visibilityMode: row.visibilityMode as PoiVisibilityMode,
     status: row.status as PublishStatus
   };
 }
@@ -99,7 +98,6 @@ async function writePoi(id: string, input: PoiInput) {
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
-      visibilityMode: input.visibilityMode,
       status: input.status
     },
     update: {
@@ -120,7 +118,6 @@ async function writePoi(id: string, input: PoiInput) {
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
-      visibilityMode: input.visibilityMode,
       status: input.status
     }
   });

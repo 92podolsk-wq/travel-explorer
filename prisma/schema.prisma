@@ -60,7 +60,6 @@ model Poi {
   difficulty       String
   durationMinutes  Int
   importance       Int
-  visibilityMode   String
   status           String   @default("published")
   photos           Photo[]
   favoritedBy      Favorite[]

@@ -31,8 +31,6 @@ export type PoiTag =
 
 export type Difficulty = "easy" | "moderate" | "active";
 
-export type PoiVisibilityMode = "default" | "zoomed-in";
-
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
 export type Photo = {
@@ -67,7 +65,6 @@ export type Poi = {
   difficulty: Difficulty;
   durationMinutes: number;
   importance: number;
-  visibilityMode: PoiVisibilityMode;
   status: PublishStatus;
 };
 

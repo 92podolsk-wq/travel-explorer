@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import type { Difficulty, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode } from "@/entities/poi/model/types";
+import type { Difficulty, PoiCategory, PoiInput, PoiTag } from "@/entities/poi/model/types";
 import { parseCsv, rowsToObjects } from "@/shared/lib/csv";
 import { Button } from "@/shared/ui/button";
 
@@ -45,14 +45,13 @@ function csvRowToPoiInput(row: Record<string, string>): PoiInput {
     difficulty: (row.difficulty?.trim() as Difficulty) || "easy",
     durationMinutes: Number(row.durationMinutes) || 60,
     importance: Number(row.importance) || 70,
-    visibilityMode: (row.visibilityMode?.trim() as PoiVisibilityMode) || "default",
     status: row.status?.trim() === "published" ? "published" : "draft"
   };
 }
 
 const csvTemplate =
-  "regionId,name,nameEn,nameRu,nameJa,description,lat,lng,rating,categories,tags,seasons,photoScore,mustVisit,bestTime,difficulty,durationMinutes,importance,visibilityMode,status,photoUrl,photoAlt\n" +
-  'kyoto,Example Place,Example Place,Пример места,例の場所,"A short description, with commas if needed.",35.01,135.76,4.6,"temple;garden","photographer;nature","all year",80,false,"Morning;Late afternoon",easy,60,70,default,draft,https://example.com/photo.jpg,Example photo\n';
+  "regionId,name,nameEn,nameRu,nameJa,description,lat,lng,rating,categories,tags,seasons,photoScore,mustVisit,bestTime,difficulty,durationMinutes,importance,status,photoUrl,photoAlt\n" +
+  'kyoto,Example Place,Example Place,Пример места,例の場所,"A short description, with commas if needed.",35.01,135.76,4.6,"temple;garden","photographer;nature","all year",80,false,"Morning;Late afternoon",easy,60,70,draft,https://example.com/photo.jpg,Example photo\n';
 
 type ImportExportPanelProps = {
   onImported: () => void;

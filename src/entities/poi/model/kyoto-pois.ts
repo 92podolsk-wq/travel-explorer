@@ -32,7 +32,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "active",
     durationMinutes: 150,
     importance: 100,
-    visibilityMode: "zoomed-in",
     regionId: "kyoto"
   },
   {
@@ -59,7 +58,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "moderate",
     durationMinutes: 120,
     importance: 98,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -87,7 +85,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "easy",
     durationMinutes: 90,
     importance: 95,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -114,7 +111,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "easy",
     durationMinutes: 120,
     importance: 94,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -141,7 +137,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "easy",
     durationMinutes: 75,
     importance: 86,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -168,7 +163,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "easy",
     durationMinutes: 60,
     importance: 92,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -195,7 +189,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "moderate",
     durationMinutes: 150,
     importance: 80,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -222,7 +215,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "active",
     durationMinutes: 210,
     importance: 78,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -249,7 +241,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "easy",
     durationMinutes: 60,
     importance: 74,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -276,7 +267,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     difficulty: "moderate",
     durationMinutes: 120,
     importance: 70,
-    visibilityMode: "default",
     regionId: "kyoto"
   },
   {
@@ -302,7 +292,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["spring", "autumn"],
     photoScore: 90,
     mustVisit: true,
-    visibilityMode: "default",
     bestTime: ["Morning", "Cloudy midday"],
     difficulty: "easy",
     durationMinutes: 120,
@@ -332,7 +321,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 93,
     mustVisit: true,
-    visibilityMode: "default",
     bestTime: ["Dusk", "Night"],
     difficulty: "easy",
     durationMinutes: 90,
@@ -361,7 +349,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 85,
     mustVisit: false,
-    visibilityMode: "default",
     bestTime: ["Dusk"],
     difficulty: "easy",
     durationMinutes: 75,
@@ -391,7 +378,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 82,
     mustVisit: true,
-    visibilityMode: "default",
     bestTime: ["Opening", "Late afternoon"],
     difficulty: "easy",
     durationMinutes: 150,
@@ -421,7 +407,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["spring", "autumn"],
     photoScore: 84,
     mustVisit: false,
-    visibilityMode: "default",
     bestTime: ["Morning"],
     difficulty: "easy",
     durationMinutes: 90,
@@ -450,7 +435,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 91,
     mustVisit: true,
-    visibilityMode: "default",
     bestTime: ["Dusk", "Night"],
     difficulty: "easy",
     durationMinutes: 60,
@@ -479,7 +463,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 74,
     mustVisit: false,
-    visibilityMode: "default",
     bestTime: ["Late morning"],
     difficulty: "easy",
     durationMinutes: 60,
@@ -509,7 +492,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 86,
     mustVisit: false,
-    visibilityMode: "default",
     bestTime: ["Morning"],
     difficulty: "easy",
     durationMinutes: 75,
@@ -538,7 +520,6 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
     seasons: ["all year"],
     photoScore: 88,
     mustVisit: false,
-    visibilityMode: "default",
     bestTime: ["Morning", "Late afternoon"],
     difficulty: "easy",
     durationMinutes: 30,

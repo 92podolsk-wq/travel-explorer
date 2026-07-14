@@ -3,8 +3,6 @@ import type { Coordinates, Poi } from "@/entities/poi/model/types";
 import { computeModeScore } from "@/features/exploration-mode/model/score";
 import { haversineDistanceMeters } from "@/shared/lib/geo";
 
-export const zoomedInOnlyThreshold = 12;
-
 const zoomThreshold = (zoom: number) => {
   if (zoom < 10) {
     return 92;
@@ -62,13 +60,11 @@ export function getVisiblePois(
         poi.tags.some((tag) => tag.includes(normalizedQuery)) ||
         getSearchText(poi).includes(normalizedQuery);
 
-      const visibleAtZoom = poi.visibilityMode !== "zoomed-in" || zoom > zoomedInOnlyThreshold;
       const visibleWhenViewed = !hideViewed || !viewedPoiIds.includes(poi.id);
       const visibleWhenFavorite = !hideFavorites || !favoritePoiIds.includes(poi.id);
       const visibleWhenVisited = !hideVisited || !visitedPoiIds.includes(poi.id);
 
       return (
-        visibleAtZoom &&
         visibleWhenViewed &&
         visibleWhenFavorite &&
         visibleWhenVisited &&

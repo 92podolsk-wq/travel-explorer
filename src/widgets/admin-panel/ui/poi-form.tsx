@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Languages, Plus, Star, Trash2 } from "lucide-react";
 import { poiCategories, poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
-import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, PoiVisibilityMode, Season } from "@/entities/poi/model/types";
+import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, Season } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
@@ -39,7 +39,6 @@ type FormState = {
   durationMinutes: string;
   difficulty: Difficulty;
   mustVisit: boolean;
-  visibilityMode: PoiVisibilityMode;
   categories: PoiCategory[];
   tags: PoiTag[];
   seasons: string;
@@ -67,7 +66,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       durationMinutes: "60",
       difficulty: "easy",
       mustVisit: false,
-      visibilityMode: "default",
       categories: [],
       tags: [],
       seasons: "all year",
@@ -94,7 +92,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     durationMinutes: String(poi.durationMinutes),
     difficulty: poi.difficulty,
     mustVisit: poi.mustVisit,
-    visibilityMode: poi.visibilityMode ?? "default",
     categories: poi.categories,
     tags: poi.tags,
     seasons: poi.seasons.join(", "),
@@ -161,7 +158,6 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     seasons: splitList(form.seasons),
     photoScore: Number(form.photoScore) || 0,
     mustVisit: form.mustVisit,
-    visibilityMode: form.visibilityMode,
     bestTime: splitList(form.bestTime),
     difficulty: form.difficulty,
     durationMinutes: Number(form.durationMinutes) || 0,
@@ -470,23 +466,6 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
             Обязательно к посещению
           </label>
         </div>
-      </div>
-
-      <div>
-        <label
-          className={fieldLabel}
-          title="Определяет, при каком масштабе карты место видно."
-        >
-          Видимость на карте
-        </label>
-        <select
-          className={selectClass}
-          value={form.visibilityMode}
-          onChange={(e) => setForm((p) => ({ ...p, visibilityMode: e.target.value as PoiVisibilityMode }))}
-        >
-          <option value="default">Показывать всегда (видно при любом масштабе)</option>
-          <option value="zoomed-in">Показывать только при приближении (масштаб больше 12)</option>
-        </select>
       </div>
 
       <div>

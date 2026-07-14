@@ -9,6 +9,7 @@ import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
+import { WelcomePage } from "@/views/welcome";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
 import { FavoritesPanel } from "@/widgets/favorites-panel/ui/favorites-panel";
@@ -37,6 +38,8 @@ export function ExplorerPage({
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
   const setExplorationModes = useExplorerStore((state) => state.setExplorationModes);
+  const hasHydrated = useExplorerStore((state) => state.hasHydrated);
+  const hasSeenWelcome = useExplorerStore((state) => state.hasSeenWelcome);
 
   useHydrateAuth();
 
@@ -48,6 +51,14 @@ export function ExplorerPage({
     setExplorationModes(initialExplorationModes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!hasHydrated) {
+    return <main className="h-dvh w-full bg-muted" />;
+  }
+
+  if (!hasSeenWelcome) {
+    return <WelcomePage />;
+  }
 
   return (
     <main className="flex h-dvh w-full flex-col overflow-hidden bg-muted">

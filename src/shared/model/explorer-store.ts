@@ -51,6 +51,8 @@ type ExplorerState = {
   activeItineraryId: string | null;
   currentUser: User | null;
   authStatus: "loading" | "guest" | "authenticated";
+  hasSeenWelcome: boolean;
+  hasHydrated: boolean;
   hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
@@ -83,6 +85,8 @@ type ExplorerState = {
   setItinerary: (itinerary: Itinerary | null) => void;
   setItineraries: (list: ItinerarySummary[]) => void;
   setActiveItineraryId: (id: string | null) => void;
+  setHasSeenWelcome: (value: boolean) => void;
+  setHasHydrated: (value: boolean) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>()(
@@ -116,6 +120,8 @@ export const useExplorerStore = create<ExplorerState>()(
   activeItineraryId: null,
   currentUser: null,
   authStatus: "loading",
+  hasSeenWelcome: false,
+  hasHydrated: false,
   hydrateAuth: (user, poiState) =>
     set({
       currentUser: user,
@@ -243,15 +249,21 @@ export const useExplorerStore = create<ExplorerState>()(
   setSortByDistance: (value) => set({ sortByDistance: value }),
   setItinerary: (itinerary) => set({ itinerary }),
   setItineraries: (list) => set({ itineraries: list }),
-  setActiveItineraryId: (id) => set({ activeItineraryId: id })
+  setActiveItineraryId: (id) => set({ activeItineraryId: id }),
+  setHasSeenWelcome: (value) => set({ hasSeenWelcome: value }),
+  setHasHydrated: (value) => set({ hasHydrated: value })
     }),
     {
       name: "travel-explorer-settings",
       partialize: (state) => ({
         language: state.language,
         activeRegionIds: state.activeRegionIds,
-        activeItineraryId: state.activeItineraryId
-      })
+        activeItineraryId: state.activeItineraryId,
+        hasSeenWelcome: state.hasSeenWelcome
+      }),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      }
     }
   )
 );

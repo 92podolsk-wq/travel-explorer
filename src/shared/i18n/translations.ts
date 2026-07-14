@@ -177,6 +177,35 @@ type TranslationDictionary = {
     close: string;
     error: string;
   };
+  welcome: {
+    heroTitle: string;
+    heroSubtitle: string;
+    heroExploreCta: string;
+    heroHowItWorksCta: string;
+    statsPlaces: string;
+    statsRegions: string;
+    statsModes: string;
+    statsInfinity: string;
+    placesUnit: string;
+    destinationsTitle: string;
+    modesTitle: string;
+    itineraryTitle: string;
+    itineraryBody: string;
+    itineraryCta: string;
+    galleryTitle: string;
+    gallerySubtitle: string;
+    howItWorksTitle: string;
+    step1Title: string;
+    step1Body: string;
+    step2Title: string;
+    step2Body: string;
+    step3Title: string;
+    step3Body: string;
+    step4Title: string;
+    step4Body: string;
+    step5Title: string;
+    step5Body: string;
+  };
 };
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -437,6 +466,35 @@ export const translations: Record<Language, TranslationDictionary> = {
       thanks: "Thanks for the feedback! We'll take a look soon.",
       close: "Close",
       error: "Couldn't send it. Please try again."
+    },
+    welcome: {
+      heroTitle: "Discover the best places to travel",
+      heroSubtitle: "Every place, every shot, every moment. Plan the perfect trip with Wayora.",
+      heroExploreCta: "Explore {region}",
+      heroHowItWorksCta: "How it works",
+      statsPlaces: "Places in the database",
+      statsRegions: "Regions",
+      statsModes: "Exploration modes",
+      statsInfinity: "Memories",
+      placesUnit: "places",
+      destinationsTitle: "Popular destinations",
+      modesTitle: "Exploration modes",
+      itineraryTitle: "Smart routes in minutes",
+      itineraryBody: "Automatically build the optimal route based on time, distance and your interests.",
+      itineraryCta: "Try it",
+      galleryTitle: "Get inspired by the best shots",
+      gallerySubtitle: "Real photos from real places to help you find the perfect angle.",
+      howItWorksTitle: "How it works",
+      step1Title: "Pick a destination and mode",
+      step1Body: "Choose a city and an exploration mode that fits what you're after.",
+      step2Title: "Explore the best places on the map",
+      step2Body: "Browse sights on an interactive map with photos and descriptions.",
+      step3Title: "Save the places you like",
+      step3Body: "Add places to your favorites in one click.",
+      step4Title: "Build smart routes",
+      step4Body: "Automatically generate a multi-day route based on timing and distance.",
+      step5Title: "Enjoy the trip",
+      step5Body: "Share your route and discover Japan at its best."
     }
   },
   ru: {
@@ -696,6 +754,35 @@ export const translations: Record<Language, TranslationDictionary> = {
       thanks: "Спасибо за обратную связь! Мы скоро всё проверим.",
       close: "Закрыть",
       error: "Не удалось отправить. Попробуйте ещё раз."
+    },
+    welcome: {
+      heroTitle: "Открывайте лучшие места для путешествий",
+      heroSubtitle: "Каждое место, каждый кадр, каждый момент. Планируйте идеальное путешествие с Wayora.",
+      heroExploreCta: "Исследовать {region}",
+      heroHowItWorksCta: "Как это работает",
+      statsPlaces: "Мест в базе",
+      statsRegions: "Регионов",
+      statsModes: "Режима исследования",
+      statsInfinity: "Впечатлений",
+      placesUnit: "мест",
+      destinationsTitle: "Популярные направления",
+      modesTitle: "Режимы исследования",
+      itineraryTitle: "Умные маршруты за минуты",
+      itineraryBody: "Автоматически создаём оптимальный маршрут с учётом времени, расстояний и ваших интересов.",
+      itineraryCta: "Попробовать",
+      galleryTitle: "Вдохновляйтесь лучшими кадрами",
+      gallerySubtitle: "Реальные фото реальных мест помогут вам найти идеальные ракурсы.",
+      howItWorksTitle: "Как это работает",
+      step1Title: "Выберите направление и режим",
+      step1Body: "Выберите город и режим исследования, который подходит именно вам.",
+      step2Title: "Исследуйте лучшие места на карте",
+      step2Body: "Просматривайте достопримечательности на интерактивной карте с фото и описаниями.",
+      step3Title: "Сохраняйте понравившиеся места",
+      step3Body: "Добавляйте места в избранное в один клик.",
+      step4Title: "Создавайте умные маршруты",
+      step4Body: "Автоматически стройте маршрут на несколько дней с учётом времени и расстояний.",
+      step5Title: "Наслаждайтесь путешествием",
+      step5Body: "Делитесь маршрутом и открывайте Японию во всей красе."
     }
   },
   ja: {
@@ -954,6 +1041,35 @@ export const translations: Record<Language, TranslationDictionary> = {
       thanks: "フィードバックありがとうございます!近日中に確認します。",
       close: "閉じる",
       error: "送信できませんでした。もう一度お試しください。"
+    },
+    welcome: {
+      heroTitle: "最高の旅先を発見しよう",
+      heroSubtitle: "すべての場所、すべての一枚、すべての瞬間。Wayoraで理想の旅を計画しましょう。",
+      heroExploreCta: "{region}を探索する",
+      heroHowItWorksCta: "使い方を見る",
+      statsPlaces: "登録されている場所",
+      statsRegions: "地域",
+      statsModes: "探索モード",
+      statsInfinity: "思い出",
+      placesUnit: "件",
+      destinationsTitle: "人気の目的地",
+      modesTitle: "探索モード",
+      itineraryTitle: "数分でスマートなルートを作成",
+      itineraryBody: "時間、距離、あなたの興味に合わせて最適なルートを自動作成します。",
+      itineraryCta: "試してみる",
+      galleryTitle: "最高の写真からインスピレーションを得よう",
+      gallerySubtitle: "実際の場所の実際の写真から、理想のアングルを見つけましょう。",
+      howItWorksTitle: "使い方",
+      step1Title: "目的地とモードを選ぶ",
+      step1Body: "あなたに合った都市と探索モードを選びましょう。",
+      step2Title: "地図で最高の場所を探索",
+      step2Body: "写真と説明付きのインタラクティブな地図で観光地を閲覧できます。",
+      step3Title: "気に入った場所を保存",
+      step3Body: "ワンクリックでお気に入りに追加できます。",
+      step4Title: "スマートなルートを作成",
+      step4Body: "所要時間と距離を考慮した複数日のルートを自動生成します。",
+      step5Title: "旅を楽しもう",
+      step5Body: "ルートを共有して、日本の魅力を存分に発見しましょう。"
     }
   }
 };

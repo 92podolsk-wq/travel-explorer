@@ -13,6 +13,7 @@ type TranslationDictionary = {
     visible: string;
     saved: string;
     places: string;
+    viewed: string;
     save: string;
     mustVisit: string;
     photo: string;
@@ -216,6 +217,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       visible: "visible",
       saved: "saved",
       places: "places",
+      viewed: "viewed",
       save: "Save",
       mustVisit: "Must Visit",
       photo: "Photo",
@@ -504,6 +506,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       visible: "видно",
       saved: "сохранено",
       places: "мест",
+      viewed: "просмотрено",
       save: "Сохранить",
       mustVisit: "Обязательно",
       photo: "Фото",
@@ -792,6 +795,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       visible: "件表示中",
       saved: "件保存済み",
       places: "件",
+      viewed: "件閲覧済み",
       save: "保存",
       mustVisit: "必見",
       photo: "写真",

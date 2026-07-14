@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bookmark, MapPin, Minus, Plus } from "lucide-react";
+import { Bookmark, CheckCircle2, Eye, MapPin, Minus, Plus } from "lucide-react";
 import type {
   ExpressionSpecification,
   GeoJSONSource,
@@ -444,6 +444,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
+  const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const favorites = useExplorerStore((state) => state.favorites);
   const hideViewedOnMap = useExplorerStore((state) => state.hideViewedOnMap);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
@@ -733,6 +734,16 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         <span className="flex items-center gap-2">
           <Bookmark className="h-4 w-4" />
           {favorites.length} {t.app.saved}
+        </span>
+        <div className="h-5 w-px bg-border" />
+        <span className="flex items-center gap-2">
+          <Eye className="h-4 w-4" />
+          {viewedPoiIds.length} {t.app.viewed}
+        </span>
+        <div className="h-5 w-px bg-border" />
+        <span className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4" />
+          {visitedPoiIds.length} {t.app.visited.toLowerCase()}
         </span>
       </div>
       <div className="absolute bottom-5 left-[402px] z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">

@@ -872,6 +872,16 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   async function handleShareItinerary() {
     if (!itinerary) return;
     const url = `${window.location.origin}/trip/${itinerary.shareToken}`;
+
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: itinerary.title, url });
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+
     await navigator.clipboard.writeText(url);
     setIsLinkCopied(true);
     setTimeout(() => setIsLinkCopied(false), 2000);
@@ -1246,9 +1256,21 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                         {t.favoritesCtaBody.replace("{days}", String(favoritesTripDays))}
                       </div>
                     </div>
-                    <Button type="button" size="sm" onClick={handleGoToGenerateItinerary} className="shrink-0">
-                      {t.favoritesCtaButton}
-                    </Button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {itinerary && itinerary.stops.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleShareItinerary}
+                          title={isLinkCopied ? t.linkCopied : t.shareItinerary}
+                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-white text-muted-foreground transition hover:text-primary"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </button>
+                      )}
+                      <Button type="button" size="sm" onClick={handleGoToGenerateItinerary}>
+                        {t.favoritesCtaButton}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 

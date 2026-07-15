@@ -188,7 +188,7 @@ function ItineraryTimelineRow({
         {...attributes}
         {...listeners}
         aria-label="Drag"
-        className="flex h-7 w-7 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground active:cursor-grabbing"
+        className="flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-4 w-4" />
       </button>

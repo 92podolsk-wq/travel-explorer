@@ -818,7 +818,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           {visitedPoiIds.length} {t.app.visited.toLowerCase()}
         </button>
       </div>
-      <div className="absolute bottom-5 left-[402px] z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
+      <div className="absolute right-4 top-6 z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto">
         <button
           type="button"
           onClick={() => mapRef.current?.zoomIn()}

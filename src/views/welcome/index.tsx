@@ -94,7 +94,7 @@ export function WelcomePage() {
           {heroPhoto && (
             <CoverImage photo={heroPhoto} alt={t.heroTitle} className="absolute inset-0 h-full w-full" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white/70 sm:bg-gradient-to-r sm:from-white sm:via-white/85 sm:to-white/40" />
           <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-6 py-14 sm:py-20">
             <h1 className="max-w-xl text-3xl font-bold leading-tight text-foreground sm:text-5xl">{t.heroTitle}</h1>
             <p className="max-w-md text-sm text-muted-foreground sm:text-base">{t.heroSubtitle}</p>

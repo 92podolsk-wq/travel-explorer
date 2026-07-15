@@ -118,6 +118,21 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
   const lat = Number(form.lat);
   const lng = Number(form.lng);
   if (Number.isNaN(lat) || Number.isNaN(lng)) return { error: "Координаты должны быть числами." };
+  if (lat < -90 || lat > 90) return { error: "Широта должна быть от -90 до 90." };
+  if (lng < -180 || lng > 180) return { error: "Долгота должна быть от -180 до 180." };
+
+  const rating = Number(form.rating);
+  const photoScore = Number(form.photoScore);
+  const durationMinutes = Number(form.durationMinutes);
+  const importance = Number(form.importance);
+
+  if ([rating, photoScore, durationMinutes, importance].some((value) => Number.isNaN(value))) {
+    return { error: "Рейтинг, оценка фото, длительность и важность должны быть числами." };
+  }
+  if (rating < 0 || rating > 5) return { error: "Рейтинг должен быть от 0 до 5." };
+  if (photoScore < 0 || photoScore > 100) return { error: "Оценка фото должна быть от 0 до 100." };
+  if (importance < 0 || importance > 100) return { error: "Важность должна быть от 0 до 100." };
+  if (durationMinutes < 0) return { error: "Длительность не может быть отрицательной." };
 
   if (form.categories.length === 0) return { error: "Выберите хотя бы одну категорию." };
 
@@ -151,17 +166,17 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
       ja: form.descriptionJa.trim() || descriptionRu
     },
     coordinates: { lat, lng },
-    rating: Number(form.rating) || 0,
+    rating,
     photos,
     categories: form.categories,
     tags: form.tags,
     seasons: splitList(form.seasons),
-    photoScore: Number(form.photoScore) || 0,
+    photoScore,
     mustVisit: form.mustVisit,
     bestTime: splitList(form.bestTime),
     difficulty: form.difficulty,
-    durationMinutes: Number(form.durationMinutes) || 0,
-    importance: Number(form.importance) || 0,
+    durationMinutes,
+    importance,
     status: form.status
   };
 }
@@ -383,6 +398,8 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
           <Input
             type="number"
             step="0.0001"
+            min="-90"
+            max="90"
             value={form.lat}
             onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))}
             placeholder="35.0116"
@@ -395,6 +412,8 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
           <Input
             type="number"
             step="0.0001"
+            min="-180"
+            max="180"
             value={form.lng}
             onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))}
             placeholder="135.7681"

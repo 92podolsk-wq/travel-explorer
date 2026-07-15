@@ -29,7 +29,7 @@ import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
 import { SiteSettingsTab } from "./site-settings-tab";
 
-type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" };
+type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" } | { mode: "error"; message: string };
 
 type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
@@ -116,86 +116,50 @@ export function AdminPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   async function loadCountries() {
     const res = await fetch("/api/countries");
+    if (!res.ok) throw new Error("Failed to load countries");
     setCountries((await res.json()) as Country[]);
   }
   async function loadAreas() {
     const res = await fetch("/api/areas");
+    if (!res.ok) throw new Error("Failed to load areas");
     setAreas((await res.json()) as Area[]);
   }
   async function loadRegions() {
     const res = await fetch("/api/regions");
+    if (!res.ok) throw new Error("Failed to load regions");
     setRegions((await res.json()) as Region[]);
   }
   async function loadPois() {
     const res = await fetch("/api/pois");
+    if (!res.ok) throw new Error("Failed to load pois");
     setPois((await res.json()) as Poi[]);
   }
   async function loadExplorationModes() {
     const res = await fetch("/api/exploration-modes");
+    if (!res.ok) throw new Error("Failed to load exploration modes");
     setExplorationModes((await res.json()) as ExplorationMode[]);
   }
   async function loadUsers() {
     const res = await fetch("/api/admin/users");
+    if (!res.ok) throw new Error("Failed to load users");
     setUsers((await res.json()) as AdminUser[]);
   }
   async function loadAccounts() {
     const res = await fetch("/api/admin/accounts");
+    if (!res.ok) throw new Error("Failed to load accounts");
     setAccounts((await res.json()) as AdminAccount[]);
   }
   async function loadReports() {
     const res = await fetch("/api/admin/reports");
+    if (!res.ok) throw new Error("Failed to load reports");
     setReports((await res.json()) as PoiReport[]);
   }
 
-  useEffect(() => {
-    (async () => {
-      const res = await fetch("/api/admin/session");
-      const { authenticated, admin } = (await res.json()) as {
-        authenticated: boolean;
-        admin: { name: string; email: string } | null;
-      };
-
-      if (authenticated) {
-        setCurrentAdmin(admin);
-        await Promise.all([
-          loadCountries(),
-          loadAreas(),
-          loadRegions(),
-          loadPois(),
-          loadExplorationModes(),
-          loadUsers(),
-          loadAccounts(),
-          loadReports()
-        ]);
-        setAuthView({ mode: "ready" });
-      } else {
-        setAuthView({ mode: "login" });
-      }
-    })();
-  }, []);
-
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoginError(null);
-
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (!res.ok) {
-      setLoginError("Неверный email или пароль.");
-      return;
-    }
-
-    const { admin } = (await res.json()) as { admin: { name: string; email: string } };
-    setCurrentAdmin(admin);
-
-    setPassword("");
+  async function loadAllAdminData() {
     await Promise.all([
       loadCountries(),
       loadAreas(),
@@ -206,7 +170,67 @@ export function AdminPanel() {
       loadAccounts(),
       loadReports()
     ]);
-    setAuthView({ mode: "ready" });
+  }
+
+  async function checkSessionAndLoad() {
+    setAuthView({ mode: "loading" });
+    try {
+      const res = await fetch("/api/admin/session");
+      if (!res.ok) throw new Error("Session check failed");
+      const { authenticated, admin } = (await res.json()) as {
+        authenticated: boolean;
+        admin: { name: string; email: string } | null;
+      };
+
+      if (!authenticated) {
+        setAuthView({ mode: "login" });
+        return;
+      }
+
+      setCurrentAdmin(admin);
+      await loadAllAdminData();
+      setAuthView({ mode: "ready" });
+    } catch {
+      setAuthView({
+        mode: "error",
+        message: "Не удалось загрузить админ-панель. Проверьте соединение и попробуйте снова."
+      });
+    }
+  }
+
+  useEffect(() => {
+    void checkSessionAndLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        setLoginError("Неверный email или пароль.");
+        return;
+      }
+
+      const { admin } = (await res.json()) as { admin: { name: string; email: string } };
+      setCurrentAdmin(admin);
+
+      setPassword("");
+      await loadAllAdminData();
+      setAuthView({ mode: "ready" });
+    } catch {
+      setLoginError("Не удалось войти. Проверьте соединение и попробуйте снова.");
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -569,6 +593,17 @@ export function AdminPanel() {
     return null;
   }
 
+  if (authView.mode === "error") {
+    return (
+      <div className="mx-auto mt-24 max-w-sm rounded-lg border border-border bg-white p-6 text-center shadow-sm">
+        <p className="mb-4 text-sm font-medium text-red-600">{authView.message}</p>
+        <Button type="button" onClick={() => void checkSessionAndLoad()}>
+          Повторить
+        </Button>
+      </div>
+    );
+  }
+
   if (authView.mode === "login") {
     return (
       <div className="mx-auto mt-24 max-w-sm rounded-lg border border-border bg-white p-6 shadow-sm">
@@ -581,16 +616,18 @@ export function AdminPanel() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             autoFocus
+            disabled={isLoggingIn}
           />
           <Input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Пароль"
+            disabled={isLoggingIn}
           />
           {loginError && <p className="text-sm font-medium text-red-600">{loginError}</p>}
-          <Button type="submit" className="w-full">
-            Войти
+          <Button type="submit" className="w-full" disabled={isLoggingIn}>
+            {isLoggingIn ? "Вход…" : "Войти"}
           </Button>
         </form>
       </div>

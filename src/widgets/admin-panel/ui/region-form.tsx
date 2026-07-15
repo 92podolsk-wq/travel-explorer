@@ -96,6 +96,21 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
   if ([lat, lng, swLng, swLat, neLng, neLat, defaultZoom, timezoneOffsetHours].some((value) => Number.isNaN(value))) {
     return { error: "Координаты, масштаб, границы и часовой пояс должны быть числами." };
   }
+  if (lat < -90 || lat > 90) return { error: "Широта центра должна быть от -90 до 90." };
+  if (lng < -180 || lng > 180) return { error: "Долгота центра должна быть от -180 до 180." };
+  if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90) {
+    return { error: "Широта границ должна быть от -90 до 90." };
+  }
+  if (swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180) {
+    return { error: "Долгота границ должна быть от -180 до 180." };
+  }
+  if (swLat >= neLat || swLng >= neLng) {
+    return { error: "Юго-западный угол границ должен быть южнее и западнее северо-восточного." };
+  }
+  if (defaultZoom < 0 || defaultZoom > 22) return { error: "Масштаб по умолчанию должен быть от 0 до 22." };
+  if (timezoneOffsetHours < -12 || timezoneOffsetHours > 14) {
+    return { error: "Часовой пояс должен быть от -12 до 14." };
+  }
 
   const name = form.name.trim();
 
@@ -254,7 +269,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           >
             Широта центра
           </label>
-          <Input type="number" step="0.0001" value={form.lat} onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))} placeholder="35.6762" />
+          <Input type="number" step="0.0001" min="-90" max="90" value={form.lat} onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))} placeholder="35.6762" />
         </div>
         <div>
           <label
@@ -263,13 +278,13 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           >
             Долгота центра
           </label>
-          <Input type="number" step="0.0001" value={form.lng} onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))} placeholder="139.6503" />
+          <Input type="number" step="0.0001" min="-180" max="180" value={form.lng} onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))} placeholder="139.6503" />
         </div>
         <div>
           <label className={fieldLabel} title="Масштаб карты, который устанавливается по умолчанию при открытии этого города.">
             Масштаб по умолчанию
           </label>
-          <Input type="number" step="1" value={form.defaultZoom} onChange={(e) => setForm((p) => ({ ...p, defaultZoom: e.target.value }))} />
+          <Input type="number" step="1" min="0" max="22" value={form.defaultZoom} onChange={(e) => setForm((p) => ({ ...p, defaultZoom: e.target.value }))} />
         </div>
       </div>
 
@@ -281,10 +296,10 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           Границы карты (юго-запад и северо-восток)
         </label>
         <div className="grid grid-cols-4 gap-3">
-          <Input type="number" step="0.01" value={form.swLng} onChange={(e) => setForm((p) => ({ ...p, swLng: e.target.value }))} placeholder="Долгота ЮЗ" />
-          <Input type="number" step="0.01" value={form.swLat} onChange={(e) => setForm((p) => ({ ...p, swLat: e.target.value }))} placeholder="Широта ЮЗ" />
-          <Input type="number" step="0.01" value={form.neLng} onChange={(e) => setForm((p) => ({ ...p, neLng: e.target.value }))} placeholder="Долгота СВ" />
-          <Input type="number" step="0.01" value={form.neLat} onChange={(e) => setForm((p) => ({ ...p, neLat: e.target.value }))} placeholder="Широта СВ" />
+          <Input type="number" step="0.01" min="-180" max="180" value={form.swLng} onChange={(e) => setForm((p) => ({ ...p, swLng: e.target.value }))} placeholder="Долгота ЮЗ" />
+          <Input type="number" step="0.01" min="-90" max="90" value={form.swLat} onChange={(e) => setForm((p) => ({ ...p, swLat: e.target.value }))} placeholder="Широта ЮЗ" />
+          <Input type="number" step="0.01" min="-180" max="180" value={form.neLng} onChange={(e) => setForm((p) => ({ ...p, neLng: e.target.value }))} placeholder="Долгота СВ" />
+          <Input type="number" step="0.01" min="-90" max="90" value={form.neLat} onChange={(e) => setForm((p) => ({ ...p, neLat: e.target.value }))} placeholder="Широта СВ" />
         </div>
       </div>
 
@@ -296,7 +311,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           >
             Часовой пояс (часы от UTC)
           </label>
-          <Input type="number" step="1" value={form.timezoneOffsetHours} onChange={(e) => setForm((p) => ({ ...p, timezoneOffsetHours: e.target.value }))} />
+          <Input type="number" step="1" min="-12" max="14" value={form.timezoneOffsetHours} onChange={(e) => setForm((p) => ({ ...p, timezoneOffsetHours: e.target.value }))} />
         </div>
         <div>
           <label

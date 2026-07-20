@@ -35,6 +35,9 @@ const poiClusterCountLayerId = "poi-cluster-counts";
 const routeSourceId = "travel-explorer-itinerary-route";
 const routeLayerId = "itinerary-route-line";
 const routeApproximateLayerId = "itinerary-route-line-approximate";
+const dayBadgeSourceId = "travel-explorer-itinerary-day-badges";
+const dayBadgeCircleLayerId = "itinerary-day-badge-circles";
+const dayBadgeLabelLayerId = "itinerary-day-badge-labels";
 const regionVoronoiSourceId = "travel-explorer-region-voronoi";
 const regionVoronoiFillLayerId = "region-voronoi-fill";
 const regionVoronoiLineLayerId = "region-voronoi-line";
@@ -52,7 +55,8 @@ type PoiFeatureProperties = {
 
 type PoiFeature = Feature<Point, PoiFeatureProperties>;
 type PoiFeatureCollection = FeatureCollection<Point, PoiFeatureProperties>;
-type RouteFeatureCollection = FeatureCollection<LineString, { approximate: boolean }>;
+type RouteFeatureCollection = FeatureCollection<LineString, { approximate: boolean; day: number; color: string }>;
+type DayBadgeFeatureCollection = FeatureCollection<Point, { day: number; color: string }>;
 
 const emptyPoiCollection: PoiFeatureCollection = {
   type: "FeatureCollection",
@@ -63,6 +67,17 @@ const emptyRouteCollection: RouteFeatureCollection = {
   type: "FeatureCollection",
   features: []
 };
+
+const emptyDayBadgeCollection: DayBadgeFeatureCollection = {
+  type: "FeatureCollection",
+  features: []
+};
+
+const dayRouteColors = ["#287f72", "#a3312c", "#e0a13e", "#5b6ee1", "#6b5b95"];
+
+function getDayColor(dayIndex: number): string {
+  return dayRouteColors[dayIndex % dayRouteColors.length];
+}
 
 function createPoiCollection(
   pois: Poi[],
@@ -173,7 +188,7 @@ async function addPoiLayers(map: MapLibreMap) {
     filter: ["==", ["get", "approximate"], false],
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#287f72",
+      "line-color": ["get", "color"],
       "line-width": 3,
       "line-opacity": 0.75
     }
@@ -186,7 +201,7 @@ async function addPoiLayers(map: MapLibreMap) {
     filter: ["==", ["get", "approximate"], true],
     layout: { "line-cap": "round", "line-join": "round" },
     paint: {
-      "line-color": "#287f72",
+      "line-color": ["get", "color"],
       "line-width": 3,
       "line-opacity": 0.75,
       "line-dasharray": [2, 1.5]
@@ -339,6 +354,41 @@ async function addPoiLayers(map: MapLibreMap) {
       "text-halo-width": 1.6
     }
   });
+
+  map.addSource(dayBadgeSourceId, {
+    type: "geojson",
+    data: emptyDayBadgeCollection
+  });
+
+  map.addLayer({
+    id: dayBadgeCircleLayerId,
+    type: "circle",
+    source: dayBadgeSourceId,
+    paint: {
+      "circle-radius": 10,
+      "circle-color": ["get", "color"],
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#ffffff",
+      "circle-translate": [14, -14]
+    }
+  });
+
+  map.addLayer({
+    id: dayBadgeLabelLayerId,
+    type: "symbol",
+    source: dayBadgeSourceId,
+    layout: {
+      "text-field": ["get", "day"],
+      "text-size": 10,
+      "text-font": ["Noto Sans Bold"],
+      "text-allow-overlap": true,
+      "text-ignore-placement": true
+    },
+    paint: {
+      "text-color": "#ffffff",
+      "text-translate": [14, -14]
+    }
+  });
 }
 
 function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {
@@ -416,6 +466,16 @@ function setPoiSourceData(map: MapLibreMap, data: PoiFeatureCollection) {
 
 function setRouteSourceData(map: MapLibreMap, data: RouteFeatureCollection) {
   const source = map.getSource(routeSourceId);
+
+  if (!source) {
+    return;
+  }
+
+  (source as GeoJSONSource).setData(data);
+}
+
+function setDayBadgeSourceData(map: MapLibreMap, data: DayBadgeFeatureCollection) {
+  const source = map.getSource(dayBadgeSourceId);
 
   if (!source) {
     return;
@@ -760,39 +820,74 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
 
     if (stopsInView.length < 2) {
       setRouteSourceData(map, emptyRouteCollection);
+      setDayBadgeSourceData(map, emptyDayBadgeCollection);
       return;
     }
 
+    const dayNumbers = Array.from(new Set(stopsInView.map((stop) => stop.day))).sort((a, b) => a - b);
+    const dayGroups = dayNumbers.map((day, index) => ({
+      day,
+      color: getDayColor(index),
+      stops: stopsInView.filter((stop) => stop.day === day)
+    }));
+
+    setDayBadgeSourceData(
+      map,
+      dayGroups.length > 1
+        ? {
+            type: "FeatureCollection",
+            features: dayGroups.map((group) => ({
+              type: "Feature",
+              properties: { day: group.day, color: group.color },
+              geometry: {
+                type: "Point",
+                coordinates: [group.stops[0].poi.coordinates.lng, group.stops[0].poi.coordinates.lat]
+              }
+            }))
+          }
+        : emptyDayBadgeCollection
+    );
+
     let isCancelled = false;
+    const dayGroupsWithRoute = dayGroups.filter((group) => group.stops.length >= 2);
+
     const straightLine: RouteFeatureCollection = {
       type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: { approximate: true },
-          geometry: {
-            type: "LineString",
-            coordinates: stopsInView.map((stop) => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
-          }
+      features: dayGroupsWithRoute.map((group) => ({
+        type: "Feature",
+        properties: { approximate: true, day: group.day, color: group.color },
+        geometry: {
+          type: "LineString",
+          coordinates: group.stops.map((stop) => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
         }
-      ]
+      }))
     };
 
     setRouteSourceData(map, straightLine);
 
     (async () => {
-      const routeCoordinates = await fetchWalkingRouteCoordinates(stopsInView.map((stop) => stop.poi.coordinates));
-      if (isCancelled || !routeCoordinates) return;
+      const routesPerDay = await Promise.all(
+        dayGroupsWithRoute.map(async (group) => {
+          const routeCoordinates = await fetchWalkingRouteCoordinates(group.stops.map((stop) => stop.poi.coordinates));
+          return {
+            day: group.day,
+            color: group.color,
+            approximate: !routeCoordinates,
+            coordinates:
+              routeCoordinates ?? group.stops.map((stop): [number, number] => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
+          };
+        })
+      );
+
+      if (isCancelled) return;
 
       setRouteSourceData(map, {
         type: "FeatureCollection",
-        features: [
-          {
-            type: "Feature",
-            properties: { approximate: false },
-            geometry: { type: "LineString", coordinates: routeCoordinates }
-          }
-        ]
+        features: routesPerDay.map((route) => ({
+          type: "Feature",
+          properties: { approximate: route.approximate, day: route.day, color: route.color },
+          geometry: { type: "LineString", coordinates: route.coordinates }
+        }))
       });
     })();
 

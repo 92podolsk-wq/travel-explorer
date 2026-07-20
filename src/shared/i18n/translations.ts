@@ -54,6 +54,7 @@ type TranslationDictionary = {
     nextPlace: string;
     nearMe: string;
     nearMeHint: string;
+    locateMeHint: string;
     locating: string;
     locationError: string;
     seasonReminder: string;
@@ -258,6 +259,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       nextPlace: "Next",
       nearMe: "Near me",
       nearMeHint: "Sort places by distance from your location",
+      locateMeHint: "Show my location on the map",
       locating: "Locating…",
       locationError: "Couldn't get your location. Check your browser's location permission.",
       seasonReminder: "{season} season starts in {city} in {days} days",
@@ -547,6 +549,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       nextPlace: "Далее",
       nearMe: "Рядом со мной",
       nearMeHint: "Сортировать места по расстоянию от вас",
+      locateMeHint: "Показать моё местоположение на карте",
       locating: "Определяем местоположение…",
       locationError: "Не удалось определить местоположение. Проверьте разрешение геолокации в браузере.",
       seasonReminder: "Через {days} дн. в {city} начинается сезон: {season}",
@@ -836,6 +839,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       nextPlace: "次へ",
       nearMe: "現在地の近く",
       nearMeHint: "現在地からの距離で並び替え",
+      locateMeHint: "現在地を地図に表示",
       locating: "位置情報を取得中…",
       locationError: "現在地を取得できませんでした。ブラウザの位置情報の許可を確認してください。",
       seasonReminder: "あと{days}日で{city}で{season}シーズンが始まります",

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, CheckCircle2, Eye, MapPin, Minus, Plus } from "lucide-react";
+import { Bookmark, CheckCircle2, Eye, LocateFixed, MapPin, Minus, Plus } from "lucide-react";
 import type {
   ExpressionSpecification,
   GeoJSONSource,
@@ -18,6 +18,8 @@ import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { cn } from "@/shared/lib/cn";
+import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { resolveMapStyle } from "@/shared/map/map-styles";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
@@ -491,9 +493,28 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const setZoom = useExplorerStore((state) => state.setZoom);
   const userLocation = useExplorerStore((state) => state.userLocation);
   const sortByDistance = useExplorerStore((state) => state.sortByDistance);
+  const isLocatingUser = useExplorerStore((state) => state.isLocatingUser);
+  const setUserLocation = useExplorerStore((state) => state.setUserLocation);
+  const setIsLocatingUser = useExplorerStore((state) => state.setIsLocatingUser);
+  const setLocationError = useExplorerStore((state) => state.setLocationError);
   const itinerary = useExplorerStore((state) => state.itinerary);
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
+
+  async function handleLocateMe() {
+    const map = mapRef.current;
+    setIsLocatingUser(true);
+    setLocationError(null);
+    try {
+      const coords = await getCurrentPosition();
+      setUserLocation(coords);
+      map?.flyTo({ center: [coords.lng, coords.lat], zoom: Math.max(map.getZoom(), 15) });
+    } catch {
+      setLocationError(t.app.locationError);
+    } finally {
+      setIsLocatingUser(false);
+    }
+  }
 
   const selectedModes = useMemo(
     () => explorationModes.filter((mode) => selectedModeIds.includes(mode.id)),
@@ -818,26 +839,38 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           {visitedPoiIds.length} {t.app.visited.toLowerCase()}
         </button>
       </div>
-      <div className="absolute right-4 top-6 z-20 flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto">
+      <div className="absolute right-4 top-6 z-20 flex flex-col items-end gap-2 lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto lg:items-stretch">
         <button
           type="button"
-          onClick={() => mapRef.current?.zoomIn()}
-          aria-label="Zoom in"
-          title="Zoom in"
-          className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+          onClick={() => void handleLocateMe()}
+          disabled={isLocatingUser}
+          aria-label={t.app.locateMeHint}
+          title={t.app.locateMeHint}
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-white/70 bg-white/[0.82] text-foreground shadow-soft backdrop-blur-xl transition hover:bg-muted/60 disabled:opacity-60"
         >
-          <Plus className="h-4 w-4" />
+          <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
         </button>
-        <div className="h-px bg-border" />
-        <button
-          type="button"
-          onClick={() => mapRef.current?.zoomOut()}
-          aria-label="Zoom out"
-          title="Zoom out"
-          className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
-        >
-          <Minus className="h-4 w-4" />
-        </button>
+        <div className="flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
+          <button
+            type="button"
+            onClick={() => mapRef.current?.zoomIn()}
+            aria-label="Zoom in"
+            title="Zoom in"
+            className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <div className="h-px bg-border" />
+          <button
+            type="button"
+            onClick={() => mapRef.current?.zoomOut()}
+            aria-label="Zoom out"
+            title="Zoom out"
+            className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

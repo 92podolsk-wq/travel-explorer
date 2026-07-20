@@ -142,14 +142,14 @@ export function SiteHeader() {
       >
         <Image
           src="/logo-icon.png"
-          alt="Travel Explorer"
+          alt="Wayora"
           width={36}
           height={36}
           className="h-9 w-9 shrink-0 rounded-full object-cover"
           priority
         />
         <div className="hidden text-left leading-tight sm:block">
-          <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
+          <p className="text-sm font-semibold text-foreground">Wayora</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
             Explore Japan
           </p>

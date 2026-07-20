@@ -607,7 +607,7 @@ export function AdminPanel() {
   if (authView.mode === "login") {
     return (
       <div className="mx-auto mt-24 max-w-sm rounded-lg border border-border bg-white p-6 shadow-sm">
-        <h1 className="mb-1 text-lg font-semibold">Админ-панель Travel Explorer</h1>
+        <h1 className="mb-1 text-lg font-semibold">Админ-панель Wayora</h1>
         <p className="mb-5 text-sm text-muted-foreground">Войдите под своей учётной записью администратора.</p>
         <form onSubmit={handleLogin} className="space-y-3">
           <Input
@@ -648,7 +648,7 @@ export function AdminPanel() {
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Админ-панель Travel Explorer</h1>
+          <h1 className="text-2xl font-semibold">Админ-панель Wayora</h1>
           <p className="text-sm text-muted-foreground">
             Стран: {countries.length} · Регионов: {areas.length} · Городов: {regions.length} · Локаций: {pois.length} ·
             Режимов: {explorationModes.length} · Пользователей: {users.length} · Админов: {accounts.length}

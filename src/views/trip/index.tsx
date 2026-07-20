@@ -29,13 +29,13 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
       <header className="flex h-16 items-center gap-2.5 border-b border-border bg-white px-5 print:hidden">
         <Image
           src="/logo-icon.png"
-          alt="Travel Explorer"
+          alt="Wayora"
           width={36}
           height={36}
           className="h-9 w-9 rounded-full object-cover"
         />
         <div>
-          <p className="text-sm font-semibold text-foreground">Travel Explorer</p>
+          <p className="text-sm font-semibold text-foreground">Wayora</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Общий маршрут</p>
         </div>
       </header>

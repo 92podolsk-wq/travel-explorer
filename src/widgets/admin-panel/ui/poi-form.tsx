@@ -655,7 +655,7 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
 
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
-      <div className="flex justify-end gap-2 border-t border-border pt-4">
+      <div className="sticky -bottom-5 -mx-5 z-10 flex justify-end gap-2 border-t border-border bg-white px-5 py-4 shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.15)]">
         <Button type="button" variant="outline" onClick={onCancel}>
           Отмена
         </Button>

@@ -6,6 +6,7 @@ import { Heart, X as XIcon } from "lucide-react";
 import type { Poi } from "@/entities/poi/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
 
 type NeighboringSwipeRegion = { id: string; name: string; count: number };
 
@@ -227,7 +228,8 @@ export function SwipeDiscoveryModal({
   }, [current]);
 
   const nameFor = (poi: Poi) => poi.nameByLanguage[language] ?? poi.name;
-  const descriptionFor = (poi: Poi) => t.poi[poi.id]?.description ?? poi.description;
+  const descriptionFor = (poi: Poi) =>
+    localizedPoiDescription(poi.descriptionByLanguage, poi.description, language, t.poi[poi.id]?.description);
 
   const backCards = [
     { poi: next3, depth: 3, scale: 0.91, blur: 2, opacity: 0.6 },

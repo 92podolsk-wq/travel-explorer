@@ -17,6 +17,7 @@ import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { getUpcomingSeasonReminder } from "@/shared/lib/season-reminder";
 import { shuffle } from "@/shared/lib/shuffle";
 import { getSunTimes } from "@/shared/lib/sun-times";
+import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { SwipeDiscoveryModal } from "@/widgets/swipe-discovery/ui/swipe-discovery-modal";
 import { Button } from "@/shared/ui/button";
@@ -474,7 +475,7 @@ export function ExplorerSidebar() {
                       {isFavorite && <Star className="h-4 w-4 shrink-0 fill-primary text-primary" />}
                     </div>
                     <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">
-                      {t.poi[poi.id]?.description ?? poi.description}
+                      {localizedPoiDescription(poi.descriptionByLanguage, poi.description, language, t.poi[poi.id]?.description)}
                     </p>
                     <div className="mt-2.5 flex items-center gap-2.5 text-xs font-medium text-muted-foreground">
                       <span className="inline-flex items-center gap-1 text-foreground">

@@ -13,7 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
-import { looksTranslated } from "@/shared/lib/translation-completeness";
+import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 import { UploadPhotoModal } from "./upload-photo-modal";
 
@@ -61,13 +61,12 @@ export function PoiDetails() {
   const poiName = selectedPoi.nameByLanguage[language] ?? selectedPoi.name;
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
-  const localizedDescription = selectedPoi.descriptionByLanguage[language];
-  const description =
-    language === "ru"
-      ? localizedDescription
-      : looksTranslated(language, localizedDescription)
-        ? localizedDescription
-        : (poiCopy?.description ?? selectedPoi.description);
+  const description = localizedPoiDescription(
+    selectedPoi.descriptionByLanguage,
+    selectedPoi.description,
+    language,
+    poiCopy?.description
+  );
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
 
   const seasonFilteredPhotos =

@@ -1,48 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { GripVertical, Trash2 } from "lucide-react";
+import type { AdminPhoto } from "@/entities/photo/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { cn } from "@/shared/lib/cn";
 
-type PhotoWithPoi = {
-  id: string;
-  poiId: string;
-  poiName: string;
-  regionId: string;
-  url: string;
-  alt: string;
-  author: string | null;
-  season: string | null;
-  position: number;
-};
-
 type MediaLibraryTabProps = {
   regions: Region[];
+  photos: AdminPhoto[];
+  onReload: () => void;
 };
 
-export function MediaLibraryTab({ regions }: MediaLibraryTabProps) {
-  const [photos, setPhotos] = useState<PhotoWithPoi[]>([]);
+export function MediaLibraryTab({ regions, photos, onReload }: MediaLibraryTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [cityFilter, setCityFilter] = useState<string>("all");
   const [dragState, setDragState] = useState<{ poiId: string; photoId: string } | null>(null);
 
-  async function loadPhotos() {
-    const res = await fetch("/api/admin/photos");
-    if (!res.ok) {
-      setError("Не удалось загрузить фото.");
-      return;
-    }
-    setPhotos((await res.json()) as PhotoWithPoi[]);
-  }
-
-  useEffect(() => {
-    loadPhotos();
-  }, []);
-
   const groups = useMemo(() => {
     const filtered = cityFilter === "all" ? photos : photos.filter((photo) => photo.regionId === cityFilter);
-    const byPoi = new Map<string, { poiId: string; poiName: string; photos: PhotoWithPoi[] }>();
+    const byPoi = new Map<string, { poiId: string; poiName: string; photos: AdminPhoto[] }>();
     for (const photo of filtered) {
       const group = byPoi.get(photo.poiId) ?? { poiId: photo.poiId, poiName: photo.poiName, photos: [] };
       group.photos.push(photo);
@@ -51,24 +28,30 @@ export function MediaLibraryTab({ regions }: MediaLibraryTabProps) {
     return Array.from(byPoi.values()).sort((a, b) => a.poiName.localeCompare(b.poiName));
   }, [photos, cityFilter]);
 
-  const handleAltBlur = async (photo: PhotoWithPoi, value: string) => {
+  const handleAltBlur = async (photo: AdminPhoto, value: string) => {
     if (value === photo.alt) return;
-    setPhotos((prev) => prev.map((p) => (p.id === photo.id ? { ...p, alt: value } : p)));
-    await fetch(`/api/admin/photos/${photo.id}`, {
+    setError(null);
+    const res = await fetch(`/api/admin/photos/${photo.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ alt: value })
     });
+    if (!res.ok) {
+      setError("Не удалось сохранить подпись.");
+      return;
+    }
+    onReload();
   };
 
-  const handleDelete = async (photo: PhotoWithPoi) => {
+  const handleDelete = async (photo: AdminPhoto) => {
     if (!window.confirm("Удалить это фото?")) return;
+    setError(null);
     const res = await fetch(`/api/admin/photos/${photo.id}`, { method: "DELETE" });
     if (!res.ok) {
       setError("Не удалось удалить фото.");
       return;
     }
-    setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+    onReload();
   };
 
   const handleDrop = async (poiId: string, targetPhotoId: string) => {
@@ -83,23 +66,24 @@ export function MediaLibraryTab({ regions }: MediaLibraryTabProps) {
     const ids = group.photos.map((p) => p.id);
     const fromIndex = ids.indexOf(dragState.photoId);
     const toIndex = ids.indexOf(targetPhotoId);
+    setDragState(null);
     if (fromIndex === -1 || toIndex === -1) return;
 
     const reordered = [...ids];
     reordered.splice(fromIndex, 1);
     reordered.splice(toIndex, 0, dragState.photoId);
 
-    setPhotos((prev) => {
-      const positionById = new Map(reordered.map((id, index) => [id, index]));
-      return prev.map((p) => (positionById.has(p.id) ? { ...p, position: positionById.get(p.id)! } : p));
-    });
-    setDragState(null);
-
-    await fetch("/api/admin/photos/reorder", {
+    setError(null);
+    const res = await fetch("/api/admin/photos/reorder", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiId, orderedIds: reordered })
     });
+    if (!res.ok) {
+      setError("Не удалось изменить порядок фото.");
+      return;
+    }
+    onReload();
   };
 
   return (

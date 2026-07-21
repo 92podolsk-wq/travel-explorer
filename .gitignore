@@ -30,3 +30,7 @@ Thumbs.db
 *.xls
 
 /generated/prisma
+
+# user-uploaded content
+/private-uploads/
+/public/uploads/

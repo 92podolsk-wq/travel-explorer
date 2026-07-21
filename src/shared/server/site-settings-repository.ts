@@ -11,13 +11,21 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   const row = await prisma.siteSetting.findUnique({ where: { id: singletonId } });
 
   if (!row) {
-    return { mapStyleId: "openfreemap-bright", protomapsPmtilesUrl: null, maxCustomMarkersPerUser: 200 };
+    return {
+      mapStyleId: "openfreemap-bright",
+      protomapsPmtilesUrl: null,
+      maxCustomMarkersPerUser: 200,
+      maxPhotoUploadsPerUserPerDay: 5,
+      maxPhotoUploadsSiteWidePerDay: 200
+    };
   }
 
   return {
     mapStyleId: toMapStyleId(row.mapStyleId),
     protomapsPmtilesUrl: row.protomapsPmtilesUrl,
-    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser
+    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser,
+    maxPhotoUploadsPerUserPerDay: row.maxPhotoUploadsPerUserPerDay,
+    maxPhotoUploadsSiteWidePerDay: row.maxPhotoUploadsSiteWidePerDay
   };
 }
 
@@ -28,18 +36,24 @@ export async function updateSiteSettings(input: SiteSettingsInput): Promise<Site
       id: singletonId,
       mapStyleId: input.mapStyleId,
       protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null,
-      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser
+      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser,
+      maxPhotoUploadsPerUserPerDay: input.maxPhotoUploadsPerUserPerDay,
+      maxPhotoUploadsSiteWidePerDay: input.maxPhotoUploadsSiteWidePerDay
     },
     update: {
       mapStyleId: input.mapStyleId,
       protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null,
-      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser
+      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser,
+      maxPhotoUploadsPerUserPerDay: input.maxPhotoUploadsPerUserPerDay,
+      maxPhotoUploadsSiteWidePerDay: input.maxPhotoUploadsSiteWidePerDay
     }
   });
 
   return {
     mapStyleId: toMapStyleId(row.mapStyleId),
     protomapsPmtilesUrl: row.protomapsPmtilesUrl,
-    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser
+    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser,
+    maxPhotoUploadsPerUserPerDay: row.maxPhotoUploadsPerUserPerDay,
+    maxPhotoUploadsSiteWidePerDay: row.maxPhotoUploadsSiteWidePerDay
   };
 }

@@ -6,6 +6,7 @@ import type { AdminAccount } from "@/entities/admin-account/model/types";
 import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
+import type { AdminPhoto } from "@/entities/photo/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { PoiReport } from "@/entities/poi-report/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
@@ -24,6 +25,7 @@ import { ExplorationModeForm } from "./exploration-mode-form";
 import { ImportExportPanel } from "./import-export-panel";
 import { MasterDetail } from "./master-detail";
 import { MediaLibraryTab } from "./media-library-tab";
+import { PhotoModerationTab } from "./photo-moderation-tab";
 import { ReportsTab } from "./reports-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
@@ -43,6 +45,7 @@ type Tab =
   | "media"
   | "modes"
   | "reports"
+  | "photos-moderation"
   | "users"
   | "accounts";
 
@@ -56,6 +59,7 @@ const tabLabels: Record<Tab, string> = {
   media: "Медиатека",
   modes: "Режимы",
   reports: "Сообщения",
+  "photos-moderation": "Фото на модерации",
   users: "Пользователи",
   accounts: "Администраторы"
 };
@@ -65,7 +69,7 @@ type TabGroup = "overview" | "content" | "community";
 const tabGroups: Record<TabGroup, Tab[]> = {
   overview: ["dashboard", "settings"],
   content: ["countries", "areas", "cities", "locations", "media", "modes"],
-  community: ["reports", "users", "accounts"]
+  community: ["reports", "photos-moderation", "users", "accounts"]
 };
 
 const groupLabels: Record<TabGroup, string> = {
@@ -95,6 +99,7 @@ export function AdminPanel() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [reports, setReports] = useState<PoiReport[]>([]);
+  const [photos, setPhotos] = useState<AdminPhoto[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<{ name: string; email: string } | null>(null);
 
   const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
@@ -158,6 +163,11 @@ export function AdminPanel() {
     if (!res.ok) throw new Error("Failed to load reports");
     setReports((await res.json()) as PoiReport[]);
   }
+  async function loadPhotos() {
+    const res = await fetch("/api/admin/photos");
+    if (!res.ok) throw new Error("Failed to load photos");
+    setPhotos((await res.json()) as AdminPhoto[]);
+  }
 
   async function loadAllAdminData() {
     await Promise.all([
@@ -168,7 +178,8 @@ export function AdminPanel() {
       loadExplorationModes(),
       loadUsers(),
       loadAccounts(),
-      loadReports()
+      loadReports(),
+      loadPhotos()
     ]);
   }
 
@@ -637,6 +648,8 @@ export function AdminPanel() {
   const findAreaCountry = (area: Area) => countries.find((country) => country.id === area.countryId);
   const findCityArea = (region: Region) => areas.find((area) => area.id === region.areaId);
   const unreadReportsCount = reports.filter((report) => report.status === "new").length;
+  const pendingPhotosCount = photos.filter((photo) => photo.status === "pending").length;
+  const communityBadgeCount = unreadReportsCount + pendingPhotosCount;
 
   const translationBadge = (...fields: Record<string, string>[]): MasterDetailBadge[] => {
     const missing = missingLanguages(fields);
@@ -686,9 +699,9 @@ export function AdminPanel() {
           >
             <span className="inline-flex items-center gap-1.5">
               {groupLabels[group]}
-              {group === "community" && unreadReportsCount > 0 && (
+              {group === "community" && communityBadgeCount > 0 && (
                 <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                  {unreadReportsCount}
+                  {communityBadgeCount}
                 </span>
               )}
             </span>
@@ -714,6 +727,11 @@ export function AdminPanel() {
               {tab === "reports" && unreadReportsCount > 0 && (
                 <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                   {unreadReportsCount}
+                </span>
+              )}
+              {tab === "photos-moderation" && pendingPhotosCount > 0 && (
+                <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {pendingPhotosCount}
                 </span>
               )}
             </button>
@@ -970,7 +988,13 @@ export function AdminPanel() {
         </>
       )}
 
-      {activeTab === "media" && <MediaLibraryTab regions={regions} />}
+      {activeTab === "media" && (
+        <MediaLibraryTab
+          regions={regions}
+          photos={photos.filter((photo) => photo.status === "approved")}
+          onReload={loadPhotos}
+        />
+      )}
 
       {activeTab === "modes" && (
         <>
@@ -1029,6 +1053,10 @@ export function AdminPanel() {
       )}
 
       {activeTab === "reports" && <ReportsTab reports={reports} onReload={loadReports} />}
+
+      {activeTab === "photos-moderation" && (
+        <PhotoModerationTab photos={photos.filter((photo) => photo.status === "pending")} onReload={loadPhotos} />
+      )}
 
       {activeTab === "users" && (
         <>

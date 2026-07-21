@@ -99,16 +99,23 @@ model ExplorationMode {
 }
 
 model Photo {
-  id       String  @id
-  poiId    String
-  poi      Poi     @relation(fields: [poiId], references: [id], onDelete: Cascade)
-  url      String
-  alt      String
-  author   String?
-  season   String?
-  position Int
+  id               String    @id @default(cuid())
+  poiId            String
+  poi              Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  url              String
+  alt              String
+  author           String?
+  season           String?
+  position         Int
+  status           String    @default("approved")
+  uploadedByUserId String?
+  uploadedBy       User?     @relation(fields: [uploadedByUserId], references: [id], onDelete: SetNull)
+  storagePath      String?
+  createdAt        DateTime  @default(now())
 
   @@index([poiId])
+  @@index([status])
+  @@index([uploadedByUserId])
 }
 
 model User {
@@ -126,6 +133,7 @@ model User {
   poiReports   PoiReport[]
   itineraries  Itinerary[]
   customMarkers CustomMarker[]
+  uploadedPhotos Photo[]
 }
 
 model Session {
@@ -228,11 +236,13 @@ model ItineraryDay {
 }
 
 model SiteSetting {
-  id                      String   @id @default("singleton")
-  mapStyleId              String   @default("openfreemap-bright")
-  protomapsPmtilesUrl     String?
-  maxCustomMarkersPerUser Int      @default(200)
-  updatedAt               DateTime @updatedAt
+  id                             String   @id @default("singleton")
+  mapStyleId                     String   @default("openfreemap-bright")
+  protomapsPmtilesUrl            String?
+  maxCustomMarkersPerUser        Int      @default(200)
+  maxPhotoUploadsPerUserPerDay   Int      @default(5)
+  maxPhotoUploadsSiteWidePerDay  Int      @default(200)
+  updatedAt                      DateTime @updatedAt
 }
 
 model CustomMarker {

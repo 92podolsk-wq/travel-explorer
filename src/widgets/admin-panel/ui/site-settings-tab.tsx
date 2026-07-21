@@ -13,6 +13,8 @@ export function SiteSettingsTab() {
   const [selectedStyle, setSelectedStyle] = useState<MapStyleId>("openfreemap-bright");
   const [pmtilesUrl, setPmtilesUrl] = useState("");
   const [maxCustomMarkers, setMaxCustomMarkers] = useState("200");
+  const [maxPhotoUploadsPerUser, setMaxPhotoUploadsPerUser] = useState("5");
+  const [maxPhotoUploadsSiteWide, setMaxPhotoUploadsSiteWide] = useState("200");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,6 +32,8 @@ export function SiteSettingsTab() {
       setSelectedStyle(data.mapStyleId);
       setPmtilesUrl(data.protomapsPmtilesUrl ?? "");
       setMaxCustomMarkers(String(data.maxCustomMarkersPerUser));
+      setMaxPhotoUploadsPerUser(String(data.maxPhotoUploadsPerUserPerDay));
+      setMaxPhotoUploadsSiteWide(String(data.maxPhotoUploadsSiteWidePerDay));
     })();
   }, []);
 
@@ -43,6 +47,18 @@ export function SiteSettingsTab() {
       return;
     }
 
+    const parsedPhotoUserLimit = Number(maxPhotoUploadsPerUser);
+    if (!Number.isInteger(parsedPhotoUserLimit) || parsedPhotoUserLimit < 0 || parsedPhotoUserLimit > 100) {
+      setSaveError("Лимит фото на пользователя в сутки должен быть целым числом от 0 до 100.");
+      return;
+    }
+
+    const parsedPhotoSiteLimit = Number(maxPhotoUploadsSiteWide);
+    if (!Number.isInteger(parsedPhotoSiteLimit) || parsedPhotoSiteLimit < 0 || parsedPhotoSiteLimit > 10000) {
+      setSaveError("Общий лимит фото в сутки должен быть целым числом от 0 до 10000.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/admin/site-settings", {
@@ -51,7 +67,9 @@ export function SiteSettingsTab() {
         body: JSON.stringify({
           mapStyleId: selectedStyle,
           protomapsPmtilesUrl: pmtilesUrl,
-          maxCustomMarkersPerUser: parsedLimit
+          maxCustomMarkersPerUser: parsedLimit,
+          maxPhotoUploadsPerUserPerDay: parsedPhotoUserLimit,
+          maxPhotoUploadsSiteWidePerDay: parsedPhotoSiteLimit
         })
       });
 
@@ -146,6 +164,43 @@ export function SiteSettingsTab() {
           value={maxCustomMarkers}
           onChange={(e) => setMaxCustomMarkers(e.target.value)}
         />
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">Загрузка фото пользователями</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Дневные лимиты на загрузку фото к локациям — защита от спама. Загруженные фото попадают на модерацию.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <div className="max-w-xs space-y-1.5">
+          <label className="text-xs font-semibold text-foreground" htmlFor="max-photo-uploads-per-user">
+            Лимит фото на пользователя в сутки
+          </label>
+          <Input
+            id="max-photo-uploads-per-user"
+            type="number"
+            min={0}
+            max={100}
+            value={maxPhotoUploadsPerUser}
+            onChange={(e) => setMaxPhotoUploadsPerUser(e.target.value)}
+          />
+        </div>
+
+        <div className="max-w-xs space-y-1.5">
+          <label className="text-xs font-semibold text-foreground" htmlFor="max-photo-uploads-site-wide">
+            Общий лимит фото в сутки
+          </label>
+          <Input
+            id="max-photo-uploads-site-wide"
+            type="number"
+            min={0}
+            max={10000}
+            value={maxPhotoUploadsSiteWide}
+            onChange={(e) => setMaxPhotoUploadsSiteWide(e.target.value)}
+          />
+        </div>
       </div>
 
       {saveError && <p className="text-sm font-medium text-red-600">{saveError}</p>}

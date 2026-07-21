@@ -2,10 +2,10 @@ import { randomBytes } from "crypto";
 import type { Itinerary, ItineraryStopPoint, ItinerarySummary } from "@/entities/itinerary/model/types";
 import type { PlannedDay } from "@/shared/lib/itinerary-planner";
 import { toCustomMarker } from "./custom-markers-repository";
-import { toPoi, type PoiRow } from "./pois-repository";
+import { toPoi, publicPhotosInclude, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
 
-const stopInclude = { poi: { include: { photos: true } }, customMarker: true } as const;
+const stopInclude = { poi: { include: { photos: publicPhotosInclude } }, customMarker: true } as const;
 const itineraryInclude = { stops: { include: stopInclude }, days: true } as const;
 
 const MAX_ITINERARIES_PER_USER = 3;

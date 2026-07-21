@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, MapPin, Sparkles, Star, SunMedium, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Sparkles, Star, SunMedium, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -15,6 +15,7 @@ import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
 import { looksTranslated } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
+import { UploadPhotoModal } from "./upload-photo-modal";
 
 export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
@@ -36,6 +37,7 @@ export function PoiDetails() {
   const t = getTranslations(language);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isUploadPhotoOpen, setIsUploadPhotoOpen] = useState(false);
 
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
 
@@ -342,9 +344,17 @@ export function PoiDetails() {
 
           {currentUser && (
             <div
-              className="shrink-0 border-t border-white/70 px-5 py-3"
+              className="flex shrink-0 items-center gap-4 border-t border-white/70 px-5 py-3"
               style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
             >
+              <button
+                type="button"
+                onClick={() => setIsUploadPhotoOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                {t.photoUpload.cta}
+              </button>
               <button
                 type="button"
                 onClick={() => setIsReportOpen(true)}
@@ -361,6 +371,10 @@ export function PoiDetails() {
 
       {isReportOpen && (
         <ReportInaccuracyModal poiId={selectedPoi.id} language={language} onClose={() => setIsReportOpen(false)} />
+      )}
+
+      {isUploadPhotoOpen && (
+        <UploadPhotoModal poiId={selectedPoi.id} language={language} onClose={() => setIsUploadPhotoOpen(false)} />
       )}
     </div>
   );

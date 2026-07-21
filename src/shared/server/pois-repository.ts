@@ -26,6 +26,9 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`;
 }
 
+export const publicPhotosInclude = { where: { status: "approved" } } as const;
+export const adminFormPhotosInclude = { where: { status: "approved", uploadedByUserId: null } } as const;
+
 export type PoiRow = Awaited<ReturnType<typeof prisma.poi.findFirstOrThrow<{ include: { photos: true } }>>>;
 
 export function toPoi(row: PoiRow): Poi {
@@ -67,12 +70,12 @@ export function toPoi(row: PoiRow): Poi {
 }
 
 export async function readPois(): Promise<Poi[]> {
-  const rows = await prisma.poi.findMany({ include: { photos: true } });
+  const rows = await prisma.poi.findMany({ include: { photos: adminFormPhotosInclude } });
   return rows.map(toPoi);
 }
 
 export async function readPublishedPois(): Promise<Poi[]> {
-  const rows = await prisma.poi.findMany({ where: { status: "published" }, include: { photos: true } });
+  const rows = await prisma.poi.findMany({ where: { status: "published" }, include: { photos: publicPhotosInclude } });
   return rows.map(toPoi);
 }
 
@@ -122,7 +125,7 @@ async function writePoi(id: string, input: PoiInput) {
     }
   });
 
-  await prisma.photo.deleteMany({ where: { poiId: id } });
+  await prisma.photo.deleteMany({ where: { poiId: id, uploadedByUserId: null } });
   await prisma.photo.createMany({
     data: input.photos.map((photo, index) => ({
       id: photo.id,
@@ -131,7 +134,9 @@ async function writePoi(id: string, input: PoiInput) {
       alt: photo.alt,
       author: photo.author ?? null,
       season: photo.season ?? null,
-      position: index
+      position: index,
+      status: "approved",
+      uploadedByUserId: null
     }))
   });
 }
@@ -142,7 +147,7 @@ export async function createPoi(input: PoiInput): Promise<Poi> {
 
   await writePoi(id, input);
 
-  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: true } });
+  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: adminFormPhotosInclude } });
   return toPoi(row);
 }
 
@@ -154,7 +159,7 @@ export async function updatePoi(id: string, input: PoiInput): Promise<Poi | null
 
   await writePoi(id, input);
 
-  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: true } });
+  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: adminFormPhotosInclude } });
   return toPoi(row);
 }
 

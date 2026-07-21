@@ -194,6 +194,21 @@ type TranslationDictionary = {
     close: string;
     error: string;
   };
+  photoUpload: {
+    cta: string;
+    title: string;
+    hint: string;
+    submit: string;
+    uploading: string;
+    cancel: string;
+    success: string;
+    close: string;
+    errorTooLarge: string;
+    errorInvalidType: string;
+    errorUserLimit: string;
+    errorSiteLimit: string;
+    errorGeneric: string;
+  };
   welcome: {
     heroTitle: string;
     heroSubtitle: string;
@@ -508,6 +523,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       close: "Close",
       error: "Couldn't send it. Please try again."
     },
+    photoUpload: {
+      cta: "Add a photo",
+      title: "Upload a photo",
+      hint: "JPEG, PNG or WebP, up to 10MB. Your photo will be reviewed before it appears on the site.",
+      submit: "Upload",
+      uploading: "Uploading…",
+      cancel: "Cancel",
+      success: "Thanks! Your photo was submitted for moderation.",
+      close: "Close",
+      errorTooLarge: "The file is too large — max 10MB.",
+      errorInvalidType: "Unsupported file type — please use JPEG, PNG or WebP.",
+      errorUserLimit: "You've reached your daily upload limit ({limit} photos).",
+      errorSiteLimit: "The site has reached its daily upload limit — try again tomorrow.",
+      errorGeneric: "Couldn't upload the photo. Please try again."
+    },
     welcome: {
       heroTitle: "Discover the best places to travel",
       heroSubtitle: "Every place, every shot, every moment. Plan the perfect trip with Wayora.",
@@ -820,6 +850,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       close: "Закрыть",
       error: "Не удалось отправить. Попробуйте ещё раз."
     },
+    photoUpload: {
+      cta: "Добавить фото",
+      title: "Загрузить фото",
+      hint: "JPEG, PNG или WebP, до 10 МБ. Фото появится на сайте после проверки модератором.",
+      submit: "Загрузить",
+      uploading: "Загрузка…",
+      cancel: "Отмена",
+      success: "Спасибо! Фото отправлено на модерацию.",
+      close: "Закрыть",
+      errorTooLarge: "Файл слишком большой — максимум 10 МБ.",
+      errorInvalidType: "Неподдерживаемый тип файла — используйте JPEG, PNG или WebP.",
+      errorUserLimit: "Вы достигли дневного лимита загрузок ({limit} фото).",
+      errorSiteLimit: "Достигнут общий дневной лимит загрузок на сайте — попробуйте завтра.",
+      errorGeneric: "Не удалось загрузить фото. Попробуйте ещё раз."
+    },
     welcome: {
       heroTitle: "Открывайте лучшие места для путешествий",
       heroSubtitle: "Каждое место, каждый кадр, каждый момент. Планируйте идеальное путешествие с Wayora.",
@@ -1130,6 +1175,21 @@ export const translations: Record<Language, TranslationDictionary> = {
       thanks: "フィードバックありがとうございます!近日中に確認します。",
       close: "閉じる",
       error: "送信できませんでした。もう一度お試しください。"
+    },
+    photoUpload: {
+      cta: "写真を追加",
+      title: "写真をアップロード",
+      hint: "JPEG、PNG、WebP形式、10MBまで。写真は審査後にサイトに表示されます。",
+      submit: "アップロード",
+      uploading: "アップロード中…",
+      cancel: "キャンセル",
+      success: "ありがとうございます!写真は審査のために送信されました。",
+      close: "閉じる",
+      errorTooLarge: "ファイルが大きすぎます — 最大10MBです。",
+      errorInvalidType: "対応していないファイル形式です — JPEG、PNG、WebPをご利用ください。",
+      errorUserLimit: "1日のアップロード上限に達しました({limit}枚)。",
+      errorSiteLimit: "サイト全体の1日のアップロード上限に達しました — 明日もう一度お試しください。",
+      errorGeneric: "写真をアップロードできませんでした。もう一度お試しください。"
     },
     welcome: {
       heroTitle: "最高の旅先を発見しよう",

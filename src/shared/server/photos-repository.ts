@@ -1,21 +1,13 @@
+import type { AdminPhoto, PhotoStatus } from "@/entities/photo/model/types";
 import type { Season } from "@/entities/poi/model/types";
+import { deletePendingPhotoFile, deletePublicPhotoFile, movePendingPhotoToPublic } from "./photo-storage";
 import { prisma } from "./prisma-client";
 
-export type PhotoWithPoi = {
-  id: string;
-  poiId: string;
-  poiName: string;
-  regionId: string;
-  url: string;
-  alt: string;
-  author: string | null;
-  season: Season | null;
-  position: number;
-};
+export class PhotoNotPendingError extends Error {}
 
-export async function readAllPhotosWithPoi(): Promise<PhotoWithPoi[]> {
+export async function readAllPhotosWithPoi(): Promise<AdminPhoto[]> {
   const rows = await prisma.photo.findMany({
-    include: { poi: { select: { name: true, regionId: true } } },
+    include: { poi: { select: { name: true, regionId: true } }, uploadedBy: { select: { email: true, name: true } } },
     orderBy: [{ poiId: "asc" }, { position: "asc" }]
   });
 
@@ -28,7 +20,12 @@ export async function readAllPhotosWithPoi(): Promise<PhotoWithPoi[]> {
     alt: row.alt,
     author: row.author,
     season: row.season as Season | null,
-    position: row.position
+    position: row.position,
+    status: row.status as PhotoStatus,
+    uploadedByUserId: row.uploadedByUserId,
+    uploadedByEmail: row.uploadedBy?.email ?? null,
+    uploadedByName: row.uploadedBy?.name ?? null,
+    createdAt: row.createdAt.toISOString()
   }));
 }
 
@@ -54,12 +51,53 @@ export async function updatePhoto(
 }
 
 export async function deletePhoto(id: string): Promise<boolean> {
-  try {
-    await prisma.photo.delete({ where: { id } });
-    return true;
-  } catch {
+  const existing = await prisma.photo.findUnique({
+    where: { id },
+    select: { uploadedByUserId: true, status: true, storagePath: true, url: true }
+  });
+  if (!existing) {
     return false;
   }
+
+  if (existing.uploadedByUserId) {
+    if (existing.status === "pending" && existing.storagePath) {
+      await deletePendingPhotoFile(existing.storagePath);
+    } else if (existing.status === "approved") {
+      await deletePublicPhotoFile(existing.url);
+    }
+  }
+
+  await prisma.photo.delete({ where: { id } });
+  return true;
+}
+
+export async function approvePhoto(id: string): Promise<boolean | null> {
+  const existing = await prisma.photo.findUnique({ where: { id } });
+  if (!existing) {
+    return null;
+  }
+  if (existing.status !== "pending" || !existing.storagePath) {
+    throw new PhotoNotPendingError();
+  }
+
+  const maxPosition = await prisma.photo.aggregate({
+    where: { poiId: existing.poiId, status: "approved" },
+    _max: { position: true }
+  });
+
+  const url = await movePendingPhotoToPublic(existing.storagePath, existing.poiId);
+
+  await prisma.photo.update({
+    where: { id },
+    data: {
+      status: "approved",
+      url,
+      storagePath: null,
+      position: (maxPosition._max.position ?? -1) + 1
+    }
+  });
+
+  return true;
 }
 
 export async function reorderPhotos(poiId: string, orderedIds: string[]): Promise<boolean> {

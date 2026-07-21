@@ -13,10 +13,14 @@ export type SiteSettings = {
   mapStyleId: MapStyleId;
   protomapsPmtilesUrl: string | null;
   maxCustomMarkersPerUser: number;
+  maxPhotoUploadsPerUserPerDay: number;
+  maxPhotoUploadsSiteWidePerDay: number;
 };
 
 export type SiteSettingsInput = {
   mapStyleId: MapStyleId;
   protomapsPmtilesUrl?: string | null;
   maxCustomMarkersPerUser: number;
+  maxPhotoUploadsPerUserPerDay: number;
+  maxPhotoUploadsSiteWidePerDay: number;
 };

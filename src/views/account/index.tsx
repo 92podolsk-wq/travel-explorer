@@ -48,7 +48,14 @@ import {
   minutesToTimeInputValue,
   timeInputValueToMinutes
 } from "@/entities/itinerary/model/timeline";
-import type { ItineraryStopWithPoi } from "@/entities/itinerary/model/types";
+import type { ItineraryStopPoint, ItineraryStopWithPoi } from "@/entities/itinerary/model/types";
+import {
+  stopPointColor,
+  stopPointCoordinates,
+  stopPointId,
+  stopPointName,
+  stopPointRegionId
+} from "@/entities/itinerary/model/stop-point";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
@@ -57,6 +64,7 @@ import { avatarIds } from "@/entities/user/model/avatars";
 import type { User } from "@/entities/user/model/types";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
+import type { Language } from "@/shared/i18n/types";
 
 type Translations = ReturnType<typeof getTranslations>;
 import { estimateTransitionMinutes, sequenceByNearestNeighbor } from "@/shared/lib/itinerary-planner";
@@ -105,6 +113,21 @@ function PoiThumbnail({ poi, className }: { poi: Poi; className?: string }) {
   );
 }
 
+function StopPointThumbnail({ point, className }: { point: ItineraryStopPoint; className?: string }) {
+  if (point.kind === "poi") {
+    return <PoiThumbnail poi={point.poi} className={className} />;
+  }
+
+  return (
+    <div
+      className={cn("flex shrink-0 items-center justify-center rounded", className)}
+      style={{ backgroundColor: stopPointColor(point) ?? "#7a7a7a" }}
+    >
+      <MapPin className="h-5 w-5 text-white" />
+    </div>
+  );
+}
+
 function PoiRow({
   poi,
   regionName,
@@ -132,6 +155,7 @@ function PoiRow({
 
 function ItineraryTimelineRow({
   stop,
+  language,
   arrivalMinutes,
   departureMinutes,
   durationMinutes,
@@ -146,6 +170,7 @@ function ItineraryTimelineRow({
   dict
 }: {
   stop: ItineraryStopWithPoi;
+  language: Language;
   arrivalMinutes: number;
   departureMinutes: number;
   durationMinutes: number;
@@ -193,7 +218,7 @@ function ItineraryTimelineRow({
         <GripVertical className="h-4 w-4" />
       </button>
       <button type="button" onClick={onSelect} className="shrink-0">
-        <PoiThumbnail poi={stop.poi} className="h-12 w-12" />
+        <StopPointThumbnail point={stop.point} className="h-12 w-12" />
       </button>
       <div className="min-w-0 flex-1">
         <button
@@ -201,7 +226,7 @@ function ItineraryTimelineRow({
           onClick={onSelect}
           className="block truncate text-left text-sm font-semibold text-foreground hover:text-primary"
         >
-          {stop.poi.name}
+          {stopPointName(stop.point, language, dict.app.markerStopFallbackName)}
         </button>
         <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
           <span>{formatMinutesAsTime(arrivalMinutes)}–</span>
@@ -281,6 +306,7 @@ function ItineraryDayCard({
   day,
   title,
   stops,
+  language,
   route,
   mapStyleId,
   protomapsPmtilesUrl,
@@ -306,6 +332,7 @@ function ItineraryDayCard({
   day: number;
   title: string | null;
   stops: ItineraryStopWithPoi[];
+  language: Language;
   route: WalkingRoute | null;
   mapStyleId: SiteSettings["mapStyleId"];
   protomapsPmtilesUrl: string | null;
@@ -320,9 +347,9 @@ function ItineraryDayCard({
   onRequestRemoveDay: () => void;
   regionName: (regionId: string) => string;
   goToPoi: (poiId: string) => void;
-  onRemoveStop: (poiId: string) => void;
-  onMoveStopToDay: (poiId: string, day: number) => void;
-  onSetStopDuration: (poiId: string, minutes: number | null) => void;
+  onRemoveStop: (stopId: string) => void;
+  onMoveStopToDay: (stopId: string, day: number) => void;
+  onSetStopDuration: (stopId: string, minutes: number | null) => void;
   maxDay: number;
   t: Translations["auth"];
   dict: Translations;
@@ -335,19 +362,20 @@ function ItineraryDayCard({
   const [isEditingStart, setIsEditingStart] = useState(false);
   const [startDraft, setStartDraft] = useState("");
 
-  const pois = stops.map((stop) => stop.poi);
+  const points = stops.map((stop) => stop.point);
   const summary = computeItinerarySummary(stops);
   const effectiveStart = startMinutes ?? DEFAULT_DAY_START_MINUTES;
 
   const { entries, endMinutes } = useMemo(() => {
-    if (pois.length === 0) {
+    if (points.length === 0) {
       return { entries: [], endMinutes: effectiveStart };
     }
-    const legs = pois.slice(0, -1).map((poi, i) => {
-      const meters = route?.legDistancesMeters?.[i] ?? haversineDistanceMeters(poi.coordinates, pois[i + 1].coordinates);
+    const legs = points.slice(0, -1).map((point, i) => {
+      const meters =
+        route?.legDistancesMeters?.[i] ?? haversineDistanceMeters(stopPointCoordinates(point), stopPointCoordinates(points[i + 1]));
       return { meters, minutes: estimateTransitionMinutes(meters) };
     });
-    return buildDayTimeline(pois, legs, effectiveStart, {
+    return buildDayTimeline(points, legs, effectiveStart, {
       durationOverridesMinutes: stops.map((s) => s.durationOverrideMinutes),
       lunch: {
         enabled: lunchEnabled,
@@ -355,7 +383,7 @@ function ItineraryDayCard({
         durationMinutes: lunchDurationMinutes ?? undefined
       }
     });
-  }, [pois, route, effectiveStart, stops, lunchEnabled, lunchStartMinutes, lunchDurationMinutes]);
+  }, [points, route, effectiveStart, stops, lunchEnabled, lunchStartMinutes, lunchDurationMinutes]);
 
   const displayTitle = title || t.dayLabel.replace("{n}", String(day));
 
@@ -414,8 +442,8 @@ function ItineraryDayCard({
             </button>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            {t.dayPlaceCount.replace("{count}", String(pois.length))}
-            {pois.length > 0 && (
+            {t.dayPlaceCount.replace("{count}", String(points.length))}
+            {points.length > 0 && (
               <>
                 {" · "}
                 {t.dayWalkingDistance.replace("{distance}", formatDistance(summary.walkingDistanceMeters))}
@@ -426,7 +454,7 @@ function ItineraryDayCard({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {pois.length > 1 && (
+          {points.length > 1 && (
             <button
               type="button"
               onClick={onOptimizeDay}
@@ -495,12 +523,12 @@ function ItineraryDayCard({
             )}
           </div>
 
-          {pois.length === 0 ? (
+          {points.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t.dayEmptyPlaceholder}</p>
           ) : (
             <>
               <ItineraryDayMap
-                stops={pois}
+                stops={points}
                 lineCoordinates={route?.lineCoordinates ?? null}
                 mapStyleId={mapStyleId}
                 protomapsPmtilesUrl={protomapsPmtilesUrl}
@@ -535,21 +563,25 @@ function ItineraryDayCard({
                 <SortableContext items={stops.map((s) => s.id)} strategy={verticalListSortingStrategy}>
                   {entries.map((entry, index) => {
                     if (entry.type === "stop") {
-                      const stop = stops.find((s) => s.poi.id === entry.poi.id);
+                      const stop = stops.find((s) => stopPointId(s.point) === stopPointId(entry.point));
                       if (!stop) return null;
+                      const stopRegionId = stopPointRegionId(stop.point);
                       return (
                         <ItineraryTimelineRow
                           key={stop.id}
                           stop={stop}
+                          language={language}
                           arrivalMinutes={entry.arrivalMinutes}
                           departureMinutes={entry.departureMinutes}
                           durationMinutes={entry.durationMinutes}
                           isDurationOverridden={entry.isDurationOverridden}
-                          regionName={regionName(stop.poi.regionId)}
-                          onSelect={() => goToPoi(stop.poi.id)}
-                          onRemove={() => onRemoveStop(stop.poi.id)}
-                          onMoveToDay={(targetDay) => onMoveStopToDay(stop.poi.id, targetDay)}
-                          onSetDuration={(minutes) => onSetStopDuration(stop.poi.id, minutes)}
+                          regionName={stopRegionId ? regionName(stopRegionId) : ""}
+                          onSelect={() => {
+                            if (stop.point.kind === "poi") goToPoi(stop.point.poi.id);
+                          }}
+                          onRemove={() => onRemoveStop(stop.id)}
+                          onMoveToDay={(targetDay) => onMoveStopToDay(stop.id, targetDay)}
+                          onSetDuration={(minutes) => onSetStopDuration(stop.id, minutes)}
                           maxDay={maxDay}
                           t={t}
                           dict={dict}
@@ -659,7 +691,11 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
-  const itineraryPoiIds = new Set((itinerary?.stops ?? []).map((stop) => stop.poi.id));
+  const itineraryPoiIds = new Set(
+    (itinerary?.stops ?? [])
+      .map((stop) => (stop.point.kind === "poi" ? stop.point.poi.id : null))
+      .filter((id): id is string => id !== null)
+  );
 
   function clampDayCount(raw: string) {
     const parsed = Number(raw);
@@ -726,15 +762,22 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
-  async function handleRemoveFromItinerary(poiId: string) {
+  async function handleRemoveStopById(stopId: string) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, { method: "DELETE" });
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
-  async function handleMoveStopToDay(poiId: string, day: number) {
+  async function handleRemovePoiFromItinerary(poiId: string) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, {
+    const stop = itinerary.stops.find((s) => s.point.kind === "poi" && s.point.poi.id === poiId);
+    if (!stop) return;
+    await handleRemoveStopById(stop.id);
+  }
+
+  async function handleMoveStopToDay(stopId: string, day: number) {
+    if (!itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day })
@@ -742,9 +785,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
-  async function handleSetStopDuration(poiId: string, minutes: number | null) {
+  async function handleSetStopDuration(stopId: string, minutes: number | null) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${poiId}`, {
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ durationOverrideMinutes: minutes })
@@ -752,12 +795,12 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (res.ok) setItinerary(await res.json());
   }
 
-  async function handleReorderItinerary(day: number, orderedPoiIds: string[]) {
+  async function handleReorderItinerary(day: number, orderedStopIds: string[]) {
     if (!itinerary) return;
     const res = await fetch(`/api/me/itineraries/${itinerary.id}/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ day, orderedPoiIds })
+      body: JSON.stringify({ day, orderedStopIds })
     });
     if (res.ok) setItinerary(await res.json());
   }
@@ -766,9 +809,11 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (!itinerary) return;
     setOptimizingDay(day);
     try {
-      const dayPois = itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poi);
-      const ordered = sequenceByNearestNeighbor(dayPois);
-      await handleReorderItinerary(day, ordered.map((poi) => poi.id));
+      const dayStops = itinerary.stops
+        .filter((stop) => stop.day === day)
+        .map((stop) => ({ stopId: stop.id, coordinates: stopPointCoordinates(stop.point), importance: stop.point.kind === "poi" ? stop.point.poi.importance : 0 }));
+      const ordered = sequenceByNearestNeighbor(dayStops);
+      await handleReorderItinerary(day, ordered.map((item) => item.stopId));
     } finally {
       setOptimizingDay(null);
     }
@@ -983,7 +1028,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     ? itinerary.id +
       "|" +
       itinerary.days
-        .map((d) => `${d.day}:${itinerary.stops.filter((s) => s.day === d.day).map((s) => s.poi.id).join(",")}`)
+        .map((d) => `${d.day}:${itinerary.stops.filter((s) => s.day === d.day).map((s) => s.id).join(",")}`)
         .join("|")
     : "";
 
@@ -998,9 +1043,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     (async () => {
       const entries = await Promise.all(
         itinerary.days.map(async (d) => {
-          const dayPois = itinerary.stops.filter((s) => s.day === d.day).map((s) => s.poi);
-          if (dayPois.length < 2) return [d.day, null] as const;
-          const route = await fetchWalkingRoute(dayPois.map((poi) => poi.coordinates));
+          const dayPoints = itinerary.stops.filter((s) => s.day === d.day).map((s) => s.point);
+          if (dayPoints.length < 2) return [d.day, null] as const;
+          const route = await fetchWalkingRoute(dayPoints.map((point) => stopPointCoordinates(point)));
           return [d.day, route] as const;
         })
       );
@@ -1033,26 +1078,26 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       : itinerary.stops.find((s) => s.id === over.id)?.day;
     if (targetDay == null) return;
 
-    const targetSiblingPoiIds = itinerary.stops
+    const targetSiblingStopIds = itinerary.stops
       .filter((s) => s.day === targetDay && s.id !== activeStop.id)
       .sort((a, b) => a.position - b.position)
-      .map((s) => s.poi.id);
+      .map((s) => s.id);
 
     const overStop = overIsDayContainer ? null : itinerary.stops.find((s) => s.id === over.id);
-    const insertIndex = overStop ? targetSiblingPoiIds.indexOf(overStop.poi.id) : targetSiblingPoiIds.length;
+    const insertIndex = overStop ? targetSiblingStopIds.indexOf(overStop.id) : targetSiblingStopIds.length;
 
-    const orderedPoiIds = [...targetSiblingPoiIds];
-    orderedPoiIds.splice(insertIndex === -1 ? targetSiblingPoiIds.length : insertIndex, 0, activeStop.poi.id);
+    const orderedStopIds = [...targetSiblingStopIds];
+    orderedStopIds.splice(insertIndex === -1 ? targetSiblingStopIds.length : insertIndex, 0, activeStop.id);
 
     setItinerary({
       ...itinerary,
       stops: itinerary.stops.map((s) => (s.id === activeStop.id ? { ...s, day: targetDay } : s))
     });
 
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${activeStop.poi.id}/move`, {
+    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${activeStop.id}/move`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ day: targetDay, orderedPoiIds })
+      body: JSON.stringify({ day: targetDay, orderedStopIds })
     });
     if (res.ok) setItinerary(await res.json());
   }
@@ -1373,7 +1418,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                                     <button
                                       type="button"
                                       onClick={() =>
-                                        isInItinerary ? handleRemoveFromItinerary(poi.id) : handleAddToItinerary(poi.id)
+                                        isInItinerary ? handleRemovePoiFromItinerary(poi.id) : handleAddToItinerary(poi.id)
                                       }
                                       className={cn(
                                         "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
@@ -1610,12 +1655,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       onRequestRemoveDay={() => setPendingRemoveDay(dayInfo.day)}
                       regionName={regionName}
                       goToPoi={goToPoi}
-                      onRemoveStop={handleRemoveFromItinerary}
+                      onRemoveStop={handleRemoveStopById}
                       onMoveStopToDay={handleMoveStopToDay}
                       onSetStopDuration={handleSetStopDuration}
                       maxDay={maxDay}
                       t={t}
                       dict={dict}
+                      language={language}
                       defaultExpanded={index === 0}
                     />
                   ))}
@@ -1627,9 +1673,9 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                 <DragOverlay>
                   {activeDragStop ? (
                     <div className="flex items-center gap-3 rounded-md border border-primary/40 bg-white p-2.5 shadow-panel">
-                      <PoiThumbnail poi={activeDragStop.poi} className="h-10 w-10" />
+                      <StopPointThumbnail point={activeDragStop.point} className="h-10 w-10" />
                       <p className="max-w-[10rem] truncate text-sm font-semibold text-foreground">
-                        {activeDragStop.poi.name}
+                        {stopPointName(activeDragStop.point, language, dict.app.markerStopFallbackName)}
                       </p>
                     </div>
                   ) : null}

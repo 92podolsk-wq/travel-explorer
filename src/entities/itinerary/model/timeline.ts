@@ -1,9 +1,10 @@
-import type { Poi } from "@/entities/poi/model/types";
+import type { ItineraryStopPoint } from "./types";
+import { stopPointDurationMinutes } from "./stop-point";
 
 export type DayTimelineEntry =
   | {
       type: "stop";
-      poi: Poi;
+      point: ItineraryStopPoint;
       arrivalMinutes: number;
       departureMinutes: number;
       durationMinutes: number;
@@ -18,7 +19,7 @@ export const LUNCH_THRESHOLD_MINUTES = 12 * 60;
 export type LunchOptions = { enabled: boolean | null; startMinutes?: number; durationMinutes?: number };
 
 export function buildDayTimeline(
-  stops: Poi[],
+  stops: ItineraryStopPoint[],
   legs: { minutes: number; meters: number }[],
   dayStartMinutes = 540,
   options?: { durationOverridesMinutes?: (number | null)[]; lunch?: LunchOptions }
@@ -41,14 +42,14 @@ export function buildDayTimeline(
     lunchInserted = true;
   }
 
-  stops.forEach((poi, index) => {
+  stops.forEach((point, index) => {
     const overrideMinutes = options?.durationOverridesMinutes?.[index] ?? null;
-    const durationMinutes = overrideMinutes ?? poi.durationMinutes;
+    const durationMinutes = overrideMinutes ?? stopPointDurationMinutes(point);
     const arrivalMinutes = cursor;
     const departureMinutes = arrivalMinutes + durationMinutes;
     entries.push({
       type: "stop",
-      poi,
+      point,
       arrivalMinutes,
       departureMinutes,
       durationMinutes,

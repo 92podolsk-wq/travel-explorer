@@ -13,7 +13,7 @@ type CustomMarkerRow = {
   createdAt: Date;
 };
 
-function toCustomMarker(row: CustomMarkerRow): CustomMarker {
+export function toCustomMarker(row: CustomMarkerRow): CustomMarker {
   return {
     id: row.id,
     lat: row.lat,

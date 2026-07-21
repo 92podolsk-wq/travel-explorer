@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { removeStop, updateStop } from "@/shared/server/itineraries-repository";
+import { removeStopById, updateStopById } from "@/shared/server/itineraries-repository";
 import { getCurrentUser } from "@/shared/server/user-auth";
 
-type RouteParams = { params: Promise<{ itineraryId: string; poiId: string }> };
+type RouteParams = { params: Promise<{ itineraryId: string; stopId: string }> };
 
 export async function DELETE(_request: Request, { params }: RouteParams) {
   const user = await getCurrentUser();
@@ -10,8 +10,8 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { itineraryId, poiId } = await params;
-  const result = await removeStop(user.id, itineraryId, poiId);
+  const { itineraryId, stopId } = await params;
+  const result = await removeStopById(user.id, itineraryId, stopId);
   if (!result) {
     return NextResponse.json({ error: "Itinerary not found" }, { status: 404 });
   }
@@ -25,7 +25,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { itineraryId, poiId } = await params;
+  const { itineraryId, stopId } = await params;
   const { day, durationOverrideMinutes } = (await request.json()) as {
     day?: number;
     durationOverrideMinutes?: number | null;
@@ -35,7 +35,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Invalid day" }, { status: 400 });
   }
 
-  const result = await updateStop(user.id, itineraryId, poiId, { day, durationOverrideMinutes });
+  const result = await updateStopById(user.id, itineraryId, stopId, { day, durationOverrideMinutes });
   if (!result) {
     return NextResponse.json({ error: "Stop not found" }, { status: 404 });
   }

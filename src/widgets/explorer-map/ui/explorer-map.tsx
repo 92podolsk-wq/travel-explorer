@@ -12,6 +12,8 @@ import type {
 } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
+import type { ItineraryStopPoint } from "@/entities/itinerary/model/types";
+import { stopPointCoordinates, stopPointRegionId } from "@/entities/itinerary/model/stop-point";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
@@ -100,6 +102,11 @@ const dayRouteColors = ["#287f72", "#a3312c", "#e0a13e", "#5b6ee1", "#6b5b95"];
 
 function getDayColor(dayIndex: number): string {
   return dayRouteColors[dayIndex % dayRouteColors.length];
+}
+
+function pointToLngLat(point: ItineraryStopPoint): [number, number] {
+  const coordinates = stopPointCoordinates(point);
+  return [coordinates.lng, coordinates.lat];
 }
 
 function createPoiCollection(
@@ -719,6 +726,26 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     }
   }
 
+  async function handleAddMarkerToItineraryClick(customMarkerId: string) {
+    const state = useExplorerStore.getState();
+    if (!state.currentUser || !state.itinerary) return;
+    const res = await fetch(`/api/me/itineraries/${state.itinerary.id}/stops`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customMarkerId })
+    });
+    if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
+  }
+
+  async function handleRemoveMarkerStopClick(customMarkerId: string) {
+    const state = useExplorerStore.getState();
+    if (!state.itinerary) return;
+    const stop = state.itinerary.stops.find((s) => s.point.kind === "marker" && s.point.marker.id === customMarkerId);
+    if (!stop) return;
+    const res = await fetch(`/api/me/itineraries/${state.itinerary.id}/stops/${stop.id}`, { method: "DELETE" });
+    if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
+  }
+
   const selectedModes = useMemo(
     () => explorationModes.filter((mode) => selectedModeIds.includes(mode.id)),
     [selectedModeIds, explorationModes]
@@ -830,6 +857,22 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           labelEl.textContent = label;
           popupNode.appendChild(labelEl);
         }
+
+        const markerState = useExplorerStore.getState();
+        const isLocalMarker = id.startsWith("local-");
+        const existingStop = markerState.itinerary?.stops.find(
+          (s) => s.point.kind === "marker" && s.point.marker.id === id
+        );
+
+        let itineraryButton: HTMLButtonElement | null = null;
+        if (markerState.currentUser && markerState.itinerary && !isLocalMarker) {
+          itineraryButton = document.createElement("button");
+          itineraryButton.type = "button";
+          itineraryButton.className = "text-left text-xs font-semibold text-primary hover:underline";
+          itineraryButton.textContent = existingStop ? t.app.removeMarkerFromItinerary : t.app.addMarkerToItinerary;
+          popupNode.appendChild(itineraryButton);
+        }
+
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
         deleteButton.textContent = t.app.markerDeleteLabel;
@@ -840,6 +883,15 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           .setLngLat(coordinates)
           .setDOMContent(popupNode)
           .addTo(map);
+
+        itineraryButton?.addEventListener("click", () => {
+          if (existingStop) {
+            void handleRemoveMarkerStopClick(id);
+          } else {
+            void handleAddMarkerToItineraryClick(id);
+          }
+          popup.remove();
+        });
 
         deleteButton.addEventListener("click", () => {
           void handleDeleteMarker(id);
@@ -1029,7 +1081,10 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     const map = mapRef.current;
     if (!map || !isMapReady) return;
 
-    const stopsInView = (itinerary?.stops ?? []).filter((stop) => activeRegionIds.includes(stop.poi.regionId));
+    const stopsInView = (itinerary?.stops ?? []).filter((stop) => {
+      const regionId = stopPointRegionId(stop.point);
+      return regionId === null || activeRegionIds.includes(regionId);
+    });
 
     if (stopsInView.length < 2) {
       setRouteSourceData(map, emptyRouteCollection);
@@ -1054,7 +1109,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
               properties: { day: group.day, color: group.color },
               geometry: {
                 type: "Point",
-                coordinates: [group.stops[0].poi.coordinates.lng, group.stops[0].poi.coordinates.lat]
+                coordinates: pointToLngLat(group.stops[0].point)
               }
             }))
           }
@@ -1071,7 +1126,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         properties: { approximate: true, day: group.day, color: group.color },
         geometry: {
           type: "LineString",
-          coordinates: group.stops.map((stop) => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
+          coordinates: group.stops.map((stop) => pointToLngLat(stop.point))
         }
       }))
     };
@@ -1081,13 +1136,14 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     (async () => {
       const routesPerDay = await Promise.all(
         dayGroupsWithRoute.map(async (group) => {
-          const routeCoordinates = await fetchWalkingRouteCoordinates(group.stops.map((stop) => stop.poi.coordinates));
+          const routeCoordinates = await fetchWalkingRouteCoordinates(
+            group.stops.map((stop) => stopPointCoordinates(stop.point))
+          );
           return {
             day: group.day,
             color: group.color,
             approximate: !routeCoordinates,
-            coordinates:
-              routeCoordinates ?? group.stops.map((stop): [number, number] => [stop.poi.coordinates.lng, stop.poi.coordinates.lat])
+            coordinates: routeCoordinates ?? group.stops.map((stop) => pointToLngLat(stop.point))
           };
         })
       );

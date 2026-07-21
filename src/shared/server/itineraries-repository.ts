@@ -1,10 +1,11 @@
 import { randomBytes } from "crypto";
-import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
+import type { Itinerary, ItineraryStopPoint, ItinerarySummary } from "@/entities/itinerary/model/types";
 import type { PlannedDay } from "@/shared/lib/itinerary-planner";
+import { toCustomMarker } from "./custom-markers-repository";
 import { toPoi, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
 
-const stopInclude = { poi: { include: { photos: true } } } as const;
+const stopInclude = { poi: { include: { photos: true } }, customMarker: true } as const;
 const itineraryInclude = { stops: { include: stopInclude }, days: true } as const;
 
 const MAX_ITINERARIES_PER_USER = 3;
@@ -12,8 +13,19 @@ const MAX_ITINERARIES_PER_USER = 3;
 type ItineraryRow = Awaited<
   ReturnType<typeof prisma.itinerary.findFirstOrThrow<{ include: typeof itineraryInclude }>>
 >;
+type StopRow = ItineraryRow["stops"][number];
 
 export class ItineraryLimitError extends Error {}
+
+function toStopPoint(row: StopRow): ItineraryStopPoint {
+  if (row.poi) {
+    return { kind: "poi", poi: toPoi(row.poi as PoiRow) };
+  }
+  if (row.customMarker) {
+    return { kind: "marker", marker: toCustomMarker(row.customMarker) };
+  }
+  throw new Error(`ItineraryStop ${row.id} has neither a poi nor a customMarker`);
+}
 
 function toItinerary(row: ItineraryRow): Itinerary {
   return {
@@ -26,7 +38,7 @@ function toItinerary(row: ItineraryRow): Itinerary {
         id: stop.id,
         day: stop.day,
         position: stop.position,
-        poi: toPoi(stop.poi as PoiRow),
+        point: toStopPoint(stop),
         durationOverrideMinutes: stop.durationOverrideMinutes
       })),
     days: [...row.days]
@@ -123,20 +135,25 @@ export async function deleteItinerary(userId: string, itineraryId: string): Prom
   return true;
 }
 
+function nextStopPlacement(stops: { day: number; position: number }[]): { day: number; position: number } {
+  const targetDay = stops.reduce((max, stop) => Math.max(max, stop.day), 1);
+  const maxPosition = stops
+    .filter((stop) => stop.day === targetDay)
+    .reduce((max, stop) => Math.max(max, stop.position), -1);
+  return { day: targetDay, position: maxPosition + 1 };
+}
+
 export async function addStop(userId: string, itineraryId: string, poiId: string): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
-  const targetDay = itinerary.stops.reduce((max, stop) => Math.max(max, stop.day), 1);
-  const maxPosition = itinerary.stops
-    .filter((stop) => stop.day === targetDay)
-    .reduce((max, stop) => Math.max(max, stop.position), -1);
+  const { day, position } = nextStopPlacement(itinerary.stops);
 
   await prisma.itineraryStop.upsert({
     where: { itineraryId_poiId: { itineraryId, poiId } },
-    create: { itineraryId, poiId, day: targetDay, position: maxPosition + 1 },
+    create: { itineraryId, poiId, day, position },
     update: {}
   });
 
@@ -149,10 +166,9 @@ export async function addStops(userId: string, itineraryId: string, poiIds: stri
     return null;
   }
 
-  const existingPoiIds = new Set(itinerary.stops.map((stop) => stop.poiId));
-  const targetDay = itinerary.stops.reduce((max, stop) => Math.max(max, stop.day), 1);
-  let nextPosition =
-    itinerary.stops.filter((stop) => stop.day === targetDay).reduce((max, stop) => Math.max(max, stop.position), -1) + 1;
+  const existingPoiIds = new Set(itinerary.stops.map((stop) => stop.poiId).filter((id): id is string => id != null));
+  const { day: targetDay, position: startPosition } = nextStopPlacement(itinerary.stops);
+  let nextPosition = startPosition;
 
   const newPoiIds = poiIds.filter((poiId) => !existingPoiIds.has(poiId));
   if (newPoiIds.length > 0) {
@@ -165,6 +181,28 @@ export async function addStops(userId: string, itineraryId: string, poiIds: stri
       }))
     });
   }
+
+  return getItinerary(userId, itineraryId);
+}
+
+export async function addMarkerStop(userId: string, itineraryId: string, customMarkerId: string): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
+
+  const marker = await prisma.customMarker.findUnique({ where: { id: customMarkerId }, select: { userId: true } });
+  if (!marker || marker.userId !== userId) {
+    return null;
+  }
+
+  const { day, position } = nextStopPlacement(itinerary.stops);
+
+  await prisma.itineraryStop.upsert({
+    where: { itineraryId_customMarkerId: { itineraryId, customMarkerId } },
+    create: { itineraryId, customMarkerId, day, position },
+    update: {}
+  });
 
   return getItinerary(userId, itineraryId);
 }
@@ -184,13 +222,13 @@ export async function clearStops(userId: string, itineraryId: string): Promise<I
   return getItinerary(userId, itineraryId);
 }
 
-export async function removeStop(userId: string, itineraryId: string, poiId: string): Promise<Itinerary | null> {
+export async function removeStopById(userId: string, itineraryId: string, stopId: string): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
-  await prisma.itineraryStop.deleteMany({ where: { itineraryId, poiId } });
+  await prisma.itineraryStop.deleteMany({ where: { id: stopId, itineraryId } });
   return getItinerary(userId, itineraryId);
 }
 
@@ -198,22 +236,22 @@ export async function reorderDayStops(
   userId: string,
   itineraryId: string,
   day: number,
-  orderedPoiIds: string[]
+  orderedStopIds: string[]
 ): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
-  const dayPoiIds = new Set(itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.poiId));
-  if (orderedPoiIds.length !== dayPoiIds.size || !orderedPoiIds.every((id) => dayPoiIds.has(id))) {
+  const dayStopIds = new Set(itinerary.stops.filter((stop) => stop.day === day).map((stop) => stop.id));
+  if (orderedStopIds.length !== dayStopIds.size || !orderedStopIds.every((id) => dayStopIds.has(id))) {
     return null;
   }
 
   await prisma.$transaction(
-    orderedPoiIds.map((poiId, index) =>
+    orderedStopIds.map((stopId, index) =>
       prisma.itineraryStop.update({
-        where: { itineraryId_poiId: { itineraryId, poiId } },
+        where: { id: stopId },
         data: { position: index }
       })
     )
@@ -222,10 +260,10 @@ export async function reorderDayStops(
   return getItinerary(userId, itineraryId);
 }
 
-export async function updateStop(
+export async function updateStopById(
   userId: string,
   itineraryId: string,
-  poiId: string,
+  stopId: string,
   patch: { day?: number; durationOverrideMinutes?: number | null }
 ): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
@@ -233,7 +271,7 @@ export async function updateStop(
     return null;
   }
 
-  const stop = itinerary.stops.find((s) => s.poiId === poiId);
+  const stop = itinerary.stops.find((s) => s.id === stopId);
   if (!stop) {
     return null;
   }
@@ -241,7 +279,7 @@ export async function updateStop(
   const data: { day?: number; position?: number; durationOverrideMinutes?: number | null } = {};
   if (patch.day != null && patch.day !== stop.day) {
     const maxPosition = itinerary.stops
-      .filter((s) => s.day === patch.day && s.poiId !== poiId)
+      .filter((s) => s.day === patch.day && s.id !== stopId)
       .reduce((max, s) => Math.max(max, s.position), -1);
     data.day = patch.day;
     data.position = maxPosition + 1;
@@ -251,7 +289,7 @@ export async function updateStop(
   }
 
   await prisma.itineraryStop.update({
-    where: { itineraryId_poiId: { itineraryId, poiId } },
+    where: { id: stopId },
     data
   });
 
@@ -261,25 +299,25 @@ export async function updateStop(
 export async function moveStopToDayWithOrder(
   userId: string,
   itineraryId: string,
-  poiId: string,
+  stopId: string,
   day: number,
-  orderedPoiIds: string[]
+  orderedStopIds: string[]
 ): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
     return null;
   }
 
-  const stop = itinerary.stops.find((s) => s.poiId === poiId);
+  const stop = itinerary.stops.find((s) => s.id === stopId);
   if (!stop) {
     return null;
   }
 
   await prisma.$transaction([
-    prisma.itineraryStop.update({ where: { itineraryId_poiId: { itineraryId, poiId } }, data: { day } }),
-    ...orderedPoiIds.map((id, index) =>
+    prisma.itineraryStop.update({ where: { id: stopId }, data: { day } }),
+    ...orderedStopIds.map((id, index) =>
       prisma.itineraryStop.update({
-        where: { itineraryId_poiId: { itineraryId, poiId: id } },
+        where: { id },
         data: { position: index }
       })
     )

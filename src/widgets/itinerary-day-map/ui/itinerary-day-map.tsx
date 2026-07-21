@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
-import type { Poi } from "@/entities/poi/model/types";
+import type { ItineraryStopPoint } from "@/entities/itinerary/model/types";
+import { stopPointColor, stopPointCoordinates } from "@/entities/itinerary/model/stop-point";
 import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { resolveMapStyle } from "@/shared/map/map-styles";
 import { categoryMarkerColors } from "@/shared/map/poi-marker-icons";
@@ -12,7 +13,7 @@ const routeSourceId = "itinerary-day-route";
 const routeLayerId = "itinerary-day-route-line";
 
 type ItineraryDayMapProps = {
-  stops: Poi[];
+  stops: ItineraryStopPoint[];
   lineCoordinates: [number, number][] | null;
   mapStyleId: MapStyleId;
   protomapsPmtilesUrl: string | null;
@@ -131,10 +132,14 @@ export function ItineraryDayMap({
     void import("maplibre-gl").then((maplibre) => {
       if (mapRef.current !== map) return;
 
-      stops.forEach((poi, index) => {
-        const color = categoryMarkerColors[poi.categories[0]] ?? "#7a7a7a";
+      stops.forEach((point, index) => {
+        const color =
+          point.kind === "poi"
+            ? (categoryMarkerColors[point.poi.categories[0]] ?? "#7a7a7a")
+            : (stopPointColor(point) ?? "#7a7a7a");
+        const coordinates = stopPointCoordinates(point);
         const marker = new maplibre.Marker({ element: buildNumberedMarkerEl(index + 1, color) })
-          .setLngLat([poi.coordinates.lng, poi.coordinates.lat])
+          .setLngLat([coordinates.lng, coordinates.lat])
           .addTo(map);
         markersRef.current.push(marker);
       });
@@ -151,7 +156,10 @@ export function ItineraryDayMap({
       const boundsCoordinates =
         lineCoordinates && lineCoordinates.length > 0
           ? lineCoordinates
-          : stops.map((poi): [number, number] => [poi.coordinates.lng, poi.coordinates.lat]);
+          : stops.map((point): [number, number] => {
+              const coordinates = stopPointCoordinates(point);
+              return [coordinates.lng, coordinates.lat];
+            });
 
       if (boundsCoordinates.length === 1) {
         map.easeTo({ center: boundsCoordinates[0], zoom: 14, duration: 0 });

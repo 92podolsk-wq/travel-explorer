@@ -1,4 +1,4 @@
-import type { Poi } from "@/entities/poi/model/types";
+import type { Coordinates, Poi } from "@/entities/poi/model/types";
 import type { Language } from "@/shared/i18n/types";
 import { clusterPoisByProximity, haversineDistanceMeters } from "./geo";
 
@@ -61,10 +61,10 @@ function sequenceClusterByNearestNeighbor(pois: Poi[], minutesPerDay: number): P
   return days;
 }
 
-/** Orders POIs into a single visiting sequence via nearest-neighbor, no time budget — used to re-sequence an already-assigned day. */
-export function sequenceByNearestNeighbor(pois: Poi[]): Poi[] {
-  const remaining = [...pois].sort((a, b) => b.importance - a.importance);
-  const ordered: Poi[] = [];
+/** Orders items into a single visiting sequence via nearest-neighbor, no time budget — used to re-sequence an already-assigned day. */
+export function sequenceByNearestNeighbor<T extends { coordinates: Coordinates; importance?: number }>(items: T[]): T[] {
+  const remaining = [...items].sort((a, b) => (b.importance ?? 0) - (a.importance ?? 0));
+  const ordered: T[] = [];
 
   let current = remaining.shift();
   if (!current) return ordered;

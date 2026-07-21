@@ -66,6 +66,9 @@ type TranslationDictionary = {
     markerSave: string;
     markerSaving: string;
     markerDeleteLabel: string;
+    markerStopFallbackName: string;
+    addMarkerToItinerary: string;
+    removeMarkerFromItinerary: string;
     locating: string;
     locationError: string;
     seasonReminder: string;
@@ -283,6 +286,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       markerSave: "Save",
       markerSaving: "Saving…",
       markerDeleteLabel: "Delete",
+      markerStopFallbackName: "Custom point",
+      addMarkerToItinerary: "Add to itinerary",
+      removeMarkerFromItinerary: "Remove from itinerary",
       locating: "Locating…",
       locationError: "Couldn't get your location. Check your browser's location permission.",
       seasonReminder: "{season} season starts in {city} in {days} days",
@@ -585,6 +591,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       markerSave: "Сохранить",
       markerSaving: "Сохранение…",
       markerDeleteLabel: "Удалить",
+      markerStopFallbackName: "Своя точка",
+      addMarkerToItinerary: "Добавить в маршрут",
+      removeMarkerFromItinerary: "Убрать из маршрута",
       locating: "Определяем местоположение…",
       locationError: "Не удалось определить местоположение. Проверьте разрешение геолокации в браузере.",
       seasonReminder: "Через {days} дн. в {city} начинается сезон: {season}",
@@ -887,6 +896,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       markerSave: "保存",
       markerSaving: "保存中…",
       markerDeleteLabel: "削除",
+      markerStopFallbackName: "自分の地点",
+      addMarkerToItinerary: "旅程に追加",
+      removeMarkerFromItinerary: "旅程から削除",
       locating: "位置情報を取得中…",
       locationError: "現在地を取得できませんでした。ブラウザの位置情報の許可を確認してください。",
       seasonReminder: "あと{days}日で{city}で{season}シーズンが始まります",

@@ -1,10 +1,13 @@
+import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { Poi } from "@/entities/poi/model/types";
+
+export type ItineraryStopPoint = { kind: "poi"; poi: Poi } | { kind: "marker"; marker: CustomMarker };
 
 export type ItineraryStopWithPoi = {
   id: string;
   day: number;
   position: number;
-  poi: Poi;
+  point: ItineraryStopPoint;
   durationOverrideMinutes: number | null;
 };
 

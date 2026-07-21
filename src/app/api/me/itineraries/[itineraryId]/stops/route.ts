@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addStop, addStops, clearStops } from "@/shared/server/itineraries-repository";
+import { addMarkerStop, addStop, addStops, clearStops } from "@/shared/server/itineraries-repository";
 import { getCurrentUser } from "@/shared/server/user-auth";
 
 type RouteParams = { params: Promise<{ itineraryId: string }> };
@@ -11,15 +11,21 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   const { itineraryId } = await params;
-  const { poiId, poiIds } = (await request.json()) as { poiId?: string; poiIds?: string[] };
+  const { poiId, poiIds, customMarkerId } = (await request.json()) as {
+    poiId?: string;
+    poiIds?: string[];
+    customMarkerId?: string;
+  };
 
   let result;
   if (Array.isArray(poiIds) && poiIds.length > 0) {
     result = await addStops(user.id, itineraryId, poiIds);
   } else if (poiId) {
     result = await addStop(user.id, itineraryId, poiId);
+  } else if (customMarkerId) {
+    result = await addMarkerStop(user.id, itineraryId, customMarkerId);
   } else {
-    return NextResponse.json({ error: "poiId is required" }, { status: 400 });
+    return NextResponse.json({ error: "poiId, poiIds, or customMarkerId is required" }, { status: 400 });
   }
 
   if (!result) {

@@ -198,16 +198,19 @@ model Itinerary {
 }
 
 model ItineraryStop {
-  id                      String    @id @default(cuid())
+  id                      String        @id @default(cuid())
   itineraryId             String
-  itinerary               Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
-  poiId                   String
-  poi                     Poi       @relation(fields: [poiId], references: [id], onDelete: Cascade)
-  day                     Int       @default(1)
+  itinerary               Itinerary     @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  poiId                   String?
+  poi                     Poi?          @relation(fields: [poiId], references: [id], onDelete: Cascade)
+  customMarkerId          String?
+  customMarker            CustomMarker? @relation(fields: [customMarkerId], references: [id], onDelete: Cascade)
+  day                     Int           @default(1)
   position                Int
   durationOverrideMinutes Int?
 
   @@unique([itineraryId, poiId])
+  @@unique([itineraryId, customMarkerId])
 }
 
 model ItineraryDay {
@@ -233,14 +236,15 @@ model SiteSetting {
 }
 
 model CustomMarker {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lat       Float
-  lng       Float
-  color     String
-  label     String   @default("")
-  createdAt DateTime @default(now())
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lat            Float
+  lng            Float
+  color          String
+  label          String          @default("")
+  createdAt      DateTime        @default(now())
+  itineraryStops ItineraryStop[]
 
   @@index([userId])
 }

@@ -5,6 +5,14 @@ import Image from "next/image";
 import { Download, ExternalLink } from "lucide-react";
 import type { Itinerary } from "@/entities/itinerary/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
+import {
+  stopPointCoordinates,
+  stopPointDescription,
+  stopPointDurationMinutes,
+  stopPointName,
+  stopPointPhotoAlt,
+  stopPointPhotoUrl
+} from "@/entities/itinerary/model/stop-point";
 import { buildGoogleMapsUrl } from "@/features/favorites-export/lib/build-google-maps-url";
 
 type TripViewProps = {
@@ -12,10 +20,11 @@ type TripViewProps = {
   autoPrint?: boolean;
 };
 
+const FALLBACK_MARKER_NAME = "Своя точка";
+
 export function TripView({ itinerary, autoPrint }: TripViewProps) {
-  const pois = itinerary.stops.map((stop) => stop.poi);
+  const mapsUrl = buildGoogleMapsUrl(itinerary.stops.map((stop) => ({ coordinates: stopPointCoordinates(stop.point) })));
   const summary = computeItinerarySummary(itinerary.stops);
-  const mapsUrl = buildGoogleMapsUrl(pois);
   const days = [...new Set(itinerary.stops.map((stop) => stop.day))].sort((a, b) => a - b);
 
   useEffect(() => {
@@ -43,7 +52,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
       <div className="mx-auto max-w-2xl px-6 py-10">
         <h1 className="text-2xl font-semibold text-foreground">{itinerary.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {pois.length} мест · {summary.totalMinutes} мин в пути (из них {summary.walkingMinutes} мин пешком)
+          {itinerary.stops.length} мест · {summary.totalMinutes} мин в пути (из них {summary.walkingMinutes} мин пешком)
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 print:hidden">
@@ -68,7 +77,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
           </button>
         </div>
 
-        {pois.length === 0 ? (
+        {itinerary.stops.length === 0 ? (
           <p className="mt-6 text-sm text-muted-foreground">В этом маршруте пока нет мест.</p>
         ) : (
           <div className="mt-6 flex flex-col gap-6">
@@ -77,29 +86,36 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">День {day}</p>
                 {itinerary.stops
                   .filter((stop) => stop.day === day)
-                  .map((stop, index) => (
-                    <div key={stop.id} className="flex gap-3 rounded-lg border border-border bg-white p-3 shadow-sm">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                        {index + 1}
-                      </span>
-                      {stop.poi.photos[0] && (
-                        <Image
-                          src={stop.poi.photos[0].url}
-                          alt={stop.poi.photos[0].alt ?? stop.poi.name}
-                          width={64}
-                          height={64}
-                          className="h-16 w-16 shrink-0 rounded object-cover"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">{stop.poi.name}</p>
-                        <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{stop.poi.description}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {stop.durationOverrideMinutes ?? stop.poi.durationMinutes} мин на месте
-                        </p>
+                  .map((stop, index) => {
+                    const photoUrl = stopPointPhotoUrl(stop.point);
+                    const name = stopPointName(stop.point, "ru", FALLBACK_MARKER_NAME);
+                    const description = stopPointDescription(stop.point);
+                    return (
+                      <div key={stop.id} className="flex gap-3 rounded-lg border border-border bg-white p-3 shadow-sm">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                          {index + 1}
+                        </span>
+                        {photoUrl && (
+                          <Image
+                            src={photoUrl}
+                            alt={stopPointPhotoAlt(stop.point) ?? name}
+                            width={64}
+                            height={64}
+                            className="h-16 w-16 shrink-0 rounded object-cover"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{name}</p>
+                          {description && (
+                            <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{description}</p>
+                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {stop.durationOverrideMinutes ?? stopPointDurationMinutes(stop.point)} мин на месте
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             ))}
           </div>

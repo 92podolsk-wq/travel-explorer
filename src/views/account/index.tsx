@@ -258,7 +258,7 @@ function ItineraryTimelineRow({
               {formatMinutesAsTime(departureMinutes)}
             </button>
           )}
-          <span className="truncate">· {regionName}</span>
+          {regionName && <span className="truncate">· {regionName}</span>}
         </div>
         <div className="mt-0.5 flex items-center gap-1.5">
           <span className="text-[11px] text-muted-foreground">

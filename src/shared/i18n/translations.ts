@@ -223,6 +223,13 @@ type TranslationDictionary = {
     step5Title: string;
     step5Body: string;
   };
+  trip: {
+    sharedRouteLabel: string;
+    travelTimeSummary: string;
+    openInGoogleMaps: string;
+    empty: string;
+    stopDurationOnSite: string;
+  };
 };
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -529,6 +536,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       step4Body: "Automatically generate a multi-day route based on timing and distance.",
       step5Title: "Enjoy the trip",
       step5Body: "Share your route and discover Japan at its best."
+    },
+    trip: {
+      sharedRouteLabel: "Shared route",
+      travelTimeSummary: "{total} min total ({walking} min walking)",
+      openInGoogleMaps: "Open route in Google Maps",
+      empty: "This route has no places yet.",
+      stopDurationOnSite: "{minutes} min on site"
     }
   },
   ru: {
@@ -834,6 +848,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       step4Body: "Автоматически стройте маршрут на несколько дней с учётом времени и расстояний.",
       step5Title: "Наслаждайтесь путешествием",
       step5Body: "Делитесь маршрутом и открывайте Японию во всей красе."
+    },
+    trip: {
+      sharedRouteLabel: "Общий маршрут",
+      travelTimeSummary: "{total} мин в пути (из них {walking} мин пешком)",
+      openInGoogleMaps: "Открыть маршрут в Google Maps",
+      empty: "В этом маршруте пока нет мест.",
+      stopDurationOnSite: "{minutes} мин на месте"
     }
   },
   ja: {
@@ -1138,6 +1159,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       step4Body: "所要時間と距離を考慮した複数日のルートを自動生成します。",
       step5Title: "旅を楽しもう",
       step5Body: "ルートを共有して、日本の魅力を存分に発見しましょう。"
+    },
+    trip: {
+      sharedRouteLabel: "共有ルート",
+      travelTimeSummary: "移動時間 {total}分（うち徒歩 {walking}分）",
+      openInGoogleMaps: "Googleマップでルートを開く",
+      empty: "このルートにはまだ場所がありません。",
+      stopDurationOnSite: "現地滞在 {minutes}分"
     }
   }
 };

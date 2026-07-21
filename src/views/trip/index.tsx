@@ -14,15 +14,18 @@ import {
   stopPointPhotoUrl
 } from "@/entities/itinerary/model/stop-point";
 import { buildGoogleMapsUrl } from "@/features/favorites-export/lib/build-google-maps-url";
+import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
+import { getTranslations } from "@/shared/i18n/translations";
+import { useExplorerStore } from "@/shared/model/explorer-store";
 
 type TripViewProps = {
   itinerary: Itinerary;
   autoPrint?: boolean;
 };
 
-const FALLBACK_MARKER_NAME = "Своя точка";
-
 export function TripView({ itinerary, autoPrint }: TripViewProps) {
+  const language = useExplorerStore((state) => state.language);
+  const t = getTranslations(language);
   const mapsUrl = buildGoogleMapsUrl(itinerary.stops.map((stop) => ({ coordinates: stopPointCoordinates(stop.point) })));
   const summary = computeItinerarySummary(itinerary.stops);
   const days = [...new Set(itinerary.stops.map((stop) => stop.day))].sort((a, b) => a - b);
@@ -35,24 +38,32 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
 
   return (
     <main className="min-h-dvh bg-muted">
-      <header className="flex h-16 items-center gap-2.5 border-b border-border bg-white px-5 print:hidden">
-        <Image
-          src="/logo-icon.png"
-          alt="Wayora"
-          width={36}
-          height={36}
-          className="h-9 w-9 rounded-full object-cover"
-        />
-        <div>
-          <p className="text-sm font-semibold text-foreground">Wayora</p>
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Общий маршрут</p>
+      <header className="flex h-16 items-center justify-between gap-2.5 border-b border-border bg-white px-5 print:hidden">
+        <div className="flex items-center gap-2.5">
+          <Image
+            src="/logo-icon.png"
+            alt="Wayora"
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full object-cover"
+          />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Wayora</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              {t.trip.sharedRouteLabel}
+            </p>
+          </div>
         </div>
+        <LanguageSwitcher />
       </header>
 
       <div className="mx-auto max-w-2xl px-6 py-10">
         <h1 className="text-2xl font-semibold text-foreground">{itinerary.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {itinerary.stops.length} мест · {summary.totalMinutes} мин в пути (из них {summary.walkingMinutes} мин пешком)
+          {itinerary.stops.length} {t.app.places} ·{" "}
+          {t.trip.travelTimeSummary
+            .replace("{total}", String(summary.totalMinutes))
+            .replace("{walking}", String(summary.walkingMinutes))}
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2 print:hidden">
@@ -64,7 +75,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
               className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-white/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-white"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Открыть маршрут в Google Maps
+              {t.trip.openInGoogleMaps}
             </a>
           )}
           <button
@@ -73,22 +84,24 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-white/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-white"
           >
             <Download className="h-3.5 w-3.5" />
-            Скачать PDF
+            {t.auth.downloadPdf}
           </button>
         </div>
 
         {itinerary.stops.length === 0 ? (
-          <p className="mt-6 text-sm text-muted-foreground">В этом маршруте пока нет мест.</p>
+          <p className="mt-6 text-sm text-muted-foreground">{t.trip.empty}</p>
         ) : (
           <div className="mt-6 flex flex-col gap-6">
             {days.map((day) => (
               <div key={day} className="flex flex-col gap-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">День {day}</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t.auth.dayLabel.replace("{n}", String(day))}
+                </p>
                 {itinerary.stops
                   .filter((stop) => stop.day === day)
                   .map((stop, index) => {
                     const photoUrl = stopPointPhotoUrl(stop.point);
-                    const name = stopPointName(stop.point, "ru", FALLBACK_MARKER_NAME);
+                    const name = stopPointName(stop.point, language, t.app.markerStopFallbackName);
                     const description = stopPointDescription(stop.point);
                     return (
                       <div key={stop.id} className="flex gap-3 rounded-lg border border-border bg-white p-3 shadow-sm">
@@ -110,7 +123,10 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
                             <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{description}</p>
                           )}
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {stop.durationOverrideMinutes ?? stopPointDurationMinutes(stop.point)} мин на месте
+                            {t.trip.stopDurationOnSite.replace(
+                              "{minutes}",
+                              String(stop.durationOverrideMinutes ?? stopPointDurationMinutes(stop.point))
+                            )}
                           </p>
                         </div>
                       </div>

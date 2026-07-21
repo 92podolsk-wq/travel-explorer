@@ -125,6 +125,7 @@ model User {
   visitedPois  VisitedPoi[]
   poiReports   PoiReport[]
   itineraries  Itinerary[]
+  customMarkers CustomMarker[]
 }
 
 model Session {
@@ -224,8 +225,22 @@ model ItineraryDay {
 }
 
 model SiteSetting {
-  id                  String   @id @default("singleton")
-  mapStyleId          String   @default("openfreemap-bright")
-  protomapsPmtilesUrl String?
-  updatedAt           DateTime @updatedAt
+  id                      String   @id @default("singleton")
+  mapStyleId              String   @default("openfreemap-bright")
+  protomapsPmtilesUrl     String?
+  maxCustomMarkersPerUser Int      @default(200)
+  updatedAt               DateTime @updatedAt
+}
+
+model CustomMarker {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  color     String
+  label     String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

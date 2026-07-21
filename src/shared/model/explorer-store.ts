@@ -12,7 +12,10 @@ import { seedExplorationModes } from "@/entities/exploration-mode/model/explorat
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { User, UserPoiState } from "@/entities/user/model/types";
 import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
+import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { Language } from "@/shared/i18n/types";
+
+const DEFAULT_CUSTOM_MARKER_LIMIT = 200;
 
 function firstPoiIdForRegion(pois: Poi[], regionId: string) {
   return pois.find((poi) => poi.regionId === regionId)?.id ?? pois[0]?.id ?? "";
@@ -49,6 +52,9 @@ type ExplorerState = {
   itinerary: Itinerary | null;
   itineraries: ItinerarySummary[];
   activeItineraryId: string | null;
+  customMarkers: CustomMarker[];
+  customMarkerLimit: number;
+  isAddingMarker: boolean;
   currentUser: User | null;
   authStatus: "loading" | "guest" | "authenticated";
   hasSeenWelcome: boolean;
@@ -85,6 +91,11 @@ type ExplorerState = {
   setItinerary: (itinerary: Itinerary | null) => void;
   setItineraries: (list: ItinerarySummary[]) => void;
   setActiveItineraryId: (id: string | null) => void;
+  setCustomMarkers: (markers: CustomMarker[]) => void;
+  addCustomMarkerToState: (marker: CustomMarker) => void;
+  removeCustomMarkerFromState: (id: string) => void;
+  setCustomMarkerLimit: (limit: number) => void;
+  setIsAddingMarker: (value: boolean) => void;
   setHasSeenWelcome: (value: boolean) => void;
   setHasHydrated: (value: boolean) => void;
 };
@@ -118,6 +129,9 @@ export const useExplorerStore = create<ExplorerState>()(
   itinerary: null,
   itineraries: [],
   activeItineraryId: null,
+  customMarkers: [],
+  customMarkerLimit: DEFAULT_CUSTOM_MARKER_LIMIT,
+  isAddingMarker: false,
   currentUser: null,
   authStatus: "loading",
   hasSeenWelcome: false,
@@ -250,6 +264,12 @@ export const useExplorerStore = create<ExplorerState>()(
   setItinerary: (itinerary) => set({ itinerary }),
   setItineraries: (list) => set({ itineraries: list }),
   setActiveItineraryId: (id) => set({ activeItineraryId: id }),
+  setCustomMarkers: (markers) => set({ customMarkers: markers }),
+  addCustomMarkerToState: (marker) => set((state) => ({ customMarkers: [...state.customMarkers, marker] })),
+  removeCustomMarkerFromState: (id) =>
+    set((state) => ({ customMarkers: state.customMarkers.filter((marker) => marker.id !== id) })),
+  setCustomMarkerLimit: (limit) => set({ customMarkerLimit: limit }),
+  setIsAddingMarker: (value) => set({ isAddingMarker: value }),
   setHasSeenWelcome: (value) => set({ hasSeenWelcome: value }),
   setHasHydrated: (value) => set({ hasHydrated: value })
     }),

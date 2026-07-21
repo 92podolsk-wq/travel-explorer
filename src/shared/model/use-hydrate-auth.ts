@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
+import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { AuthMeResponse } from "@/entities/user/model/types";
 import { useExplorerStore } from "./explorer-store";
 
@@ -10,6 +11,8 @@ export function useHydrateAuth() {
   const setItinerary = useExplorerStore((state) => state.setItinerary);
   const setItineraries = useExplorerStore((state) => state.setItineraries);
   const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
+  const setCustomMarkers = useExplorerStore((state) => state.setCustomMarkers);
+  const setCustomMarkerLimit = useExplorerStore((state) => state.setCustomMarkerLimit);
 
   useEffect(() => {
     (async () => {
@@ -55,6 +58,13 @@ export function useHydrateAuth() {
         if (itineraryRes.ok) {
           setItinerary((await itineraryRes.json()) as Itinerary);
         }
+      }
+
+      const markersRes = await fetch("/api/me/custom-markers");
+      if (markersRes.ok) {
+        const markersData = (await markersRes.json()) as { markers: CustomMarker[]; limit: number };
+        setCustomMarkers(markersData.markers);
+        setCustomMarkerLimit(markersData.limit);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

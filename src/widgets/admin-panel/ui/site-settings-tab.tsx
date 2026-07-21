@@ -12,6 +12,7 @@ export function SiteSettingsTab() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<MapStyleId>("openfreemap-bright");
   const [pmtilesUrl, setPmtilesUrl] = useState("");
+  const [maxCustomMarkers, setMaxCustomMarkers] = useState("200");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,18 +29,30 @@ export function SiteSettingsTab() {
       setSettings(data);
       setSelectedStyle(data.mapStyleId);
       setPmtilesUrl(data.protomapsPmtilesUrl ?? "");
+      setMaxCustomMarkers(String(data.maxCustomMarkersPerUser));
     })();
   }, []);
 
   async function handleSave() {
     setSaveError(null);
     setIsSaved(false);
+
+    const parsedLimit = Number(maxCustomMarkers);
+    if (!Number.isInteger(parsedLimit) || parsedLimit < 0 || parsedLimit > 5000) {
+      setSaveError("Лимит меток должен быть целым числом от 0 до 5000.");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/admin/site-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mapStyleId: selectedStyle, protomapsPmtilesUrl: pmtilesUrl })
+        body: JSON.stringify({
+          mapStyleId: selectedStyle,
+          protomapsPmtilesUrl: pmtilesUrl,
+          maxCustomMarkersPerUser: parsedLimit
+        })
       });
 
       if (!res.ok) {
@@ -113,6 +126,27 @@ export function SiteSettingsTab() {
           </p>
         </div>
       )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-foreground">Пользовательские метки</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Сколько собственных меток на карте может создать один пользователь.
+        </p>
+      </div>
+
+      <div className="max-w-xs space-y-1.5">
+        <label className="text-xs font-semibold text-foreground" htmlFor="max-custom-markers">
+          Лимит меток на пользователя
+        </label>
+        <Input
+          id="max-custom-markers"
+          type="number"
+          min={0}
+          max={5000}
+          value={maxCustomMarkers}
+          onChange={(e) => setMaxCustomMarkers(e.target.value)}
+        />
+      </div>
 
       {saveError && <p className="text-sm font-medium text-red-600">{saveError}</p>}
 

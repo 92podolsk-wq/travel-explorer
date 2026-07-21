@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, CheckCircle2, Eye, LocateFixed, MapPin, Minus, Plus } from "lucide-react";
+import { Bookmark, CheckCircle2, Eye, LocateFixed, MapPin, MapPinPlus, Minus, Plus } from "lucide-react";
 import type {
   ExpressionSpecification,
   GeoJSONSource,
@@ -11,6 +11,7 @@ import type {
   Marker as MapLibreMarker
 } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
+import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { Poi, PoiCategory } from "@/entities/poi/model/types";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
@@ -24,6 +25,7 @@ import { resolveMapStyle } from "@/shared/map/map-styles";
 import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { AddMarkerPanel } from "./add-marker-panel";
 
 const poiSourceId = "travel-explorer-pois";
 const poiHitLayerId = "poi-hit-area";
@@ -38,6 +40,10 @@ const routeApproximateLayerId = "itinerary-route-line-approximate";
 const dayBadgeSourceId = "travel-explorer-itinerary-day-badges";
 const dayBadgeCircleLayerId = "itinerary-day-badge-circles";
 const dayBadgeLabelLayerId = "itinerary-day-badge-labels";
+const customMarkerSourceId = "travel-explorer-custom-markers";
+const customMarkerHaloLayerId = "custom-marker-halos";
+const customMarkerCircleLayerId = "custom-marker-circles";
+const customMarkerLabelLayerId = "custom-marker-labels";
 const regionVoronoiSourceId = "travel-explorer-region-voronoi";
 const regionVoronoiFillLayerId = "region-voronoi-fill";
 const regionVoronoiLineLayerId = "region-voronoi-line";
@@ -57,6 +63,7 @@ type PoiFeature = Feature<Point, PoiFeatureProperties>;
 type PoiFeatureCollection = FeatureCollection<Point, PoiFeatureProperties>;
 type RouteFeatureCollection = FeatureCollection<LineString, { approximate: boolean; day: number; color: string }>;
 type DayBadgeFeatureCollection = FeatureCollection<Point, { day: number; color: string }>;
+type CustomMarkerFeatureCollection = FeatureCollection<Point, { id: string; color: string; label: string }>;
 
 const emptyPoiCollection: PoiFeatureCollection = {
   type: "FeatureCollection",
@@ -72,6 +79,22 @@ const emptyDayBadgeCollection: DayBadgeFeatureCollection = {
   type: "FeatureCollection",
   features: []
 };
+
+const emptyCustomMarkerCollection: CustomMarkerFeatureCollection = {
+  type: "FeatureCollection",
+  features: []
+};
+
+function createCustomMarkerCollection(markers: CustomMarker[]): CustomMarkerFeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: markers.map((marker) => ({
+      type: "Feature",
+      properties: { id: marker.id, color: marker.color, label: marker.label },
+      geometry: { type: "Point", coordinates: [marker.lng, marker.lat] }
+    }))
+  };
+}
 
 const dayRouteColors = ["#287f72", "#a3312c", "#e0a13e", "#5b6ee1", "#6b5b95"];
 
@@ -389,6 +412,53 @@ async function addPoiLayers(map: MapLibreMap) {
       "text-translate": [14, -14]
     }
   });
+
+  map.addSource(customMarkerSourceId, {
+    type: "geojson",
+    data: emptyCustomMarkerCollection
+  });
+
+  map.addLayer({
+    id: customMarkerHaloLayerId,
+    type: "circle",
+    source: customMarkerSourceId,
+    paint: {
+      "circle-radius": 13,
+      "circle-color": ["get", "color"],
+      "circle-opacity": 0.25
+    }
+  });
+
+  map.addLayer({
+    id: customMarkerCircleLayerId,
+    type: "circle",
+    source: customMarkerSourceId,
+    paint: {
+      "circle-radius": 8,
+      "circle-color": ["get", "color"],
+      "circle-stroke-width": 2.5,
+      "circle-stroke-color": "#ffffff"
+    }
+  });
+
+  map.addLayer({
+    id: customMarkerLabelLayerId,
+    type: "symbol",
+    source: customMarkerSourceId,
+    filter: ["!=", ["get", "label"], ""],
+    layout: {
+      "text-field": ["get", "label"],
+      "text-size": 11,
+      "text-anchor": "top",
+      "text-offset": [0, 1.1],
+      "text-allow-overlap": false
+    },
+    paint: {
+      "text-color": "#23313d",
+      "text-halo-color": "#ffffff",
+      "text-halo-width": 1.6
+    }
+  });
 }
 
 function boundsFromPois(pois: Poi[]): [[number, number], [number, number]] {
@@ -484,6 +554,16 @@ function setDayBadgeSourceData(map: MapLibreMap, data: DayBadgeFeatureCollection
   (source as GeoJSONSource).setData(data);
 }
 
+function setCustomMarkerSourceData(map: MapLibreMap, data: CustomMarkerFeatureCollection) {
+  const source = map.getSource(customMarkerSourceId);
+
+  if (!source) {
+    return;
+  }
+
+  (source as GeoJSONSource).setData(data);
+}
+
 function setRegionVoronoiSourceData(map: MapLibreMap, data: RegionVoronoiCollection) {
   const source = map.getSource(regionVoronoiSourceId);
 
@@ -558,8 +638,15 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const setIsLocatingUser = useExplorerStore((state) => state.setIsLocatingUser);
   const setLocationError = useExplorerStore((state) => state.setLocationError);
   const itinerary = useExplorerStore((state) => state.itinerary);
+  const customMarkers = useExplorerStore((state) => state.customMarkers);
+  const customMarkerLimit = useExplorerStore((state) => state.customMarkerLimit);
+  const isAddingMarker = useExplorerStore((state) => state.isAddingMarker);
+  const setIsAddingMarker = useExplorerStore((state) => state.setIsAddingMarker);
+  const addCustomMarkerToState = useExplorerStore((state) => state.addCustomMarkerToState);
+  const currentUser = useExplorerStore((state) => state.currentUser);
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
+  const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   async function handleLocateMe() {
     const map = mapRef.current;
@@ -573,6 +660,62 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       setLocationError(t.app.locationError);
     } finally {
       setIsLocatingUser(false);
+    }
+  }
+
+  function handleToggleAddMarker() {
+    if (isAddingMarker) {
+      setIsAddingMarker(false);
+      setPendingMarkerCoords(null);
+    } else {
+      setIsAddingMarker(true);
+    }
+  }
+
+  async function handleSaveMarker(color: string, label: string): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!pendingMarkerCoords) {
+      return { ok: false, error: t.app.markerSaveError };
+    }
+
+    if (!currentUser) {
+      addCustomMarkerToState({
+        id: `local-${Date.now()}`,
+        lat: pendingMarkerCoords.lat,
+        lng: pendingMarkerCoords.lng,
+        color,
+        label,
+        createdAt: new Date().toISOString()
+      });
+      setIsAddingMarker(false);
+      setPendingMarkerCoords(null);
+      return { ok: true };
+    }
+
+    const res = await fetch("/api/me/custom-markers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat: pendingMarkerCoords.lat, lng: pendingMarkerCoords.lng, color, label })
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string; limit?: number } | null;
+      if (data?.error === "MARKER_LIMIT_REACHED") {
+        return { ok: false, error: t.app.markerLimitReached.replace("{limit}", String(data.limit ?? customMarkerLimit)) };
+      }
+      return { ok: false, error: t.app.markerSaveError };
+    }
+
+    const marker = (await res.json()) as CustomMarker;
+    addCustomMarkerToState(marker);
+    setIsAddingMarker(false);
+    setPendingMarkerCoords(null);
+    return { ok: true };
+  }
+
+  async function handleDeleteMarker(id: string) {
+    useExplorerStore.getState().removeCustomMarkerFromState(id);
+    if (useExplorerStore.getState().currentUser && !id.startsWith("local-")) {
+      await fetch(`/api/me/custom-markers/${id}`, { method: "DELETE" }).catch(() => {});
     }
   }
 
@@ -595,6 +738,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     () => pois.filter((poi) => activeRegionIds.includes(poi.regionId)),
     [pois, activeRegionIds]
   );
+
+  const customMarkerCollection = useMemo(() => createCustomMarkerCollection(customMarkers), [customMarkers]);
 
   const visiblePois = useMemo(
     () =>
@@ -669,6 +814,50 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         });
       };
 
+      const handleCustomMarkerClick = (event: MapLayerMouseEvent) => {
+        const feature = event.features?.[0];
+        if (!feature) return;
+        const id = feature.properties?.id as string | undefined;
+        const label = (feature.properties?.label as string | undefined) ?? "";
+        if (!id) return;
+        const coordinates = (feature.geometry as Point).coordinates as [number, number];
+
+        const popupNode = document.createElement("div");
+        popupNode.className = "flex flex-col gap-2 p-1";
+        if (label) {
+          const labelEl = document.createElement("p");
+          labelEl.className = "text-sm font-medium text-foreground";
+          labelEl.textContent = label;
+          popupNode.appendChild(labelEl);
+        }
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.textContent = t.app.markerDeleteLabel;
+        deleteButton.className = "text-left text-xs font-semibold text-red-600 hover:underline";
+        popupNode.appendChild(deleteButton);
+
+        const popup = new maplibre.Popup({ closeButton: true, closeOnClick: true })
+          .setLngLat(coordinates)
+          .setDOMContent(popupNode)
+          .addTo(map);
+
+        deleteButton.addEventListener("click", () => {
+          void handleDeleteMarker(id);
+          popup.remove();
+        });
+      };
+
+      const handleMapClick = (event: MapLayerMouseEvent) => {
+        if (!useExplorerStore.getState().isAddingMarker) return;
+
+        const hits = map.queryRenderedFeatures(event.point, {
+          layers: [poiHitLayerId, poiClusterCircleLayerId, customMarkerCircleLayerId, customMarkerHaloLayerId]
+        });
+        if (hits.length > 0) return;
+
+        setPendingMarkerCoords({ lat: event.lngLat.lat, lng: event.lngLat.lng });
+      };
+
       const setPointerCursor = () => {
         map.getCanvas().style.cursor = "pointer";
       };
@@ -690,6 +879,10 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           map.on("click", poiClusterCircleLayerId, handleClusterClick);
           map.on("mouseenter", poiClusterCircleLayerId, setPointerCursor);
           map.on("mouseleave", poiClusterCircleLayerId, resetCursor);
+          map.on("click", customMarkerCircleLayerId, handleCustomMarkerClick);
+          map.on("mouseenter", customMarkerCircleLayerId, setPointerCursor);
+          map.on("mouseleave", customMarkerCircleLayerId, resetCursor);
+          map.on("click", handleMapClick);
           setZoom(map.getZoom());
           setIsMapReady(true);
         });
@@ -717,6 +910,26 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
 
     setPoiSourceData(map, poiCollection);
   }, [isMapReady, poiCollection]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map || !isMapReady) {
+      return;
+    }
+
+    setCustomMarkerSourceData(map, customMarkerCollection);
+  }, [isMapReady, customMarkerCollection]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    map.getCanvas().style.cursor = isAddingMarker ? "crosshair" : "";
+  }, [isAddingMarker]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -945,6 +1158,21 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         >
           <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
         </button>
+        <button
+          type="button"
+          onClick={handleToggleAddMarker}
+          aria-pressed={isAddingMarker}
+          aria-label={t.app.addMarkerHint}
+          title={t.app.addMarkerHint}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-md border shadow-soft backdrop-blur-xl transition",
+            isAddingMarker
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "border-white/70 bg-white/[0.82] text-foreground hover:bg-muted/60"
+          )}
+        >
+          <MapPinPlus className="h-4 w-4" />
+        </button>
         <div className="flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
           <button
             type="button"
@@ -967,6 +1195,25 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           </button>
         </div>
       </div>
+
+      {isAddingMarker && !pendingMarkerCoords && (
+        <div className="absolute left-1/2 top-6 z-30 -translate-x-1/2 rounded-full border border-white/70 bg-white/[0.92] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl">
+          {t.app.addMarkerModeHint}
+        </div>
+      )}
+
+      {pendingMarkerCoords && (
+        <AddMarkerPanel
+          language={language}
+          markerCount={customMarkers.length}
+          markerLimit={customMarkerLimit}
+          onSave={handleSaveMarker}
+          onCancel={() => {
+            setIsAddingMarker(false);
+            setPendingMarkerCoords(null);
+          }}
+        />
+      )}
     </div>
   );
 }

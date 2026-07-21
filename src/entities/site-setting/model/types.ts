@@ -12,9 +12,11 @@ export type MapStyleId = (typeof mapStyleIds)[number];
 export type SiteSettings = {
   mapStyleId: MapStyleId;
   protomapsPmtilesUrl: string | null;
+  maxCustomMarkersPerUser: number;
 };
 
 export type SiteSettingsInput = {
   mapStyleId: MapStyleId;
   protomapsPmtilesUrl?: string | null;
+  maxCustomMarkersPerUser: number;
 };

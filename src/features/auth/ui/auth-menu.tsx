@@ -20,6 +20,7 @@ export function AuthMenu() {
   const setItinerary = useExplorerStore((state) => state.setItinerary);
   const setItineraries = useExplorerStore((state) => state.setItineraries);
   const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
+  const setCustomMarkers = useExplorerStore((state) => state.setCustomMarkers);
   const t = getTranslations(language).auth;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -85,6 +86,7 @@ export function AuthMenu() {
     setItinerary(null);
     setItineraries([]);
     setActiveItineraryId(null);
+    setCustomMarkers([]);
     setIsUserMenuOpen(false);
   }
 

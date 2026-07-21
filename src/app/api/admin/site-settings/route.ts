@@ -16,18 +16,29 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { mapStyleId, protomapsPmtilesUrl } = (await request.json()) as {
+  const { mapStyleId, protomapsPmtilesUrl, maxCustomMarkersPerUser } = (await request.json()) as {
     mapStyleId?: string;
     protomapsPmtilesUrl?: string | null;
+    maxCustomMarkersPerUser?: number;
   };
 
   if (!mapStyleId || !(mapStyleIds as readonly string[]).includes(mapStyleId)) {
     return NextResponse.json({ error: "Неизвестный стиль карты." }, { status: 400 });
   }
 
+  if (
+    maxCustomMarkersPerUser == null ||
+    !Number.isInteger(maxCustomMarkersPerUser) ||
+    maxCustomMarkersPerUser < 0 ||
+    maxCustomMarkersPerUser > 5000
+  ) {
+    return NextResponse.json({ error: "Лимит меток должен быть целым числом от 0 до 5000." }, { status: 400 });
+  }
+
   const updated = await updateSiteSettings({
     mapStyleId: mapStyleId as MapStyleId,
-    protomapsPmtilesUrl: protomapsPmtilesUrl?.trim() || null
+    protomapsPmtilesUrl: protomapsPmtilesUrl?.trim() || null,
+    maxCustomMarkersPerUser
   });
 
   return NextResponse.json(updated);

@@ -55,6 +55,17 @@ type TranslationDictionary = {
     nearMe: string;
     nearMeHint: string;
     locateMeHint: string;
+    addMarkerHint: string;
+    addMarkerModeHint: string;
+    newMarkerTitle: string;
+    markerLabelPlaceholder: string;
+    markerCountLabel: string;
+    markerLimitReached: string;
+    markerSaveError: string;
+    markerCancel: string;
+    markerSave: string;
+    markerSaving: string;
+    markerDeleteLabel: string;
     locating: string;
     locationError: string;
     seasonReminder: string;
@@ -261,6 +272,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       nearMe: "Near me",
       nearMeHint: "Sort places by distance from your location",
       locateMeHint: "Show my location on the map",
+      addMarkerHint: "Add your own marker",
+      addMarkerModeHint: "Click on the map to place a marker",
+      newMarkerTitle: "New marker",
+      markerLabelPlaceholder: "Label (optional)",
+      markerCountLabel: "{count} / {limit} markers",
+      markerLimitReached: "Marker limit reached ({limit} markers)",
+      markerSaveError: "Couldn't save the marker. Try again.",
+      markerCancel: "Cancel",
+      markerSave: "Save",
+      markerSaving: "Saving…",
+      markerDeleteLabel: "Delete",
       locating: "Locating…",
       locationError: "Couldn't get your location. Check your browser's location permission.",
       seasonReminder: "{season} season starts in {city} in {days} days",
@@ -552,6 +574,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       nearMe: "Рядом со мной",
       nearMeHint: "Сортировать места по расстоянию от вас",
       locateMeHint: "Показать моё местоположение на карте",
+      addMarkerHint: "Добавить свою метку",
+      addMarkerModeHint: "Кликните на карте, чтобы поставить метку",
+      newMarkerTitle: "Новая метка",
+      markerLabelPlaceholder: "Название (необязательно)",
+      markerCountLabel: "{count} / {limit} меток",
+      markerLimitReached: "Достигнут лимит меток ({limit})",
+      markerSaveError: "Не удалось сохранить метку. Попробуйте ещё раз.",
+      markerCancel: "Отмена",
+      markerSave: "Сохранить",
+      markerSaving: "Сохранение…",
+      markerDeleteLabel: "Удалить",
       locating: "Определяем местоположение…",
       locationError: "Не удалось определить местоположение. Проверьте разрешение геолокации в браузере.",
       seasonReminder: "Через {days} дн. в {city} начинается сезон: {season}",
@@ -843,6 +876,17 @@ export const translations: Record<Language, TranslationDictionary> = {
       nearMe: "現在地の近く",
       nearMeHint: "現在地からの距離で並び替え",
       locateMeHint: "現在地を地図に表示",
+      addMarkerHint: "自分のマーカーを追加",
+      addMarkerModeHint: "地図をクリックしてマーカーを置く",
+      newMarkerTitle: "新しいマーカー",
+      markerLabelPlaceholder: "ラベル(任意)",
+      markerCountLabel: "{count} / {limit} 件のマーカー",
+      markerLimitReached: "マーカーの上限に達しました({limit}件)",
+      markerSaveError: "マーカーを保存できませんでした。もう一度お試しください。",
+      markerCancel: "キャンセル",
+      markerSave: "保存",
+      markerSaving: "保存中…",
+      markerDeleteLabel: "削除",
       locating: "位置情報を取得中…",
       locationError: "現在地を取得できませんでした。ブラウザの位置情報の許可を確認してください。",
       seasonReminder: "あと{days}日で{city}で{season}シーズンが始まります",

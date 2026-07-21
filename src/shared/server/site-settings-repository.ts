@@ -11,10 +11,14 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   const row = await prisma.siteSetting.findUnique({ where: { id: singletonId } });
 
   if (!row) {
-    return { mapStyleId: "openfreemap-bright", protomapsPmtilesUrl: null };
+    return { mapStyleId: "openfreemap-bright", protomapsPmtilesUrl: null, maxCustomMarkersPerUser: 200 };
   }
 
-  return { mapStyleId: toMapStyleId(row.mapStyleId), protomapsPmtilesUrl: row.protomapsPmtilesUrl };
+  return {
+    mapStyleId: toMapStyleId(row.mapStyleId),
+    protomapsPmtilesUrl: row.protomapsPmtilesUrl,
+    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser
+  };
 }
 
 export async function updateSiteSettings(input: SiteSettingsInput): Promise<SiteSettings> {
@@ -23,13 +27,19 @@ export async function updateSiteSettings(input: SiteSettingsInput): Promise<Site
     create: {
       id: singletonId,
       mapStyleId: input.mapStyleId,
-      protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null
+      protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null,
+      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser
     },
     update: {
       mapStyleId: input.mapStyleId,
-      protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null
+      protomapsPmtilesUrl: input.protomapsPmtilesUrl ?? null,
+      maxCustomMarkersPerUser: input.maxCustomMarkersPerUser
     }
   });
 
-  return { mapStyleId: toMapStyleId(row.mapStyleId), protomapsPmtilesUrl: row.protomapsPmtilesUrl };
+  return {
+    mapStyleId: toMapStyleId(row.mapStyleId),
+    protomapsPmtilesUrl: row.protomapsPmtilesUrl,
+    maxCustomMarkersPerUser: row.maxCustomMarkersPerUser
+  };
 }

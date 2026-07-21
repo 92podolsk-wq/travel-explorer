@@ -17,6 +17,7 @@ type SwipeDiscoveryModalProps = {
   onClose: () => void;
   neighboringRegions?: NeighboringSwipeRegion[];
   onSwitchRegion?: (regionId: string) => void;
+  affinityCategories?: string[];
 };
 
 const SWIPE_THRESHOLD = 120;
@@ -29,15 +30,6 @@ type CardJitter = {
   offsetY: number;
   shadow: string;
 };
-
-function shuffle<T>(items: T[]): T[] {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
 
 function hashString(input: string): number {
   let hash = 0;
@@ -176,10 +168,11 @@ export function SwipeDiscoveryModal({
   onSkip,
   onClose,
   neighboringRegions = [],
-  onSwitchRegion
+  onSwitchRegion,
+  affinityCategories = []
 }: SwipeDiscoveryModalProps) {
   const t = getTranslations(language);
-  const [deck] = useState(() => shuffle(pois));
+  const [deck] = useState(() => pois);
   const [index, setIndex] = useState(0);
 
   const jitters = useMemo(() => {
@@ -263,6 +256,20 @@ export function SwipeDiscoveryModal({
             <XIcon className="h-4 w-4" />
           </button>
         </div>
+
+        {affinityCategories.length > 0 && (
+          <div className="flex w-full flex-wrap items-center gap-1.5">
+            <span className="text-xs font-medium text-white/80 drop-shadow">{t.app.swipeAffinityIntro}</span>
+            {affinityCategories.map((label) => (
+              <span
+                key={label}
+                className="rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-primary shadow-sm"
+              >
+                {label}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="relative h-[60dvh] w-full max-h-[34rem]">
           {!current ? (

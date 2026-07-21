@@ -9,11 +9,13 @@ import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
 import { SeasonWeatherStrip } from "./season-weather-strip";
 import { getModeIcon } from "@/features/exploration-mode/ui/mode-icon";
+import { buildAffinityProfile, computeAffinityScore, hasEnoughSignal, topAffinityCategories } from "@/features/recommendations/model/affinity";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { getUpcomingSeasonReminder } from "@/shared/lib/season-reminder";
+import { shuffle } from "@/shared/lib/shuffle";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { SwipeDiscoveryModal } from "@/widgets/swipe-discovery/ui/swipe-discovery-modal";
@@ -91,7 +93,16 @@ export function ExplorerSidebar() {
 
   const activeRegion = findRegionById(regions, activeRegionIds[0]);
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
-  const swipeCandidates = regionPois.filter((poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id));
+  const likedPois = pois.filter((poi) => favorites.includes(poi.id));
+  const affinityProfile = buildAffinityProfile(likedPois);
+  const hasAffinitySignal = hasEnoughSignal(affinityProfile);
+  const unswipedRegionPois = regionPois.filter((poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id));
+  const swipeCandidates = hasAffinitySignal
+    ? [...unswipedRegionPois].sort((a, b) => computeAffinityScore(b, affinityProfile) - computeAffinityScore(a, affinityProfile))
+    : shuffle(unswipedRegionPois);
+  const affinityCategoryLabels = hasAffinitySignal
+    ? topAffinityCategories(affinityProfile).map((category) => t.category[category] ?? category)
+    : [];
   const activeCountryId = areas.find((area) => area.id === activeRegion.areaId)?.countryId;
   const neighboringSwipeRegions = activeCountryId
     ? regions
@@ -504,6 +515,7 @@ export function ExplorerSidebar() {
         onClose={() => setIsSwipeOpen(false)}
         neighboringRegions={neighboringSwipeRegions}
         onSwitchRegion={setActiveRegion}
+        affinityCategories={affinityCategoryLabels}
       />
     )}
     </>

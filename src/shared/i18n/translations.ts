@@ -61,6 +61,7 @@ type TranslationDictionary = {
     seasonReminderToday: string;
     swipeDiscovery: string;
     swipeDiscoveryHint: string;
+    swipeAffinityIntro: string;
     swipeEmpty: string;
     swipeLike: string;
     swipeSkip: string;
@@ -266,6 +267,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonReminderToday: "{season} season starts today in {city}",
       swipeDiscovery: "Quick picks",
       swipeDiscoveryHint: "Swipe through places: like to save, skip to mark as seen",
+      swipeAffinityIntro: "You love:",
       swipeEmpty: "You've gone through every place here.",
       swipeLike: "Like",
       swipeSkip: "Skip",
@@ -556,6 +558,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonReminderToday: "Сегодня в {city} начинается сезон: {season}",
       swipeDiscovery: "Быстрый выбор",
       swipeDiscoveryHint: "Пролистайте места: нравится — сохранить, пропустить — отметить просмотренным",
+      swipeAffinityIntro: "Вы любите:",
       swipeEmpty: "Вы просмотрели все места здесь.",
       swipeLike: "Нравится",
       swipeSkip: "Пропустить",
@@ -846,6 +849,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       seasonReminderToday: "本日{city}で{season}シーズンが始まります",
       swipeDiscovery: "クイック選択",
       swipeDiscoveryHint: "場所をスワイプ:気に入ったら保存、スキップで既読に",
+      swipeAffinityIntro: "好きなもの:",
       swipeEmpty: "ここにある場所はすべて確認しました。",
       swipeLike: "気に入り",
       swipeSkip: "スキップ",

@@ -422,5 +422,7 @@ export async function updateDay(
 
 export async function getItineraryByShareToken(token: string): Promise<Itinerary | null> {
   const row = await loadItinerary({ shareToken: token });
-  return row ? toItinerary(row) : null;
+  if (!row) return null;
+  const itinerary = toItinerary(row);
+  return { ...itinerary, stops: itinerary.stops.filter((stop) => stop.point.kind === "poi") };
 }

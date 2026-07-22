@@ -28,6 +28,22 @@ export function localizedPoiDescription(
   return looksTranslated(language, localized) ? localized : (dictionaryDescription ?? fallbackDescription);
 }
 
+/**
+ * Same fallback logic as localizedPoiDescription, but for the bestTime string list: trusts
+ * bestTimeByLanguage for Russian or when it looks genuinely translated, otherwise falls back to a
+ * hand-curated dictionary list (if any) or the raw bestTime field.
+ */
+export function localizedPoiBestTime(
+  bestTimeByLanguage: Record<Language, string[]>,
+  fallbackBestTime: string[],
+  language: Language,
+  dictionaryBestTime?: string[]
+): string[] {
+  const localized = bestTimeByLanguage[language];
+  if (language === "ru") return localized;
+  return looksTranslated(language, localized.join(", ")) ? localized : (dictionaryBestTime ?? fallbackBestTime);
+}
+
 export function missingLanguages(fields: Record<string, string>[]): CheckedLanguage[] {
   const missingEn = fields.some((field) => !looksTranslated("en", field.en ?? ""));
   const missingJa = fields.some((field) => !looksTranslated("ja", field.ja ?? ""));

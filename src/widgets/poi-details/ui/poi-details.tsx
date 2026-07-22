@@ -13,7 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
-import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
+import { localizedPoiBestTime, localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 import { UploadPhotoModal } from "./upload-photo-modal";
 
@@ -60,7 +60,12 @@ export function PoiDetails() {
   const isVisited = visitedPoiIds.includes(selectedPoi.id);
   const poiName = selectedPoi.nameByLanguage[language] ?? selectedPoi.name;
   const poiCopy = t.poi[selectedPoi.id];
-  const bestTime = poiCopy?.bestTime ?? selectedPoi.bestTime;
+  const bestTime = localizedPoiBestTime(
+    selectedPoi.bestTimeByLanguage,
+    selectedPoi.bestTime,
+    language,
+    poiCopy?.bestTime
+  );
   const description = localizedPoiDescription(
     selectedPoi.descriptionByLanguage,
     selectedPoi.description,

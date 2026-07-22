@@ -42,6 +42,11 @@ function csvRowToPoiInput(row: Record<string, string>): PoiInput {
     photoScore: Number(row.photoScore) || 70,
     mustVisit: row.mustVisit?.trim().toLowerCase() === "true",
     bestTime: splitSubList(row.bestTime ?? ""),
+    bestTimeByLanguage: {
+      en: splitSubList(row.bestTime ?? ""),
+      ru: splitSubList(row.bestTime ?? ""),
+      ja: splitSubList(row.bestTime ?? "")
+    },
     difficulty: (row.difficulty?.trim() as Difficulty) || "easy",
     durationMinutes: Number(row.durationMinutes) || 60,
     importance: Number(row.importance) || 70,

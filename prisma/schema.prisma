@@ -57,6 +57,7 @@ model Poi {
   photoScore       Int
   mustVisit        Boolean
   bestTime         String[]
+  bestTimeByLanguage Json?
   difficulty       String
   durationMinutes  Int
   importance       Int

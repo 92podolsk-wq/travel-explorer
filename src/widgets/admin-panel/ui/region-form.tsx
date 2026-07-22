@@ -184,9 +184,8 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const result = toRegionInput(form);
+  const submitForm = async (status: FormState["status"]) => {
+    const result = toRegionInput({ ...form, status });
 
     if ("error" in result) {
       setError(result.error);
@@ -200,6 +199,16 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await submitForm(form.status);
+  };
+
+  const handlePublish = async () => {
+    setForm((p) => ({ ...p, status: "published" }));
+    await submitForm("published");
   };
 
   return (
@@ -269,7 +278,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           >
             Широта центра
           </label>
-          <Input type="number" step="0.0001" min="-90" max="90" value={form.lat} onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))} placeholder="35.6762" />
+          <Input type="number" step="any" min="-90" max="90" value={form.lat} onChange={(e) => setForm((p) => ({ ...p, lat: e.target.value }))} placeholder="35.6762" />
         </div>
         <div>
           <label
@@ -278,7 +287,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           >
             Долгота центра
           </label>
-          <Input type="number" step="0.0001" min="-180" max="180" value={form.lng} onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))} placeholder="139.6503" />
+          <Input type="number" step="any" min="-180" max="180" value={form.lng} onChange={(e) => setForm((p) => ({ ...p, lng: e.target.value }))} placeholder="139.6503" />
         </div>
         <div>
           <label className={fieldLabel} title="Масштаб карты, который устанавливается по умолчанию при открытии этого города.">
@@ -373,6 +382,17 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
         <Button type="button" variant="outline" onClick={onCancel}>
           Отмена
         </Button>
+        {form.status === "draft" && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handlePublish}
+            disabled={isSaving}
+            title="Сохранить и сразу опубликовать город на сайте."
+          >
+            {isSaving ? "Публикация…" : "Опубликовать"}
+          </Button>
+        )}
         <Button type="submit" disabled={isSaving}>
           {isSaving ? "Сохранение…" : "Сохранить"}
         </Button>

@@ -62,6 +62,11 @@ export function toPoi(row: PoiRow): Poi {
     photoScore: row.photoScore,
     mustVisit: row.mustVisit,
     bestTime: row.bestTime,
+    bestTimeByLanguage: (row.bestTimeByLanguage as Record<Language, string[]> | null) ?? {
+      en: row.bestTime,
+      ru: row.bestTime,
+      ja: row.bestTime
+    },
     difficulty: row.difficulty as Difficulty,
     durationMinutes: row.durationMinutes,
     importance: row.importance,
@@ -98,6 +103,7 @@ async function writePoi(id: string, input: PoiInput) {
       photoScore: input.photoScore,
       mustVisit: input.mustVisit,
       bestTime: input.bestTime,
+      bestTimeByLanguage: input.bestTimeByLanguage,
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
@@ -118,6 +124,7 @@ async function writePoi(id: string, input: PoiInput) {
       photoScore: input.photoScore,
       mustVisit: input.mustVisit,
       bestTime: input.bestTime,
+      bestTimeByLanguage: input.bestTimeByLanguage,
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,

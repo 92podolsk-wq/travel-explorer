@@ -11,6 +11,7 @@ import type {
   Marker as MapLibreMarker
 } from "maplibre-gl";
 import type { Feature, FeatureCollection, LineString, Point } from "geojson";
+import Supercluster from "supercluster";
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { ItineraryStopPoint } from "@/entities/itinerary/model/types";
 import { stopPointCoordinates, stopPointRegionId } from "@/entities/itinerary/model/stop-point";
@@ -238,12 +239,15 @@ async function addPoiLayers(map: MapLibreMap) {
     }
   });
 
+  // Clustering is computed ourselves (see poiClusterIndexRef/updatePoiClusterSource) via the
+  // supercluster library directly, rather than relying on MapLibre's built-in `cluster: true`
+  // GeoJSON-source clustering — that internal implementation was observed to permanently freeze
+  // a cluster's tree for a subset of tightly-packed points (they'd never split apart on zoom, no
+  // matter how far in), while computing clusters ourselves and feeding plain point/cluster
+  // features into an unclustered source does not exhibit this.
   map.addSource(poiSourceId, {
     type: "geojson",
-    data: emptyPoiCollection,
-    cluster: true,
-    clusterMaxZoom: 14,
-    clusterRadius: 50
+    data: emptyPoiCollection
   });
 
   map.addLayer({
@@ -541,6 +545,31 @@ function setPoiSourceData(map: MapLibreMap, data: PoiFeatureCollection) {
   (source as GeoJSONSource).setData(data);
 }
 
+/**
+ * Rebuilds the poi cluster index from the current poi list. clusterRadius/maxZoom match the
+ * values MapLibre's own built-in clustering used to be configured with.
+ */
+function buildPoiClusterIndex(data: PoiFeatureCollection): Supercluster<PoiFeatureProperties> {
+  const index = new Supercluster<PoiFeatureProperties>({ radius: 50, maxZoom: 20 });
+  index.load(data.features);
+  return index;
+}
+
+/** Reads the clusters visible in the map's current viewport out of the index and renders them. */
+function updatePoiClusterSource(map: MapLibreMap, index: Supercluster<PoiFeatureProperties>) {
+  const bounds = map.getBounds();
+  const bbox: [number, number, number, number] = [
+    bounds.getWest(),
+    bounds.getSouth(),
+    bounds.getEast(),
+    bounds.getNorth()
+  ];
+  const zoom = Math.round(map.getZoom());
+  const clusters = index.getClusters(bbox, zoom);
+
+  setPoiSourceData(map, { type: "FeatureCollection", features: clusters } as unknown as PoiFeatureCollection);
+}
+
 function setRouteSourceData(map: MapLibreMap, data: RouteFeatureCollection) {
   const source = map.getSource(routeSourceId);
 
@@ -621,6 +650,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const poiClusterIndexRef = useRef<Supercluster<PoiFeatureProperties> | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
 
   const pois = useExplorerStore((state) => state.pois);
@@ -827,18 +857,12 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       const handleClusterClick = (event: MapLayerMouseEvent) => {
         const feature = event.features?.[0];
         const clusterId = feature?.properties?.cluster_id;
-        const source = map.getSource(poiSourceId);
-        if (clusterId == null || !source || !("getClusterExpansionZoom" in source)) return;
+        const index = poiClusterIndexRef.current;
+        if (clusterId == null || !index) return;
 
-        (
-          source as unknown as {
-            getClusterExpansionZoom: (id: number, cb: (err: unknown, zoom: number) => void) => void;
-          }
-        ).getClusterExpansionZoom(clusterId, (err, zoom) => {
-          if (err) return;
-          const coordinates = (feature!.geometry as Point).coordinates as [number, number];
-          map.easeTo({ center: coordinates, zoom });
-        });
+        const zoom = Math.min(index.getClusterExpansionZoom(clusterId), 20);
+        const coordinates = (feature!.geometry as Point).coordinates as [number, number];
+        map.easeTo({ center: coordinates, zoom });
       };
 
       const handleCustomMarkerClick = (event: MapLayerMouseEvent) => {
@@ -931,6 +955,12 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           map.on("click", poiClusterCircleLayerId, handleClusterClick);
           map.on("mouseenter", poiClusterCircleLayerId, setPointerCursor);
           map.on("mouseleave", poiClusterCircleLayerId, resetCursor);
+          map.on("moveend", () => {
+            const index = poiClusterIndexRef.current;
+            if (index) {
+              updatePoiClusterSource(map, index);
+            }
+          });
           map.on("click", customMarkerCircleLayerId, handleCustomMarkerClick);
           map.on("mouseenter", customMarkerCircleLayerId, setPointerCursor);
           map.on("mouseleave", customMarkerCircleLayerId, resetCursor);
@@ -960,7 +990,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       return;
     }
 
-    setPoiSourceData(map, poiCollection);
+    poiClusterIndexRef.current = buildPoiClusterIndex(poiCollection);
+    updatePoiClusterSource(map, poiClusterIndexRef.current);
   }, [isMapReady, poiCollection]);
 
   useEffect(() => {

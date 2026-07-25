@@ -861,6 +861,66 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         }
       };
 
+      let hoverPreviewPopup: InstanceType<typeof maplibre.Popup> | null = null;
+      let hoveredPreviewPoiId: string | null = null;
+
+      function buildPoiPreviewNode(poi: Poi): HTMLDivElement {
+        const node = document.createElement("div");
+        node.className = "flex items-center gap-2.5 p-2 pr-3";
+
+        if (poi.photos[0]) {
+          const img = document.createElement("img");
+          img.src = poi.photos[0].url;
+          img.alt = "";
+          img.className = "h-12 w-12 shrink-0 rounded-md object-cover";
+          node.appendChild(img);
+        }
+
+        const info = document.createElement("div");
+        info.className = "min-w-0";
+
+        const name = document.createElement("p");
+        name.className = "max-w-[11rem] truncate text-sm font-semibold text-foreground";
+        name.textContent = poi.nameByLanguage[useExplorerStore.getState().language] ?? poi.name;
+        info.appendChild(name);
+
+        const rating = document.createElement("p");
+        rating.className = "text-xs text-muted-foreground";
+        rating.textContent = `★ ${poi.rating.toFixed(1)}`;
+        info.appendChild(rating);
+
+        node.appendChild(info);
+        return node;
+      }
+
+      const handlePoiHoverMove = (event: MapLayerMouseEvent) => {
+        if (useExplorerStore.getState().isAddingMarker) return;
+
+        const poiId = getPoiIdFromEvent(event);
+        if (!poiId) return;
+
+        if (poiId === hoveredPreviewPoiId) {
+          hoverPreviewPopup?.setLngLat(event.lngLat);
+          return;
+        }
+
+        const poi = useExplorerStore.getState().pois.find((p) => p.id === poiId);
+        if (!poi) return;
+
+        hoveredPreviewPoiId = poiId;
+        hoverPreviewPopup?.remove();
+        hoverPreviewPopup = new maplibre.Popup({ closeButton: false, closeOnClick: false, offset: 14 })
+          .setLngLat(event.lngLat)
+          .setDOMContent(buildPoiPreviewNode(poi))
+          .addTo(map);
+      };
+
+      const handlePoiHoverLeave = () => {
+        hoveredPreviewPoiId = null;
+        hoverPreviewPopup?.remove();
+        hoverPreviewPopup = null;
+      };
+
       const handleClusterClick = (event: MapLayerMouseEvent) => {
         const feature = event.features?.[0];
         const clusterId = feature?.properties?.cluster_id;
@@ -959,6 +1019,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           map.on("click", poiHitLayerId, handlePoiClick);
           map.on("mouseenter", poiHitLayerId, setPointerCursor);
           map.on("mouseleave", poiHitLayerId, resetCursor);
+          map.on("mousemove", poiHitLayerId, handlePoiHoverMove);
+          map.on("mouseleave", poiHitLayerId, handlePoiHoverLeave);
           map.on("click", poiClusterCircleLayerId, handleClusterClick);
           map.on("mouseenter", poiClusterCircleLayerId, setPointerCursor);
           map.on("mouseleave", poiClusterCircleLayerId, resetCursor);
@@ -1251,50 +1313,50 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
           {t.app.swipeDiscovery}
         </button>
-        <button
-          type="button"
-          onClick={() => void handleLocateMe()}
-          disabled={isLocatingUser}
-          aria-label={t.app.locateMeHint}
-          title={t.app.locateMeHint}
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-white/70 bg-white/[0.82] text-foreground shadow-soft backdrop-blur-xl transition hover:bg-muted/60 disabled:opacity-60"
-        >
-          <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
-        </button>
-        <button
-          type="button"
-          onClick={handleToggleAddMarker}
-          aria-pressed={isAddingMarker}
-          aria-label={t.app.addMarkerHint}
-          title={t.app.addMarkerHint}
-          className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-md border shadow-soft backdrop-blur-xl transition",
-            isAddingMarker
-              ? "border-primary/40 bg-primary/10 text-primary"
-              : "border-white/70 bg-white/[0.82] text-foreground hover:bg-muted/60"
-          )}
-        >
-          <MapPinPlus className="h-4 w-4" />
-        </button>
-        <div className="flex flex-col overflow-hidden rounded-md border border-white/70 bg-white/[0.82] shadow-soft backdrop-blur-xl">
+        <div className="flex flex-col overflow-hidden rounded-lg border border-border/60 bg-white shadow-panel">
+          <button
+            type="button"
+            onClick={() => void handleLocateMe()}
+            disabled={isLocatingUser}
+            aria-label={t.app.locateMeHint}
+            title={t.app.locateMeHint}
+            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60 disabled:opacity-60"
+          >
+            <LocateFixed className={cn("h-[18px] w-[18px]", isLocatingUser && "animate-pulse")} />
+          </button>
+          <div className="h-px bg-border/60" />
+          <button
+            type="button"
+            onClick={handleToggleAddMarker}
+            aria-pressed={isAddingMarker}
+            aria-label={t.app.addMarkerHint}
+            title={t.app.addMarkerHint}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center transition",
+              isAddingMarker ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/60"
+            )}
+          >
+            <MapPinPlus className="h-[18px] w-[18px]" />
+          </button>
+          <div className="h-px bg-border/60" />
           <button
             type="button"
             onClick={() => mapRef.current?.zoomIn()}
             aria-label="Zoom in"
             title="Zoom in"
-            className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-[18px] w-[18px]" />
           </button>
-          <div className="h-px bg-border" />
+          <div className="h-px bg-border/60" />
           <button
             type="button"
             onClick={() => mapRef.current?.zoomOut()}
             aria-label="Zoom out"
             title="Zoom out"
-            className="flex h-9 w-9 items-center justify-center text-foreground transition hover:bg-muted/60"
+            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-[18px] w-[18px]" />
           </button>
         </div>
       </div>

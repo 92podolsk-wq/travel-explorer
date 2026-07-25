@@ -1306,15 +1306,6 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       <div className="absolute right-4 top-6 z-20 flex flex-col items-end gap-2 lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto lg:items-stretch">
         <button
           type="button"
-          onClick={() => setIsSwipeOpen(true)}
-          title={t.app.swipeDiscoveryHint}
-          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-soft transition hover:bg-primary/90"
-        >
-          <Sparkles className="h-3.5 w-3.5 shrink-0" />
-          {t.app.swipeDiscovery}
-        </button>
-        <button
-          type="button"
           onClick={() => void handleLocateMe()}
           disabled={isLocatingUser}
           aria-label={t.app.locateMeHint}
@@ -1353,6 +1344,15 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60"
         >
           <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsSwipeOpen(true)}
+          title={t.app.swipeDiscoveryHint}
+          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-soft transition hover:bg-primary/90"
+        >
+          <Sparkles className="h-3.5 w-3.5 shrink-0" />
+          {t.app.swipeDiscovery}
         </button>
       </div>
 

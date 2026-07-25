@@ -96,6 +96,10 @@ export function ExplorerSidebar() {
 
   const activeRegion = findRegionById(regions, activeRegionIds[0]);
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
+  const headerPhoto = useMemo(
+    () => [...regionPois].filter((poi) => poi.photos.length > 0).sort((a, b) => b.importance - a.importance)[0]?.photos[0] ?? null,
+    [regionPois]
+  );
   const likedPois = pois.filter((poi) => favorites.includes(poi.id));
   const affinityProfile = buildAffinityProfile(likedPois);
   const hasAffinitySignal = hasEnoughSignal(affinityProfile);
@@ -183,6 +187,18 @@ export function ExplorerSidebar() {
       </button>
 
       <div className="relative shrink-0 overflow-hidden border-b border-white/70 p-5">
+        {headerPhoto && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={headerPhoto.url}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover opacity-[0.12]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/75 to-white/95" />
+          </>
+        )}
         <SeigaihaWatermark className="-top-8 -right-8" />
         <div
           className="relative mb-3 flex w-fit items-center gap-2.5"

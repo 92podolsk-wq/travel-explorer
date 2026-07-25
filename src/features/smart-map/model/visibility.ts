@@ -65,7 +65,7 @@ export function getVisiblePois(
       const visibleWhenViewed = !hideViewed || !viewedPoiIds.includes(poi.id);
       const visibleWhenFavorite = !hideFavorites || !favoritePoiIds.includes(poi.id);
       const visibleWhenVisited = !hideVisited || !visitedPoiIds.includes(poi.id);
-      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(poi.category);
+      const matchesCategory = selectedCategories.includes(poi.category);
 
       return (
         visibleWhenViewed &&

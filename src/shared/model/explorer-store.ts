@@ -4,6 +4,7 @@ import { seedAreas } from "@/entities/area/model/areas";
 import type { Area } from "@/entities/area/model/types";
 import { seedCountries } from "@/entities/country/model/countries";
 import type { Country } from "@/entities/country/model/types";
+import { poiMainCategories } from "@/entities/poi/model/constants";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
 import type { Coordinates, Poi, PoiMainCategory, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
@@ -33,7 +34,6 @@ type ExplorerState = {
   explorationModes: ExplorationMode[];
   activeRegionIds: string[];
   selectedPoiId: string;
-  selectedModeIds: string[];
   selectedCategories: PoiMainCategory[];
   searchQuery: string;
   favorites: string[];
@@ -65,7 +65,6 @@ type ExplorerState = {
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
   setActiveArea: (areaId: string) => void;
-  toggleModeFilter: (modeId: string) => void;
   toggleCategory: (category: PoiMainCategory) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
@@ -112,8 +111,7 @@ export const useExplorerStore = create<ExplorerState>()(
   explorationModes: seedExplorationModes,
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
-  selectedModeIds: [],
-  selectedCategories: [],
+  selectedCategories: [...poiMainCategories],
   searchQuery: "",
   favorites: [],
   viewedPoiIds: [],
@@ -173,12 +171,6 @@ export const useExplorerStore = create<ExplorerState>()(
         selectedPoiId: firstPoiIdForRegions(state.pois, activeRegionIds)
       };
     }),
-  toggleModeFilter: (modeId) =>
-    set((state) => ({
-      selectedModeIds: state.selectedModeIds.includes(modeId)
-        ? state.selectedModeIds.filter((id) => id !== modeId)
-        : [...state.selectedModeIds, modeId]
-    })),
   toggleCategory: (category) =>
     set((state) => ({
       selectedCategories: state.selectedCategories.includes(category)
@@ -261,11 +253,7 @@ export const useExplorerStore = create<ExplorerState>()(
     })),
   setCountries: (countries) => set({ countries }),
   setAreas: (areas) => set({ areas }),
-  setExplorationModes: (explorationModes) =>
-    set((state) => ({
-      explorationModes,
-      selectedModeIds: state.selectedModeIds.filter((id) => explorationModes.some((mode) => mode.id === id))
-    })),
+  setExplorationModes: (explorationModes) => set({ explorationModes }),
   setUserLocation: (location) => set({ userLocation: location }),
   setIsLocatingUser: (value) => set({ isLocatingUser: value }),
   setLocationError: (error) => set({ locationError: error }),

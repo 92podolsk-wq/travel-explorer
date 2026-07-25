@@ -9,7 +9,6 @@ import { categoryIcons } from "@/entities/poi/ui/category-icon";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
 import { SeasonWeatherStrip } from "./season-weather-strip";
-import { getModeIcon } from "@/features/exploration-mode/ui/mode-icon";
 import { buildAffinityProfile, computeAffinityScore, hasEnoughSignal, topAffinityCategories } from "@/features/recommendations/model/affinity";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
@@ -28,14 +27,14 @@ import { Input } from "@/shared/ui/input";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
 
+const noExplorationModes: never[] = [];
+
 export function ExplorerSidebar() {
   const pois = useExplorerStore((state) => state.pois);
   const regions = useExplorerStore((state) => state.regions);
   const areas = useExplorerStore((state) => state.areas);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
-  const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
-  const explorationModes = useExplorerStore((state) => state.explorationModes);
   const selectedCategories = useExplorerStore((state) => state.selectedCategories);
   const toggleCategory = useExplorerStore((state) => state.toggleCategory);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
@@ -50,7 +49,6 @@ export function ExplorerSidebar() {
   const toggleHideVisitedOnMap = useExplorerStore((state) => state.toggleHideVisitedOnMap);
   const language = useExplorerStore((state) => state.language);
   const zoom = useExplorerStore((state) => state.zoom);
-  const toggleModeFilter = useExplorerStore((state) => state.toggleModeFilter);
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
   const selectPoi = useExplorerStore((state) => state.selectPoiFromMap);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
@@ -71,7 +69,6 @@ export function ExplorerSidebar() {
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
-  const [isModeFilterOpen, setIsModeFilterOpen] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
   async function handleNearMeClick() {
@@ -134,10 +131,9 @@ export function ExplorerSidebar() {
   const reminderKey = seasonReminder ? `${activeRegion.id}:${seasonReminder.season}` : null;
   const showSeasonReminder = seasonReminder && reminderKey && !dismissedReminders.has(reminderKey);
 
-  const selectedModes = explorationModes.filter((mode) => selectedModeIds.includes(mode.id));
   const visiblePois = getVisiblePois(
     regionPois,
-    selectedModes,
+    noExplorationModes,
     zoom,
     searchQuery,
     (poi) => getLocalizedPoiSearchText(poi, language),
@@ -302,62 +298,13 @@ export function ExplorerSidebar() {
       <div className="hidden shrink-0 border-b border-white/70 sm:block">
         <button
           type="button"
-          onClick={() => setIsModeFilterOpen((value) => !value)}
-          aria-expanded={isModeFilterOpen}
-          className="flex w-full items-center justify-between gap-2 p-4 pb-3 text-left"
-        >
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            {t.app.modeFilters}
-            {selectedModeIds.length > 0 && (
-              <span className="ml-1.5 text-primary">({selectedModeIds.length})</span>
-            )}
-          </span>
-          <ChevronDown
-            className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isModeFilterOpen && "rotate-180")}
-            aria-hidden="true"
-          />
-        </button>
-        {isModeFilterOpen && (
-          <div className="flex flex-wrap gap-2 px-4 pb-4">
-            {explorationModes.map((mode) => {
-              const ModeIcon = getModeIcon(mode.icon);
-              const isSelected = selectedModeIds.includes(mode.id);
-              const matchCount = regionPois.filter((poi) =>
-                poi.tags.some((tag) => mode.tags.includes(tag))
-              ).length;
-
-              return (
-                <Button
-                  key={mode.id}
-                  type="button"
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleModeFilter(mode.id)}
-                  aria-pressed={isSelected}
-                  title={mode.descriptionByLanguage[language] ?? mode.description}
-                  className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-white/[0.58]")}
-                >
-                  <ModeIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">
-                    {mode.nameByLanguage[language] ?? mode.name} ({matchCount})
-                  </span>
-                </Button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <div className="hidden shrink-0 border-b border-white/70 sm:block">
-        <button
-          type="button"
           onClick={() => setIsCategoryFilterOpen((value) => !value)}
           aria-expanded={isCategoryFilterOpen}
           className="flex w-full items-center justify-between gap-2 p-4 pb-3 text-left"
         >
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t.app.categoryFilter}
-            {selectedCategories.length > 0 && (
+            {selectedCategories.length < poiMainCategories.length && (
               <span className="ml-1.5 text-primary">({selectedCategories.length})</span>
             )}
           </span>

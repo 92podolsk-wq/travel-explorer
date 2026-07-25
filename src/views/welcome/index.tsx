@@ -47,7 +47,6 @@ export function WelcomePage() {
   const explorationModes = useExplorerStore((state) => state.explorationModes);
   const language = useExplorerStore((state) => state.language);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
-  const toggleModeFilter = useExplorerStore((state) => state.toggleModeFilter);
   const setHasSeenWelcome = useExplorerStore((state) => state.setHasSeenWelcome);
   const t = getTranslations(language).welcome;
 
@@ -77,8 +76,7 @@ export function WelcomePage() {
     setHasSeenWelcome(true);
   }
 
-  function enterMode(modeId: string) {
-    toggleModeFilter(modeId);
+  function enterMode() {
     setHasSeenWelcome(true);
   }
 
@@ -159,7 +157,7 @@ export function WelcomePage() {
                   <button
                     key={mode.id}
                     type="button"
-                    onClick={() => enterMode(mode.id)}
+                    onClick={enterMode}
                     className="flex flex-col items-start gap-2 rounded-lg border border-border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <ModeIcon className="h-6 w-6 text-primary" />

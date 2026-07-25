@@ -140,6 +140,8 @@ function createPoiCollection(
   };
 }
 
+const noExplorationModes: never[] = [];
+
 function getPoiIdFromEvent(event: MapLayerMouseEvent) {
   const feature = event.features?.[0];
   const id = feature?.properties?.id;
@@ -656,9 +658,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const pois = useExplorerStore((state) => state.pois);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
-  const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
   const selectedCategories = useExplorerStore((state) => state.selectedCategories);
-  const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const regions = useExplorerStore((state) => state.regions);
   const language = useExplorerStore((state) => state.language);
@@ -777,11 +777,6 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
   }
 
-  const selectedModes = useMemo(
-    () => explorationModes.filter((mode) => selectedModeIds.includes(mode.id)),
-    [selectedModeIds, explorationModes]
-  );
-
   const activeRegions = useMemo(
     () => regions.filter((region) => activeRegionIds.includes(region.id)),
     [regions, activeRegionIds]
@@ -803,14 +798,13 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     () =>
       getVisiblePois(
         regionPois,
-        selectedModes,
+        noExplorationModes,
         zoom,
         searchQuery,
         (poi) => getLocalizedPoiSearchText(poi, language),
         { viewedPoiIds, hideViewed: hideViewedOnMap, nearbyOrigin: sortByDistance ? userLocation : null, selectedCategories }
       ),
     [
-      selectedModes,
       language,
       regionPois,
       searchQuery,

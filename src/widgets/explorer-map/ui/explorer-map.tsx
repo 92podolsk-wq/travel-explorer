@@ -681,6 +681,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const isAddingMarker = useExplorerStore((state) => state.isAddingMarker);
   const setIsAddingMarker = useExplorerStore((state) => state.setIsAddingMarker);
   const setIsSwipeOpen = useExplorerStore((state) => state.setIsSwipeOpen);
+  const isMobileSheetExpanded = useExplorerStore((state) => state.isMobileSheetExpanded);
   const addCustomMarkerToState = useExplorerStore((state) => state.addCustomMarkerToState);
   const currentUser = useExplorerStore((state) => state.currentUser);
   const t = getTranslations(language);
@@ -1303,7 +1304,12 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           {visitedPoiIds.length} {t.app.visited.toLowerCase()}
         </button>
       </div>
-      <div className="absolute right-4 top-6 z-20 flex flex-col items-end gap-2 lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto lg:items-stretch">
+      <div
+        className={cn(
+          "absolute right-4 top-6 z-20 flex-col items-end gap-2 lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto lg:flex lg:items-stretch",
+          isMobileSheetExpanded ? "hidden" : "flex"
+        )}
+      >
         <button
           type="button"
           onClick={() => void handleLocateMe()}

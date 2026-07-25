@@ -46,6 +46,7 @@ type ExplorerState = {
   zoom: number;
   isDetailsOpen: boolean;
   isSwipeOpen: boolean;
+  isMobileSheetExpanded: boolean;
   selectedSeasons: Season[];
   userLocation: Coordinates | null;
   isLocatingUser: boolean;
@@ -81,6 +82,7 @@ type ExplorerState = {
   setZoom: (zoom: number) => void;
   setDetailsOpen: (open: boolean) => void;
   setIsSwipeOpen: (open: boolean) => void;
+  setIsMobileSheetExpanded: (expanded: boolean) => void;
   setPois: (pois: Poi[]) => void;
   setRegions: (regions: Region[]) => void;
   setCountries: (countries: Country[]) => void;
@@ -125,6 +127,7 @@ export const useExplorerStore = create<ExplorerState>()(
   zoom: 11,
   isDetailsOpen: false,
   isSwipeOpen: false,
+  isMobileSheetExpanded: false,
   selectedSeasons: [],
   userLocation: null,
   isLocatingUser: false,
@@ -234,6 +237,7 @@ export const useExplorerStore = create<ExplorerState>()(
   setZoom: (zoom) => set({ zoom }),
   setDetailsOpen: (open) => set({ isDetailsOpen: open }),
   setIsSwipeOpen: (open) => set({ isSwipeOpen: open }),
+  setIsMobileSheetExpanded: (expanded) => set({ isMobileSheetExpanded: expanded }),
   setPois: (pois) =>
     set((state) => ({
       pois,

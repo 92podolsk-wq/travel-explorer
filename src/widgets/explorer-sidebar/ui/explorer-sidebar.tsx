@@ -66,10 +66,11 @@ export function ExplorerSidebar() {
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const isSwipeOpen = useExplorerStore((state) => state.isSwipeOpen);
   const setIsSwipeOpen = useExplorerStore((state) => state.setIsSwipeOpen);
+  const isMobileSheetExpanded = useExplorerStore((state) => state.isMobileSheetExpanded);
+  const setIsMobileSheetExpanded = useExplorerStore((state) => state.setIsMobileSheetExpanded);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
-  const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
   async function handleNearMeClick() {
@@ -179,7 +180,7 @@ export function ExplorerSidebar() {
     >
       <button
         type="button"
-        onClick={() => setIsMobileSheetExpanded((value) => !value)}
+        onClick={() => setIsMobileSheetExpanded(!isMobileSheetExpanded)}
         aria-label={isMobileSheetExpanded ? t.app.hideDetails : t.app.showDetails}
         className="flex w-full shrink-0 flex-col items-center gap-1 pb-1 pt-2.5 lg:hidden"
       >

@@ -45,6 +45,7 @@ type ExplorerState = {
   language: Language;
   zoom: number;
   isDetailsOpen: boolean;
+  isSwipeOpen: boolean;
   selectedSeasons: Season[];
   userLocation: Coordinates | null;
   isLocatingUser: boolean;
@@ -79,6 +80,7 @@ type ExplorerState = {
   toggleHideVisitedOnMap: () => void;
   setZoom: (zoom: number) => void;
   setDetailsOpen: (open: boolean) => void;
+  setIsSwipeOpen: (open: boolean) => void;
   setPois: (pois: Poi[]) => void;
   setRegions: (regions: Region[]) => void;
   setCountries: (countries: Country[]) => void;
@@ -122,6 +124,7 @@ export const useExplorerStore = create<ExplorerState>()(
   language: "en",
   zoom: 11,
   isDetailsOpen: false,
+  isSwipeOpen: false,
   selectedSeasons: [],
   userLocation: null,
   isLocatingUser: false,
@@ -230,6 +233,7 @@ export const useExplorerStore = create<ExplorerState>()(
   toggleHideVisitedOnMap: () => set((state) => ({ hideVisitedOnMap: !state.hideVisitedOnMap })),
   setZoom: (zoom) => set({ zoom }),
   setDetailsOpen: (open) => set({ isDetailsOpen: open }),
+  setIsSwipeOpen: (open) => set({ isSwipeOpen: open }),
   setPois: (pois) =>
     set((state) => ({
       pois,

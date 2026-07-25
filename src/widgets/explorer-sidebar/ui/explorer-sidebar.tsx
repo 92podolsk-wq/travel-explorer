@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Layers, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { poiMainCategories, seasons } from "@/entities/poi/model/constants";
@@ -64,10 +64,11 @@ export function ExplorerSidebar() {
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
+  const isSwipeOpen = useExplorerStore((state) => state.isSwipeOpen);
+  const setIsSwipeOpen = useExplorerStore((state) => state.setIsSwipeOpen);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
-  const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
@@ -281,15 +282,6 @@ export function ExplorerSidebar() {
             )}
           >
             <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsSwipeOpen(true)}
-            disabled={swipeCandidates.length === 0}
-            title={t.app.swipeDiscoveryHint}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-white text-muted-foreground transition hover:text-foreground disabled:opacity-40"
-          >
-            <Layers className="h-4 w-4" />
           </button>
         </div>
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}

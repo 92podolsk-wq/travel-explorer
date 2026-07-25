@@ -1313,52 +1313,47 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
           {t.app.swipeDiscovery}
         </button>
-        <div className="flex flex-col overflow-hidden rounded-lg border border-border/60 bg-white shadow-panel">
-          <button
-            type="button"
-            onClick={() => void handleLocateMe()}
-            disabled={isLocatingUser}
-            aria-label={t.app.locateMeHint}
-            title={t.app.locateMeHint}
-            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60 disabled:opacity-60"
-          >
-            <LocateFixed className={cn("h-[18px] w-[18px]", isLocatingUser && "animate-pulse")} />
-          </button>
-          <div className="h-px bg-border/60" />
-          <button
-            type="button"
-            onClick={handleToggleAddMarker}
-            aria-pressed={isAddingMarker}
-            aria-label={t.app.addMarkerHint}
-            title={t.app.addMarkerHint}
-            className={cn(
-              "flex h-10 w-10 items-center justify-center transition",
-              isAddingMarker ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/60"
-            )}
-          >
-            <MapPinPlus className="h-[18px] w-[18px]" />
-          </button>
-          <div className="h-px bg-border/60" />
-          <button
-            type="button"
-            onClick={() => mapRef.current?.zoomIn()}
-            aria-label="Zoom in"
-            title="Zoom in"
-            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60"
-          >
-            <Plus className="h-[18px] w-[18px]" />
-          </button>
-          <div className="h-px bg-border/60" />
-          <button
-            type="button"
-            onClick={() => mapRef.current?.zoomOut()}
-            aria-label="Zoom out"
-            title="Zoom out"
-            className="flex h-10 w-10 items-center justify-center text-foreground transition hover:bg-muted/60"
-          >
-            <Minus className="h-[18px] w-[18px]" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => void handleLocateMe()}
+          disabled={isLocatingUser}
+          aria-label={t.app.locateMeHint}
+          title={t.app.locateMeHint}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60 disabled:opacity-60"
+        >
+          <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
+        </button>
+        <button
+          type="button"
+          onClick={handleToggleAddMarker}
+          aria-pressed={isAddingMarker}
+          aria-label={t.app.addMarkerHint}
+          title={t.app.addMarkerHint}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full shadow-panel transition",
+            isAddingMarker ? "bg-primary/10 text-primary" : "bg-white text-foreground hover:bg-muted/60"
+          )}
+        >
+          <MapPinPlus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomIn()}
+          aria-label="Zoom in"
+          title="Zoom in"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => mapRef.current?.zoomOut()}
+          aria-label="Zoom out"
+          title="Zoom out"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
       </div>
 
       {isAddingMarker && !pendingMarkerCoords && (

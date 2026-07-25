@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Layers, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { seasons } from "@/entities/poi/model/constants";
+import { poiMainCategories, seasons } from "@/entities/poi/model/constants";
+import { categoryIcons } from "@/entities/poi/ui/category-icon";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
 import { SeasonWeatherStrip } from "./season-weather-strip";
@@ -35,6 +36,8 @@ export function ExplorerSidebar() {
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
   const explorationModes = useExplorerStore((state) => state.explorationModes);
+  const selectedCategories = useExplorerStore((state) => state.selectedCategories);
+  const toggleCategory = useExplorerStore((state) => state.toggleCategory);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
@@ -69,6 +72,7 @@ export function ExplorerSidebar() {
   const [isSwipeOpen, setIsSwipeOpen] = useState(false);
   const [isMobileSheetExpanded, setIsMobileSheetExpanded] = useState(false);
   const [isModeFilterOpen, setIsModeFilterOpen] = useState(false);
+  const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
   async function handleNearMeClick() {
     if (sortByDistance) {
@@ -144,7 +148,8 @@ export function ExplorerSidebar() {
       hideFavorites: hideFavoritesOnMap,
       visitedPoiIds,
       hideVisited: hideVisitedOnMap,
-      nearbyOrigin: sortByDistance ? userLocation : null
+      nearbyOrigin: sortByDistance ? userLocation : null,
+      selectedCategories
     }
   );
 
@@ -336,6 +341,49 @@ export function ExplorerSidebar() {
                   <span className="truncate">
                     {mode.nameByLanguage[language] ?? mode.name} ({matchCount})
                   </span>
+                </Button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div className="hidden shrink-0 border-b border-white/70 sm:block">
+        <button
+          type="button"
+          onClick={() => setIsCategoryFilterOpen((value) => !value)}
+          aria-expanded={isCategoryFilterOpen}
+          className="flex w-full items-center justify-between gap-2 p-4 pb-3 text-left"
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {t.app.categoryFilter}
+            {selectedCategories.length > 0 && (
+              <span className="ml-1.5 text-primary">({selectedCategories.length})</span>
+            )}
+          </span>
+          <ChevronDown
+            className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCategoryFilterOpen && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
+        {isCategoryFilterOpen && (
+          <div className="flex flex-wrap gap-2 px-4 pb-4">
+            {poiMainCategories.map((category) => {
+              const CategoryIcon = categoryIcons[category];
+              const isSelected = selectedCategories.includes(category);
+
+              return (
+                <Button
+                  key={category}
+                  type="button"
+                  variant={isSelected ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleCategory(category)}
+                  aria-pressed={isSelected}
+                  className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-white/[0.58]")}
+                >
+                  <CategoryIcon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{t.category[category]}</span>
                 </Button>
               );
             })}

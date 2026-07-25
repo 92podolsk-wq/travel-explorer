@@ -51,7 +51,7 @@ model Poi {
   description      String
   descriptionByLanguage Json?
   rating           Float
-  categories       String[]
+  category         String
   tags             String[]
   seasons          String[]
   photoScore       Int

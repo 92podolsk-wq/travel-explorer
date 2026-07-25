@@ -1,18 +1,16 @@
-import { Building2, Castle, Church, Eye, Flower2, Home, Landmark, Route, ShoppingBasket, Trees, University, UtensilsCrossed } from "lucide-react";
+import { Building2, Castle, Church, Eye, FerrisWheel, Flower2, Gem, Landmark, Trees, University } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { PoiCategory } from "@/entities/poi/model/types";
+import type { PoiMainCategory } from "@/entities/poi/model/types";
 
-export const categoryIcons: Record<PoiCategory, LucideIcon> = {
-  temple: Landmark,
-  shrine: Church,
-  garden: Flower2,
-  street: Route,
-  district: Building2,
+export const categoryIcons: Record<PoiMainCategory, LucideIcon> = {
   nature: Trees,
-  viewpoint: Eye,
-  market: ShoppingBasket,
-  museum: University,
-  restaurant: UtensilsCrossed,
-  residential: Home,
-  landmark: Castle
+  temples: Church,
+  castles: Castle,
+  museums: University,
+  urban: Building2,
+  viewpoints: Eye,
+  entertainment: FerrisWheel,
+  gardens: Flower2,
+  monuments: Landmark,
+  unique: Gem
 };

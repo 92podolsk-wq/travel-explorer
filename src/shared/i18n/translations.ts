@@ -1,4 +1,4 @@
-import type { Difficulty, Poi, PoiCategory, PoiTag, Season } from "@/entities/poi/model/types";
+import type { Difficulty, Poi, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
 import type { Language } from "./types";
 
 type PoiCopy = {
@@ -47,6 +47,7 @@ type TranslationDictionary = {
     kyotoGreeting: string;
     modeFilters: string;
     seasonFilter: string;
+    categoryFilter: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
@@ -89,7 +90,7 @@ type TranslationDictionary = {
     off: string;
   };
   poi: Record<string, PoiCopy>;
-  category: Record<PoiCategory, string>;
+  category: Record<PoiMainCategory, string>;
   tag: Record<PoiTag, string>;
   difficulty: Record<Difficulty, string>;
   season: Record<Season, string>;
@@ -289,6 +290,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Konnichiwa!",
       modeFilters: "Filters",
       seasonFilter: "Season",
+      categoryFilter: "Category",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
       now: "Now",
@@ -384,18 +386,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       }
     },
     category: {
-      temple: "temple",
-      shrine: "shrine",
-      garden: "garden",
-      street: "street",
-      district: "district",
-      nature: "nature",
-      viewpoint: "viewpoint",
-      market: "market",
-      museum: "museum",
-      restaurant: "restaurant",
-      residential: "residential",
-      landmark: "landmark"
+      nature: "Nature",
+      temples: "Temples & Religion",
+      castles: "Castles & Palaces",
+      museums: "Museums & Art",
+      urban: "Urban Environment",
+      viewpoints: "Viewpoints",
+      entertainment: "Entertainment",
+      gardens: "Gardens & Parks",
+      monuments: "Monuments & Memorials",
+      unique: "Unique Places"
     },
     tag: {
       "must-visit": "must visit",
@@ -616,6 +616,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Коничива!",
       modeFilters: "Фильтры",
       seasonFilter: "Сезон",
+      categoryFilter: "Категория",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
       now: "Сейчас",
@@ -711,18 +712,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       }
     },
     category: {
-      temple: "храм",
-      shrine: "святилище",
-      garden: "сад",
-      street: "улица",
-      district: "район",
-      nature: "природа",
-      viewpoint: "видовая точка",
-      market: "рынок",
-      museum: "музей",
-      restaurant: "ресторан",
-      residential: "жилой дом",
-      landmark: "достопримечательность"
+      nature: "Природа",
+      temples: "Храмы и религия",
+      castles: "Замки и дворцы",
+      museums: "Музеи и искусство",
+      urban: "Городская среда",
+      viewpoints: "Смотровые площадки",
+      entertainment: "Развлечения",
+      gardens: "Сады и парки",
+      monuments: "Памятники и мемориалы",
+      unique: "Уникальные места"
     },
     tag: {
       "must-visit": "обязательно",
@@ -943,6 +942,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "こんにちは！",
       modeFilters: "フィルター",
       seasonFilter: "季節",
+      categoryFilter: "カテゴリー",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
       now: "現在",
@@ -1037,18 +1037,16 @@ export const translations: Record<Language, TranslationDictionary> = {
       }
     },
     category: {
-      temple: "寺",
-      shrine: "神社",
-      garden: "庭園",
-      street: "通り",
-      district: "地区",
       nature: "自然",
-      viewpoint: "展望",
-      market: "市場",
-      museum: "博物館",
-      restaurant: "レストラン",
-      residential: "住宅",
-      landmark: "ランドマーク"
+      temples: "寺院・宗教",
+      castles: "城・宮殿",
+      museums: "博物館・美術",
+      urban: "街並み",
+      viewpoints: "展望スポット",
+      entertainment: "エンターテインメント",
+      gardens: "庭園・公園",
+      monuments: "記念碑・慰霊碑",
+      unique: "ユニークな場所"
     },
     tag: {
       "must-visit": "必見",
@@ -1237,7 +1235,6 @@ export function getTranslations(language: Language) {
 export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
   const dictionary = getTranslations(language);
   const poiCopy = dictionary.poi[poi.id];
-  const categories = poi.categories.map((category) => dictionary.category[category]);
   const tags = poi.tags.map((tag) => dictionary.tag[tag]);
   const bestTime = poiCopy?.bestTime ?? poi.bestTime;
 
@@ -1247,7 +1244,7 @@ export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
     poi.description,
     poiCopy?.description,
     dictionary.difficulty[poi.difficulty],
-    ...categories,
+    dictionary.category[poi.category],
     ...tags,
     ...bestTime
   ]

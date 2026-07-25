@@ -9,7 +9,7 @@ function validate(item: PoiInput, index: number): ImportError | null {
   if (!item.regionId) return { index, name: item.name || "", error: "Не указан regionId." };
   if (!item.name?.trim()) return { index, name: item.name || "", error: "Не указано название." };
   if (!item.description?.trim()) return { index, name: item.name, error: "Не указано описание." };
-  if (!item.categories || item.categories.length === 0) return { index, name: item.name, error: "Не указаны категории." };
+  if (!item.category) return { index, name: item.name, error: "Не указана категория." };
   if (!item.photos || item.photos.length === 0) return { index, name: item.name, error: "Не указано ни одного фото." };
   if (typeof item.coordinates?.lat !== "number" || typeof item.coordinates?.lng !== "number") {
     return { index, name: item.name, error: "Некорректные координаты." };

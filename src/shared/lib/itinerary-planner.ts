@@ -90,7 +90,7 @@ export function sequenceByNearestNeighbor<T extends { coordinates: Coordinates; 
 }
 
 function suggestClusterTitle(cluster: Poi[], language: Language): string {
-  const districtPois = cluster.filter((poi) => poi.categories.includes("district"));
+  const districtPois = cluster.filter((poi) => poi.category === "urban");
   const pool = districtPois.length > 0 ? districtPois : cluster;
   const anchor = pool.reduce((best, poi) => (poi.importance > best.importance ? poi : best), pool[0]);
   return anchor.nameByLanguage[language] ?? anchor.name;

@@ -1,6 +1,6 @@
 import type { Language } from "@/shared/i18n/types";
 import type { PublishStatus } from "@/entities/region/model/types";
-import type { Difficulty, Photo, Poi, PoiCategory, PoiInput, PoiTag, Season } from "@/entities/poi/model/types";
+import type { Difficulty, Photo, Poi, PoiInput, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
 import { prisma } from "./prisma-client";
 
 function slugify(value: string) {
@@ -56,7 +56,7 @@ export function toPoi(row: PoiRow): Poi {
           ...(photo.season ? { season: photo.season as Season } : {})
         })
       ),
-    categories: row.categories as PoiCategory[],
+    category: row.category as PoiMainCategory,
     tags: row.tags as PoiTag[],
     seasons: row.seasons,
     photoScore: row.photoScore,
@@ -97,7 +97,7 @@ async function writePoi(id: string, input: PoiInput) {
       description: input.description,
       descriptionByLanguage: input.descriptionByLanguage,
       rating: input.rating,
-      categories: input.categories,
+      category: input.category,
       tags: input.tags,
       seasons: input.seasons,
       photoScore: input.photoScore,
@@ -118,7 +118,7 @@ async function writePoi(id: string, input: PoiInput) {
       description: input.description,
       descriptionByLanguage: input.descriptionByLanguage,
       rating: input.rating,
-      categories: input.categories,
+      category: input.category,
       tags: input.tags,
       seasons: input.seasons,
       photoScore: input.photoScore,

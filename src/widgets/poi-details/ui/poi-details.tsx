@@ -305,16 +305,15 @@ export function PoiDetails() {
             <div className="mt-6">
               <h3 className="mb-2 text-sm font-semibold">{t.app.signals}</h3>
               <div className="flex flex-wrap gap-2">
-                {selectedPoi.categories.map((category) => {
-                  const CategoryIcon = categoryIcons[category];
-                  if (!CategoryIcon) return null;
+                {(() => {
+                  const CategoryIcon = categoryIcons[selectedPoi.category];
                   return (
-                    <Badge key={category} className="gap-1">
+                    <Badge className="gap-1">
                       <CategoryIcon className="h-3 w-3" />
-                      {t.category[category] ?? category}
+                      {t.category[selectedPoi.category]}
                     </Badge>
                   );
-                })}
+                })()}
                 {selectedPoi.tags.map((tag) => (
                   <Badge key={tag}>{t.tag[tag]}</Badge>
                 ))}

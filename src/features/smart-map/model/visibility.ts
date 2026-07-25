@@ -1,5 +1,5 @@
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
-import type { Coordinates, Poi } from "@/entities/poi/model/types";
+import type { Coordinates, Poi, PoiMainCategory } from "@/entities/poi/model/types";
 import { computeModeScore } from "@/features/exploration-mode/model/score";
 import { haversineDistanceMeters } from "@/shared/lib/geo";
 
@@ -23,6 +23,7 @@ type VisibilityOptions = {
   visitedPoiIds?: string[];
   hideVisited?: boolean;
   nearbyOrigin?: Coordinates | null;
+  selectedCategories?: PoiMainCategory[];
 };
 
 export function getVisiblePois(
@@ -38,7 +39,8 @@ export function getVisiblePois(
     hideFavorites = false,
     visitedPoiIds = [],
     hideVisited = false,
-    nearbyOrigin = null
+    nearbyOrigin = null,
+    selectedCategories = []
   }: VisibilityOptions = {}
 ) {
   const normalizedQuery = query.trim().toLowerCase();
@@ -56,13 +58,14 @@ export function getVisiblePois(
       const matchesSearch =
         normalizedQuery.length === 0 ||
         poi.name.toLowerCase().includes(normalizedQuery) ||
-        poi.categories.some((category) => category.includes(normalizedQuery)) ||
+        poi.category.includes(normalizedQuery) ||
         poi.tags.some((tag) => tag.includes(normalizedQuery)) ||
         getSearchText(poi).includes(normalizedQuery);
 
       const visibleWhenViewed = !hideViewed || !viewedPoiIds.includes(poi.id);
       const visibleWhenFavorite = !hideFavorites || !favoritePoiIds.includes(poi.id);
       const visibleWhenVisited = !hideVisited || !visitedPoiIds.includes(poi.id);
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(poi.category);
 
       return (
         visibleWhenViewed &&
@@ -70,6 +73,7 @@ export function getVisiblePois(
         visibleWhenVisited &&
         matchesSearch &&
         matchesFilterTags &&
+        matchesCategory &&
         (hasActiveFilter || score >= threshold || poi.mustVisit)
       );
     })

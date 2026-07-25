@@ -5,7 +5,7 @@ import type { Area } from "@/entities/area/model/types";
 import { seedCountries } from "@/entities/country/model/countries";
 import type { Country } from "@/entities/country/model/types";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
-import type { Coordinates, Poi, Season } from "@/entities/poi/model/types";
+import type { Coordinates, Poi, PoiMainCategory, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
 import { seedExplorationModes } from "@/entities/exploration-mode/model/exploration-modes";
@@ -34,6 +34,7 @@ type ExplorerState = {
   activeRegionIds: string[];
   selectedPoiId: string;
   selectedModeIds: string[];
+  selectedCategories: PoiMainCategory[];
   searchQuery: string;
   favorites: string[];
   viewedPoiIds: string[];
@@ -65,6 +66,7 @@ type ExplorerState = {
   setActiveRegion: (regionId: string) => void;
   setActiveArea: (areaId: string) => void;
   toggleModeFilter: (modeId: string) => void;
+  toggleCategory: (category: PoiMainCategory) => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
   toggleFavorite: (poiId: string) => void;
@@ -111,6 +113,7 @@ export const useExplorerStore = create<ExplorerState>()(
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
   selectedModeIds: [],
+  selectedCategories: [],
   searchQuery: "",
   favorites: [],
   viewedPoiIds: [],
@@ -175,6 +178,12 @@ export const useExplorerStore = create<ExplorerState>()(
       selectedModeIds: state.selectedModeIds.includes(modeId)
         ? state.selectedModeIds.filter((id) => id !== modeId)
         : [...state.selectedModeIds, modeId]
+    })),
+  toggleCategory: (category) =>
+    set((state) => ({
+      selectedCategories: state.selectedCategories.includes(category)
+        ? state.selectedCategories.filter((c) => c !== category)
+        : [...state.selectedCategories, category]
     })),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),

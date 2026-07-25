@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Languages, Plus, Star, Trash2 } from "lucide-react";
-import { poiCategories, poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
-import type { Difficulty, Poi, PoiCategory, PoiInput, PoiTag, Season } from "@/entities/poi/model/types";
+import { poiDifficulties, poiMainCategories, poiTags, seasons } from "@/entities/poi/model/constants";
+import type { Difficulty, Poi, PoiInput, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
@@ -39,7 +39,7 @@ type FormState = {
   durationMinutes: string;
   difficulty: Difficulty;
   mustVisit: boolean;
-  categories: PoiCategory[];
+  category: PoiMainCategory;
   tags: PoiTag[];
   seasons: string;
   bestTimeEn: string;
@@ -68,7 +68,7 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       durationMinutes: "60",
       difficulty: "easy",
       mustVisit: false,
-      categories: [],
+      category: "unique",
       tags: [],
       seasons: "all year",
       bestTimeEn: "",
@@ -96,7 +96,7 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     durationMinutes: String(poi.durationMinutes),
     difficulty: poi.difficulty,
     mustVisit: poi.mustVisit,
-    categories: poi.categories,
+    category: poi.category,
     tags: poi.tags,
     seasons: poi.seasons.join(", "),
     bestTimeEn: poi.bestTimeByLanguage.en.join(", "),
@@ -140,8 +140,6 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
   if (importance < 0 || importance > 100) return { error: "Важность должна быть от 0 до 100." };
   if (durationMinutes < 0) return { error: "Длительность не может быть отрицательной." };
 
-  if (form.categories.length === 0) return { error: "Выберите хотя бы одну категорию." };
-
   const photos = form.photos
     .filter((photo) => photo.url.trim())
     .map((photo, index) => ({
@@ -177,7 +175,7 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     coordinates: { lat, lng },
     rating,
     photos,
-    categories: form.categories,
+    category: form.category,
     tags: form.tags,
     seasons: splitList(form.seasons),
     photoScore,
@@ -533,16 +531,16 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
       </div>
 
       <div>
-        <label className={fieldLabel} title="Тип места — определяет иконку маркера на карте и бейджи категории в карточке места. Можно выбрать несколько.">
-          Категории
+        <label className={fieldLabel} title="Категория места — определяет иконку маркера на карте и бейдж категории в карточке места. Выбирается ровно одна.">
+          Категория
         </label>
         <div className="flex flex-wrap gap-2">
-          {poiCategories.map((category) => (
+          {poiMainCategories.map((category) => (
             <button
               key={category}
               type="button"
-              className={chipClass(form.categories.includes(category))}
-              onClick={() => setForm((p) => ({ ...p, categories: toggleListValue(p.categories, category) }))}
+              className={chipClass(form.category === category)}
+              onClick={() => setForm((p) => ({ ...p, category }))}
             >
               {t.category[category]}
             </button>

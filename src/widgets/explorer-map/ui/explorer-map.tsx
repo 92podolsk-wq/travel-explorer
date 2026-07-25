@@ -15,7 +15,7 @@ import Supercluster from "supercluster";
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { ItineraryStopPoint } from "@/entities/itinerary/model/types";
 import { stopPointCoordinates, stopPointRegionId } from "@/entities/itinerary/model/stop-point";
-import type { Poi, PoiCategory } from "@/entities/poi/model/types";
+import type { Poi, PoiMainCategory } from "@/entities/poi/model/types";
 import { findRegionById } from "@/entities/region/model/regions";
 import type { Region } from "@/entities/region/model/types";
 import type { MapStyleId } from "@/entities/site-setting/model/types";
@@ -59,7 +59,7 @@ type PoiFeatureProperties = {
   mustVisit: boolean;
   viewed: boolean;
   favorite: boolean;
-  category: PoiCategory;
+  category: PoiMainCategory;
 };
 
 type PoiFeature = Feature<Point, PoiFeatureProperties>;
@@ -133,7 +133,7 @@ function createPoiCollection(
           mustVisit: poi.mustVisit,
           viewed: viewedPoiIds.includes(poi.id),
           favorite: favoritePoiIds.includes(poi.id),
-          category: poi.categories[0] ?? "district"
+          category: poi.category
         }
       })
     )
@@ -657,6 +657,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const selectedModeIds = useExplorerStore((state) => state.selectedModeIds);
+  const selectedCategories = useExplorerStore((state) => state.selectedCategories);
   const explorationModes = useExplorerStore((state) => state.explorationModes);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const regions = useExplorerStore((state) => state.regions);
@@ -806,9 +807,20 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         zoom,
         searchQuery,
         (poi) => getLocalizedPoiSearchText(poi, language),
-        { viewedPoiIds, hideViewed: hideViewedOnMap, nearbyOrigin: sortByDistance ? userLocation : null }
+        { viewedPoiIds, hideViewed: hideViewedOnMap, nearbyOrigin: sortByDistance ? userLocation : null, selectedCategories }
       ),
-    [selectedModes, language, regionPois, searchQuery, zoom, viewedPoiIds, hideViewedOnMap, sortByDistance, userLocation]
+    [
+      selectedModes,
+      language,
+      regionPois,
+      searchQuery,
+      zoom,
+      viewedPoiIds,
+      hideViewedOnMap,
+      sortByDistance,
+      userLocation,
+      selectedCategories
+    ]
   );
 
   const poiCollection = useMemo(

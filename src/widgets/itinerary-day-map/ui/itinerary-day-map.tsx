@@ -135,7 +135,7 @@ export function ItineraryDayMap({
       stops.forEach((point, index) => {
         const color =
           point.kind === "poi"
-            ? (categoryMarkerColors[point.poi.categories[0]] ?? "#7a7a7a")
+            ? (categoryMarkerColors[point.poi.category] ?? "#7a7a7a")
             : (stopPointColor(point) ?? "#7a7a7a");
         const coordinates = stopPointCoordinates(point);
         const marker = new maplibre.Marker({ element: buildNumberedMarkerEl(index + 1, color) })

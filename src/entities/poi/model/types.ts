@@ -1,19 +1,17 @@
 import type { PublishStatus } from "@/entities/region/model/types";
 import type { Language } from "@/shared/i18n/types";
 
-export type PoiCategory =
-  | "temple"
-  | "shrine"
-  | "garden"
-  | "street"
-  | "district"
+export type PoiMainCategory =
   | "nature"
-  | "viewpoint"
-  | "market"
-  | "museum"
-  | "restaurant"
-  | "residential"
-  | "landmark";
+  | "temples"
+  | "castles"
+  | "museums"
+  | "urban"
+  | "viewpoints"
+  | "entertainment"
+  | "gardens"
+  | "monuments"
+  | "unique";
 
 export type PoiTag =
   | "must-visit"
@@ -56,7 +54,7 @@ export type Poi = {
   descriptionByLanguage: Record<Language, string>;
   rating: number;
   photos: Photo[];
-  categories: PoiCategory[];
+  category: PoiMainCategory;
   tags: PoiTag[];
   seasons: string[];
   photoScore: number;

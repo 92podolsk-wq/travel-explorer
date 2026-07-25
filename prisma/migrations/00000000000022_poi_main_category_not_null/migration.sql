@@ -1,0 +1,1 @@
+ALTER TABLE "Poi" ALTER COLUMN "category" SET NOT NULL;

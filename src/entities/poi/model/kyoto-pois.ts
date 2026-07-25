@@ -23,7 +23,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         author: "Yanajin33"
       }
     ],
-    categories: ["shrine", "nature"],
+    category: "temples",
     tags: ["must-visit", "photographer", "autumn", "sunrise", "night", "first-visit"],
     seasons: ["spring", "autumn", "winter"],
     photoScore: 98,
@@ -50,7 +50,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Kiyomizu-dera temple in Kyoto"
       }
     ],
-    categories: ["temple", "viewpoint", "street"],
+    category: "temples",
     tags: ["must-visit", "photographer", "first-visit", "sakura", "autumn"],
     seasons: ["spring", "autumn"],
     photoScore: 94,
@@ -78,7 +78,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Bamboo grove in Arashiyama"
       }
     ],
-    categories: ["nature", "street"],
+    category: "nature",
     tags: ["must-visit", "photographer", "first-visit", "nature", "rain"],
     seasons: ["all year"],
     photoScore: 91,
@@ -105,7 +105,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Traditional street in Gion at dusk"
       }
     ],
-    categories: ["district", "street"],
+    category: "urban",
     tags: ["must-visit", "photographer", "first-visit", "night", "rain"],
     seasons: ["all year"],
     photoScore: 92,
@@ -132,7 +132,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Cherry blossoms over a Kyoto canal"
       }
     ],
-    categories: ["street", "nature"],
+    category: "urban",
     tags: ["photographer", "sakura", "nature", "first-visit", "public-transport"],
     seasons: ["spring"],
     photoScore: 89,
@@ -159,7 +159,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Kinkaku-ji Golden Pavilion"
       }
     ],
-    categories: ["temple", "garden"],
+    category: "temples",
     tags: ["must-visit", "first-visit", "photographer", "autumn"],
     seasons: ["autumn", "winter"],
     photoScore: 88,
@@ -186,7 +186,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Kyoto temple garden in spring"
       }
     ],
-    categories: ["temple", "garden"],
+    category: "temples",
     tags: ["sakura", "autumn", "hidden-gem", "photographer", "public-transport"],
     seasons: ["spring", "autumn"],
     photoScore: 86,
@@ -213,7 +213,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Mossy forest path near Kyoto"
       }
     ],
-    categories: ["nature", "temple"],
+    category: "nature",
     tags: ["nature", "hidden-gem", "light-trekking", "autumn", "photographer"],
     seasons: ["summer", "autumn"],
     photoScore: 87,
@@ -240,7 +240,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Japanese market food stall"
       }
     ],
-    categories: ["market", "street"],
+    category: "urban",
     tags: ["first-visit", "rain", "public-transport"],
     seasons: ["all year"],
     photoScore: 72,
@@ -267,7 +267,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Japanese garden and pond"
       }
     ],
-    categories: ["garden", "viewpoint"],
+    category: "gardens",
     tags: ["hidden-gem", "autumn", "photographer", "nature"],
     seasons: ["autumn", "spring"],
     photoScore: 84,
@@ -297,7 +297,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Osaka Castle tower over stone ramparts"
       }
     ],
-    categories: ["museum", "garden"],
+    category: "museums",
     tags: ["must-visit", "first-visit", "sakura", "photographer"],
     seasons: ["spring", "autumn"],
     photoScore: 90,
@@ -327,7 +327,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         author: "Martin Falbisoner"
       }
     ],
-    categories: ["district", "street"],
+    category: "urban",
     tags: ["must-visit", "photographer", "night", "first-visit"],
     seasons: ["all year"],
     photoScore: 93,
@@ -356,7 +356,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Retro street in Shinsekai beneath Tsutenkaku Tower"
       }
     ],
-    categories: ["district", "street"],
+    category: "urban",
     tags: ["photographer", "night", "hidden-gem"],
     seasons: ["all year"],
     photoScore: 85,
@@ -386,7 +386,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         author: "Sakai Yayoi"
       }
     ],
-    categories: ["museum"],
+    category: "museums",
     tags: ["first-visit", "must-visit", "public-transport"],
     seasons: ["all year"],
     photoScore: 82,
@@ -416,7 +416,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         author: "名古屋太郎"
       }
     ],
-    categories: ["temple", "garden"],
+    category: "temples",
     tags: ["hidden-gem", "first-visit", "photographer"],
     seasons: ["spring", "autumn"],
     photoScore: 84,
@@ -445,7 +445,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Umeda Sky Building twin towers"
       }
     ],
-    categories: ["viewpoint"],
+    category: "viewpoints",
     tags: ["photographer", "sunrise", "night", "must-visit"],
     seasons: ["all year"],
     photoScore: 91,
@@ -474,7 +474,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Kuromon Ichiba Market food stalls"
       }
     ],
-    categories: ["market", "street"],
+    category: "urban",
     tags: ["first-visit", "rain", "public-transport"],
     seasons: ["all year"],
     photoScore: 74,
@@ -504,7 +504,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         author: "Saigen Jiro"
       }
     ],
-    categories: ["shrine", "garden"],
+    category: "temples",
     tags: ["hidden-gem", "photographer", "public-transport"],
     seasons: ["all year"],
     photoScore: 86,
@@ -533,7 +533,7 @@ const kyotoPoisWithoutStatus: Omit<Poi, "status" | "descriptionByLanguage">[] = 
         alt: "Namba Yasaka Shrine lion-head stage"
       }
     ],
-    categories: ["shrine"],
+    category: "temples",
     tags: ["photographer", "hidden-gem"],
     seasons: ["all year"],
     photoScore: 88,

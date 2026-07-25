@@ -934,6 +934,7 @@ export function AdminPanel() {
                 subtitle: regions.find((region) => region.id === poi.regionId)?.name,
                 badges: [
                   ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
+                  { label: t.category[poi.category] },
                   ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
                 ] as MasterDetailBadge[]
               }))}

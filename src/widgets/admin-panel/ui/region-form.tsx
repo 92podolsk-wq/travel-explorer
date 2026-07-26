@@ -9,6 +9,7 @@ import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { translateFromRussian } from "@/shared/lib/admin-translate";
 import { missingLanguages } from "@/shared/lib/translation-completeness";
+import { LocationMapPicker } from "./location-map-picker";
 
 type FormState = {
   name: string;
@@ -268,6 +269,18 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
             Похоже, не переведено: {missingName.map((lang) => lang.toUpperCase()).join(", ")}
           </p>
         )}
+      </div>
+
+      <div>
+        <label className={fieldLabel} title="Найдите город на карте, чтобы точно указать координаты центра, вместо того чтобы вводить их вручную.">
+          Центр города на карте
+        </label>
+        <LocationMapPicker
+          lat={form.lat}
+          lng={form.lng}
+          onChange={(lat, lng) => setForm((p) => ({ ...p, lat: lat.toFixed(6), lng: lng.toFixed(6) }))}
+          fallbackCenter={{ lat: 35.6762, lng: 139.6503 }}
+        />
       </div>
 
       <div className="grid grid-cols-3 gap-3">

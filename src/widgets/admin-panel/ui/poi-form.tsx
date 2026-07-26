@@ -7,6 +7,7 @@ import type { Difficulty, Poi, PoiInput, PoiMainCategory, PoiTag, Season } from 
 import type { Region } from "@/entities/region/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
+import { CityPicker } from "@/shared/ui/city-picker";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { translateFromRussian } from "@/shared/lib/admin-translate";
@@ -67,7 +68,7 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       importance: "70",
       durationMinutes: "60",
       difficulty: "easy",
-      mustVisit: false,
+      mustVisit: true,
       category: "unique",
       tags: [],
       seasons: "all year",
@@ -207,12 +208,13 @@ const chipClass = (active: boolean) =>
 type PoiFormProps = {
   poi?: Poi;
   regions: Region[];
+  frequentRegionIds?: string[];
   defaultRegionId?: string;
   onCancel: () => void;
   onSubmit: (input: PoiInput) => Promise<void> | void;
 };
 
-export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
+export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
   const [form, setForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -315,17 +317,12 @@ export function PoiForm({ poi, regions, defaultRegionId, onCancel, onSubmit }: P
         <label className={fieldLabel} title="К какому городу относится эта локация — определяет, на карте какого города она появится.">
           Город
         </label>
-        <select
-          className={selectClass}
+        <CityPicker
+          options={regions.map((region) => ({ id: region.id, name: region.name }))}
           value={form.regionId}
-          onChange={(e) => setForm((p) => ({ ...p, regionId: e.target.value }))}
-        >
-          {regions.map((region) => (
-            <option key={region.id} value={region.id}>
-              {region.name}
-            </option>
-          ))}
-        </select>
+          onChange={(regionId) => setForm((p) => ({ ...p, regionId }))}
+          frequentIds={frequentRegionIds}
+        />
       </div>
 
       <div>

@@ -13,6 +13,7 @@ import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
+import { CityPicker } from "@/shared/ui/city-picker";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { missingLanguages } from "@/shared/lib/translation-completeness";
@@ -657,6 +658,11 @@ export function AdminPanel() {
     return [{ label: `Нет перевода: ${missing.map((lang) => lang.toUpperCase()).join("/")}`, tone: "red" }];
   };
 
+  const frequentRegionIds = [...regions]
+    .sort((a, b) => pois.filter((poi) => poi.regionId === b.id).length - pois.filter((poi) => poi.regionId === a.id).length)
+    .slice(0, 5)
+    .map((region) => region.id);
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="mb-6 flex items-center justify-between">
@@ -909,21 +915,17 @@ export function AdminPanel() {
           <ImportExportPanel onImported={loadPois} />
           <div className="mb-3 flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Город</label>
-            <select
+            <CityPicker
+              className="w-56"
+              options={regions.map((region) => ({ id: region.id, name: region.name }))}
               value={locationCityFilter}
-              onChange={(e) => {
-                setLocationCityFilter(e.target.value);
+              onChange={(id) => {
+                setLocationCityFilter(id);
                 setLocationSelection({ mode: "empty" });
               }}
-              className="h-9 rounded-md border border-border bg-white px-2.5 text-sm shadow-sm outline-none"
-            >
-              <option value="all">Все города</option>
-              {regions.map((region) => (
-                <option key={region.id} value={region.id}>
-                  {region.name}
-                </option>
-              ))}
-            </select>
+              frequentIds={frequentRegionIds}
+              allowAll
+            />
           </div>
           <MasterDetail
             items={pois
@@ -953,6 +955,7 @@ export function AdminPanel() {
             {locationSelection.mode === "create" && (
               <PoiForm
                 regions={regions}
+                frequentRegionIds={frequentRegionIds}
                 defaultRegionId={locationCityFilter !== "all" ? locationCityFilter : undefined}
                 onCancel={() => setLocationSelection({ mode: "empty" })}
                 onSubmit={handleCreateLocation}
@@ -979,6 +982,7 @@ export function AdminPanel() {
                       key={poi.id}
                       poi={poi}
                       regions={regions}
+                      frequentRegionIds={frequentRegionIds}
                       onCancel={() => setLocationSelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateLocation(poi.id, input)}
                     />

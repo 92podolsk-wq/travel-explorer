@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Languages, Plus, Star, Trash2 } from "lucide-react";
 import { poiDifficulties, poiMainCategories, poiTags, seasons } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiInput, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
@@ -220,6 +220,9 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+  const photoFileInputs = useRef<Array<HTMLInputElement | null>>([]);
 
   const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
   const missingDescription = missingLanguages([{ en: form.descriptionEn, ja: form.descriptionJa }]);
@@ -268,6 +271,28 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
       ...prev,
       photos: prev.photos.map((photo, i) => (i === index ? { ...photo, ...patch } : photo))
     }));
+  };
+
+  const uploadPhotoFile = async (index: number, file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      setPhotoUploadError("Файл слишком большой (максимум 10 МБ).");
+      return;
+    }
+
+    setPhotoUploadError(null);
+    setUploadingPhotoIndex(index);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/admin/photos/upload", { method: "POST", body });
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { url: string };
+      updatePhoto(index, { url: data.url });
+    } catch {
+      setPhotoUploadError("Не удалось загрузить фото. Попробуйте другой файл.");
+    } finally {
+      setUploadingPhotoIndex(null);
+    }
   };
 
   const setMainPhoto = (index: number) => {
@@ -444,37 +469,11 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
-        <div>
-          <label className={fieldLabel} title="Оценка места от 0 до 5 — показывается звёздочкой в карточке и в списке мест.">
-            Рейтинг
-          </label>
-          <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm((p) => ({ ...p, rating: e.target.value }))} />
-        </div>
-        <div>
-          <label
-            className={fieldLabel}
-            title="Внутренняя оценка (0–100) для сортировки мест в режимах «Фотограф», «Природа», «Осень» и «Сакура». Не влияет на число отображаемых фото."
-          >
-            Оценка фото
-          </label>
-          <Input type="number" min="0" max="100" value={form.photoScore} onChange={(e) => setForm((p) => ({ ...p, photoScore: e.target.value }))} />
-        </div>
-        <div>
-          <label
-            className={fieldLabel}
-            title="Показатель важности (0–100) — определяет сортировку мест в режиме «Первое посещение»: чем выше значение, тем выше место в списке."
-          >
-            Важность
-          </label>
-          <Input type="number" min="0" max="100" value={form.importance} onChange={(e) => setForm((p) => ({ ...p, importance: e.target.value }))} />
-        </div>
-        <div>
-          <label className={fieldLabel} title="Примерное время посещения в минутах — показывается в карточке места как метрика «Время».">
-            Длительность (мин)
-          </label>
-          <Input type="number" min="0" value={form.durationMinutes} onChange={(e) => setForm((p) => ({ ...p, durationMinutes: e.target.value }))} />
-        </div>
+      <div>
+        <label className={fieldLabel} title="Примерное время посещения в минутах — показывается в карточке места как метрика «Время».">
+          Длительность (мин)
+        </label>
+        <Input type="number" min="0" value={form.durationMinutes} onChange={(e) => setForm((p) => ({ ...p, durationMinutes: e.target.value }))} />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -613,9 +612,40 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
         </label>
         <div className="space-y-2">
           {form.photos.map((photo, index) => (
-            <div key={index} className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-2.5">
-              <div className="relative h-16 w-16 shrink-0">
-                {photo.url.trim() ? (
+            <div
+              key={index}
+              className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-2.5"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                const file = e.dataTransfer.files?.[0];
+                if (file) void uploadPhotoFile(index, file);
+              }}
+            >
+              <input
+                ref={(el) => {
+                  photoFileInputs.current[index] = el;
+                }}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void uploadPhotoFile(index, file);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => photoFileInputs.current[index]?.click()}
+                title="Кликните или перетащите файл, чтобы загрузить фото"
+                className="relative h-16 w-16 shrink-0"
+              >
+                {uploadingPhotoIndex === index ? (
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-primary/50 bg-primary/5 text-[9px] font-medium text-primary">
+                    Загрузка…
+                  </div>
+                ) : photo.url.trim() ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={photo.url}
@@ -623,8 +653,8 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
                     className="h-16 w-16 rounded-md border border-border bg-white object-cover"
                   />
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-border text-[10px] text-muted-foreground">
-                    Превью
+                  <div className="flex h-16 w-16 items-center justify-center rounded-md border border-dashed border-border p-1 text-center text-[9px] leading-tight text-muted-foreground">
+                    Перетащите фото
                   </div>
                 )}
                 {index === 0 && (
@@ -632,7 +662,7 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
                     Главная
                   </span>
                 )}
-              </div>
+              </button>
               <div className="grid flex-1 grid-cols-3 gap-2">
                 <Input
                   value={photo.url}
@@ -693,6 +723,7 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
             <Plus className="h-3.5 w-3.5" />
             Добавить фото
           </button>
+          {photoUploadError && <p className="text-xs font-medium text-red-600">{photoUploadError}</p>}
         </div>
       </div>
 

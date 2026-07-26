@@ -42,6 +42,14 @@ export async function movePendingPhotoToPublic(storagePath: string, poiId: strin
   return `${PUBLIC_PHOTOS_URL_PREFIX}${poiId}/${filename}`;
 }
 
+export async function writePublicPhotoFile(buffer: Buffer, folder: string): Promise<string> {
+  const targetDir = path.join(PUBLIC_PHOTOS_DIR, folder);
+  await fs.mkdir(targetDir, { recursive: true });
+  const filename = `${randomUUID()}.jpg`;
+  await fs.writeFile(path.join(targetDir, filename), buffer);
+  return `${PUBLIC_PHOTOS_URL_PREFIX}${folder}/${filename}`;
+}
+
 export async function deletePublicPhotoFile(url: string): Promise<void> {
   if (!url.startsWith(PUBLIC_PHOTOS_URL_PREFIX)) {
     return;

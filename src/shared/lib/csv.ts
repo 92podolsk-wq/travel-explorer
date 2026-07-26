@@ -46,6 +46,17 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
+export function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+export function toCsv(header: string[], rows: string[][]): string {
+  return [header, ...rows].map((row) => row.map(escapeCsvField).join(",")).join("\n") + "\n";
+}
+
 export function rowsToObjects(rows: string[][]): Record<string, string>[] {
   if (rows.length === 0) return [];
   const [header, ...body] = rows;

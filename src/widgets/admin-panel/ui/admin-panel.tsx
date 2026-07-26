@@ -995,7 +995,7 @@ export function AdminPanel() {
       {activeTab === "locations" && (
         <>
           {locationsError && <p className="mb-4 text-sm font-medium text-red-600">{locationsError}</p>}
-          <ImportExportPanel onImported={loadPois} />
+          <ImportExportPanel pois={pois} regions={regions} cityFilter={locationCityFilter} onImported={loadPois} />
           <div className="mb-3 flex items-center gap-2">
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Город</label>
             <CityPicker

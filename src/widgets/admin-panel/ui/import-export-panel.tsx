@@ -2,11 +2,13 @@
 
 import { useRef, useState } from "react";
 import { Download, Upload } from "lucide-react";
-import type { Difficulty, PoiInput, PoiMainCategory, PoiTag } from "@/entities/poi/model/types";
-import { parseCsv, rowsToObjects } from "@/shared/lib/csv";
+import type { Difficulty, Poi, PoiInput, PoiMainCategory, PoiTag } from "@/entities/poi/model/types";
+import type { Region } from "@/entities/region/model/types";
+import { parseCsv, rowsToObjects, toCsv } from "@/shared/lib/csv";
 import { Button } from "@/shared/ui/button";
 
-type ImportResult = { created: number; errors: Array<{ index: number; name: string; error: string }> };
+type DryRunResult = { toCreate: number; toUpdate: number; errors: Array<{ index: number; name: string; error: string }> };
+type CommitResult = { created: number; updated: number; errors: Array<{ index: number; name: string; error: string }> };
 
 function splitSubList(value: string): string[] {
   return value
@@ -18,6 +20,7 @@ function splitSubList(value: string): string[] {
 function csvRowToPoiInput(row: Record<string, string>): PoiInput {
   const name = row.name?.trim() ?? "";
   return {
+    id: row.id?.trim() || undefined,
     regionId: row.regionId?.trim() ?? "",
     name,
     nameByLanguage: {
@@ -54,18 +57,99 @@ function csvRowToPoiInput(row: Record<string, string>): PoiInput {
   };
 }
 
-const csvTemplate =
-  "regionId,name,nameEn,nameRu,nameJa,description,lat,lng,rating,category,tags,seasons,photoScore,mustVisit,bestTime,difficulty,durationMinutes,importance,status,photoUrl,photoAlt\n" +
-  'kyoto,Example Place,Example Place,Пример места,例の場所,"A short description, with commas if needed.",35.01,135.76,4.6,temples,"photographer;nature","all year",80,false,"Morning;Late afternoon",easy,60,70,draft,https://example.com/photo.jpg,Example photo\n';
+const csvColumns = [
+  "id",
+  "regionId",
+  "name",
+  "nameEn",
+  "nameRu",
+  "nameJa",
+  "description",
+  "lat",
+  "lng",
+  "rating",
+  "category",
+  "tags",
+  "seasons",
+  "photoScore",
+  "mustVisit",
+  "bestTime",
+  "difficulty",
+  "durationMinutes",
+  "importance",
+  "status",
+  "photoUrl",
+  "photoAlt"
+];
+
+function poiToCsvRow(poi: Poi): string[] {
+  return [
+    poi.id,
+    poi.regionId,
+    poi.name,
+    poi.nameByLanguage.en,
+    poi.nameByLanguage.ru,
+    poi.nameByLanguage.ja,
+    poi.description,
+    String(poi.coordinates.lat),
+    String(poi.coordinates.lng),
+    String(poi.rating),
+    poi.category,
+    poi.tags.join(";"),
+    poi.seasons.join(";"),
+    String(poi.photoScore),
+    poi.mustVisit ? "true" : "false",
+    poi.bestTime.join(";"),
+    poi.difficulty,
+    String(poi.durationMinutes),
+    String(poi.importance),
+    poi.status,
+    poi.photos[0]?.url ?? "",
+    poi.photos[0]?.alt ?? ""
+  ];
+}
+
+const csvTemplate = toCsv(csvColumns, [
+  [
+    "",
+    "kyoto",
+    "Example Place",
+    "Example Place",
+    "Пример места",
+    "例の場所",
+    "A short description, with commas if needed.",
+    "35.01",
+    "135.76",
+    "4.6",
+    "temples",
+    "photographer;nature",
+    "all year",
+    "80",
+    "false",
+    "Morning;Late afternoon",
+    "easy",
+    "60",
+    "70",
+    "draft",
+    "https://example.com/photo.jpg",
+    "Example photo"
+  ]
+]);
 
 type ImportExportPanelProps = {
+  pois: Poi[];
+  regions: Region[];
+  cityFilter: string;
   onImported: () => void;
 };
 
-export function ImportExportPanel({ onImported }: ImportExportPanelProps) {
+export function ImportExportPanel({ pois, regions, cityFilter, onImported }: ImportExportPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [isCommitting, setIsCommitting] = useState(false);
+  const [pendingItems, setPendingItems] = useState<PoiInput[] | null>(null);
+  const [preview, setPreview] = useState<DryRunResult | null>(null);
+  const [result, setResult] = useState<CommitResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = () => {
@@ -82,13 +166,32 @@ export function ImportExportPanel({ onImported }: ImportExportPanelProps) {
     URL.revokeObjectURL(url);
   };
 
+  const handleExportCsv = () => {
+    const scopedPois = cityFilter === "all" ? pois : pois.filter((poi) => poi.regionId === cityFilter);
+    const csv = toCsv(csvColumns, scopedPois.map(poiToCsvRow));
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const cityName = cityFilter === "all" ? "all-cities" : (regions.find((region) => region.id === cityFilter)?.id ?? cityFilter);
+    link.download = `pois-${cityName}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const resetState = () => {
+    setPendingItems(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+  };
+
   const handleFileSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setError(null);
-    setResult(null);
-    setIsImporting(true);
+    resetState();
+    setIsChecking(true);
 
     try {
       const text = await file.text();
@@ -106,7 +209,37 @@ export function ImportExportPanel({ onImported }: ImportExportPanelProps) {
       const res = await fetch("/api/admin/import/pois", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items, dryRun: true })
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(data?.error ?? "Не удалось проверить файл.");
+        return;
+      }
+
+      const data = (await res.json()) as DryRunResult;
+      setPendingItems(items);
+      setPreview(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось разобрать файл.");
+    } finally {
+      setIsChecking(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!pendingItems) return;
+
+    setIsCommitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/admin/import/pois", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: pendingItems, dryRun: false })
       });
 
       if (!res.ok) {
@@ -115,14 +248,13 @@ export function ImportExportPanel({ onImported }: ImportExportPanelProps) {
         return;
       }
 
-      const data = (await res.json()) as ImportResult;
+      const data = (await res.json()) as CommitResult;
       setResult(data);
-      if (data.created > 0) onImported();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Не удалось разобрать файл.");
+      setPendingItems(null);
+      setPreview(null);
+      if (data.created > 0 || data.updated > 0) onImported();
     } finally {
-      setIsImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setIsCommitting(false);
     }
   };
 
@@ -132,25 +264,60 @@ export function ImportExportPanel({ onImported }: ImportExportPanelProps) {
         <Download className="h-3.5 w-3.5" />
         Экспортировать всё (JSON)
       </Button>
+      <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={handleExportCsv}>
+        <Download className="h-3.5 w-3.5" />
+        {cityFilter === "all" ? "Экспортировать CSV (все локации)" : "Экспортировать CSV (этот город)"}
+      </Button>
       <Button type="button" variant="outline" size="sm" onClick={handleDownloadTemplate}>
         Шаблон CSV
       </Button>
       <label className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-primary transition hover:bg-primary/5 cursor-pointer">
         <Upload className="h-3.5 w-3.5" />
-        {isImporting ? "Импорт…" : "Импортировать локации (CSV/JSON)"}
+        {isChecking ? "Проверка…" : "Импортировать локации (CSV/JSON)"}
         <input
           ref={fileInputRef}
           type="file"
           accept=".csv,.json"
           className="hidden"
-          disabled={isImporting}
+          disabled={isChecking || Boolean(pendingItems)}
           onChange={handleFileSelected}
         />
       </label>
       {error && <p className="w-full text-sm font-medium text-red-600">{error}</p>}
+      {preview && pendingItems && (
+        <div className="w-full rounded-md border border-border bg-muted/30 p-3 text-sm">
+          <p className="font-medium text-foreground">
+            Будет создано: {preview.toCreate} · Будет обновлено: {preview.toUpdate}
+            {preview.errors.length > 0 && <> · Ошибок: {preview.errors.length}</>}
+          </p>
+          {preview.errors.length > 0 && (
+            <ul className="mt-1.5 list-inside list-disc text-xs text-red-600">
+              {preview.errors.slice(0, 5).map((e) => (
+                <li key={e.index}>
+                  {e.name || `#${e.index + 1}`}: {e.error}
+                </li>
+              ))}
+              {preview.errors.length > 5 && <li>…и ещё {preview.errors.length - 5}</li>}
+            </ul>
+          )}
+          <div className="mt-2.5 flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={isCommitting || preview.toCreate + preview.toUpdate === 0}
+              onClick={handleConfirmImport}
+            >
+              {isCommitting ? "Импорт…" : "Подтвердить импорт"}
+            </Button>
+            <Button type="button" variant="outline" size="sm" disabled={isCommitting} onClick={resetState}>
+              Отмена
+            </Button>
+          </div>
+        </div>
+      )}
       {result && (
         <p className="w-full text-sm text-muted-foreground">
-          Добавлено: {result.created}
+          Создано: {result.created} · Обновлено: {result.updated}
           {result.errors.length > 0 && (
             <>
               {" "}

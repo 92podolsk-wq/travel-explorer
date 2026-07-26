@@ -20,6 +20,7 @@ function toAdminUser(row: UserRow): AdminUser {
     name: row.name,
     avatarId: row.avatarId,
     isBlocked: row.isBlocked,
+    canAccessHiddenCategories: row.canAccessHiddenCategories,
     createdAt: row.createdAt.toISOString()
   };
 }
@@ -59,6 +60,11 @@ export async function setUserBlocked(userId: string, isBlocked: boolean): Promis
   }
 
   return toAdminUser(row);
+}
+
+export async function setUserHiddenCategoryAccess(userId: string, allowed: boolean): Promise<AdminUser | null> {
+  const row = await prisma.user.update({ where: { id: userId }, data: { canAccessHiddenCategories: allowed } }).catch(() => null);
+  return row ? toAdminUser(row) : null;
 }
 
 export async function deleteUser(userId: string): Promise<boolean> {

@@ -4,7 +4,7 @@ import { seedAreas } from "@/entities/area/model/areas";
 import type { Area } from "@/entities/area/model/types";
 import { seedCountries } from "@/entities/country/model/countries";
 import type { Country } from "@/entities/country/model/types";
-import { poiMainCategories } from "@/entities/poi/model/constants";
+import type { Category } from "@/entities/category/model/types";
 import { kyotoPois } from "@/entities/poi/model/kyoto-pois";
 import type { Coordinates, Poi, PoiMainCategory, Season } from "@/entities/poi/model/types";
 import { defaultRegion, findRegionById, seedRegions } from "@/entities/region/model/regions";
@@ -32,6 +32,7 @@ type ExplorerState = {
   countries: Country[];
   areas: Area[];
   explorationModes: ExplorationMode[];
+  categories: Category[];
   activeRegionIds: string[];
   selectedPoiId: string;
   selectedCategories: PoiMainCategory[];
@@ -88,6 +89,7 @@ type ExplorerState = {
   setCountries: (countries: Country[]) => void;
   setAreas: (areas: Area[]) => void;
   setExplorationModes: (explorationModes: ExplorationMode[]) => void;
+  setCategories: (categories: Category[]) => void;
   toggleSeason: (season: Season) => void;
   setUserLocation: (location: Coordinates | null) => void;
   setIsLocatingUser: (value: boolean) => void;
@@ -113,9 +115,10 @@ export const useExplorerStore = create<ExplorerState>()(
   countries: seedCountries,
   areas: seedAreas,
   explorationModes: seedExplorationModes,
+  categories: [],
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
-  selectedCategories: [...poiMainCategories],
+  selectedCategories: [],
   searchQuery: "",
   favorites: [],
   viewedPoiIds: [],
@@ -262,6 +265,18 @@ export const useExplorerStore = create<ExplorerState>()(
   setCountries: (countries) => set({ countries }),
   setAreas: (areas) => set({ areas }),
   setExplorationModes: (explorationModes) => set({ explorationModes }),
+  setCategories: (categories) =>
+    set((state) => {
+      const isInitialLoad = state.categories.length === 0;
+      const knownIds = new Set(state.categories.map((category) => category.id));
+      const newIds = categories.filter((category) => !knownIds.has(category.id)).map((category) => category.id);
+      const validSelected = state.selectedCategories.filter((id) => categories.some((category) => category.id === id));
+
+      return {
+        categories,
+        selectedCategories: isInitialLoad ? categories.map((category) => category.id) : [...validSelected, ...newIds]
+      };
+    }),
   setUserLocation: (location) => set({ userLocation: location }),
   setIsLocatingUser: (value) => set({ isLocatingUser: value }),
   setLocationError: (error) => set({ locationError: error }),

@@ -25,7 +25,7 @@ import type { Language } from "@/shared/i18n/types";
 import { cn } from "@/shared/lib/cn";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { resolveMapStyle } from "@/shared/map/map-styles";
-import { categoryMarkerColors, registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
+import { registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { AddMarkerPanel } from "./add-marker-panel";
@@ -149,19 +149,23 @@ function getPoiIdFromEvent(event: MapLayerMouseEvent) {
   return typeof id === "string" ? id : null;
 }
 
-const categoryColorMatchExpression = [
-  "match",
-  ["get", "category"],
-  ...Object.entries(categoryMarkerColors).flatMap(([category, color]) => [category, color]),
-  "#7a7a7a"
-] as unknown as ExpressionSpecification;
+function buildCategoryColorMatchExpression(categories: { id: string; color: string }[]) {
+  return [
+    "match",
+    ["get", "category"],
+    ...categories.flatMap((category) => [category.id, category.color]),
+    "#7a7a7a"
+  ] as unknown as ExpressionSpecification;
+}
 
 async function addPoiLayers(map: MapLibreMap) {
   if (map.getSource(poiSourceId)) {
     return;
   }
 
-  await registerCategoryMarkerIcons(map);
+  const categories = useExplorerStore.getState().categories;
+  const categoryColorMatchExpression = buildCategoryColorMatchExpression(categories);
+  await registerCategoryMarkerIcons(map, categories);
 
   map.addSource(regionVoronoiSourceId, {
     type: "geojson",
@@ -885,10 +889,12 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         name.textContent = poi.nameByLanguage[useExplorerStore.getState().language] ?? poi.name;
         info.appendChild(name);
 
-        const rating = document.createElement("p");
-        rating.className = "text-xs text-muted-foreground";
-        rating.textContent = `★ ${poi.rating.toFixed(1)}`;
-        info.appendChild(rating);
+        if (poi.favoritesCount > 0) {
+          const favorites = document.createElement("p");
+          favorites.className = "text-xs text-muted-foreground";
+          favorites.textContent = `♥ ${poi.favoritesCount}`;
+          info.appendChild(favorites);
+        }
 
         node.appendChild(info);
         return node;

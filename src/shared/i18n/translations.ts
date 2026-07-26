@@ -1,4 +1,4 @@
-import type { Difficulty, Poi, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
+import type { Difficulty, Poi, PoiTag, Season } from "@/entities/poi/model/types";
 import type { Language } from "./types";
 
 type PoiCopy = {
@@ -89,7 +89,6 @@ type TranslationDictionary = {
     off: string;
   };
   poi: Record<string, PoiCopy>;
-  category: Record<PoiMainCategory, string>;
   tag: Record<PoiTag, string>;
   difficulty: Record<Difficulty, string>;
   season: Record<Season, string>;
@@ -382,18 +381,6 @@ export const translations: Record<Language, TranslationDictionary> = {
           "Elegant villa gardens with layered views across northeast Kyoto, best for slow visual exploration.",
         bestTime: ["Morning"]
       }
-    },
-    category: {
-      nature: "Nature",
-      temples: "Temples & Religion",
-      castles: "Castles & Palaces",
-      museums: "Museums & Art",
-      urban: "Urban Environment",
-      viewpoints: "Viewpoints",
-      entertainment: "Entertainment",
-      gardens: "Gardens & Parks",
-      monuments: "Monuments & Memorials",
-      unique: "Unique Places"
     },
     tag: {
       "must-visit": "must visit",
@@ -708,18 +695,6 @@ export const translations: Record<Language, TranslationDictionary> = {
         bestTime: ["Утро"]
       }
     },
-    category: {
-      nature: "Природа",
-      temples: "Храмы и религия",
-      castles: "Замки и дворцы",
-      museums: "Музеи и искусство",
-      urban: "Городская среда",
-      viewpoints: "Смотровые площадки",
-      entertainment: "Развлечения",
-      gardens: "Сады и парки",
-      monuments: "Памятники и мемориалы",
-      unique: "Уникальные места"
-    },
     tag: {
       "must-visit": "обязательно",
       photographer: "фотографу",
@@ -1032,18 +1007,6 @@ export const translations: Record<Language, TranslationDictionary> = {
         bestTime: ["朝"]
       }
     },
-    category: {
-      nature: "自然",
-      temples: "寺院・宗教",
-      castles: "城・宮殿",
-      museums: "博物館・美術",
-      urban: "街並み",
-      viewpoints: "展望スポット",
-      entertainment: "エンターテインメント",
-      gardens: "庭園・公園",
-      monuments: "記念碑・慰霊碑",
-      unique: "ユニークな場所"
-    },
     tag: {
       "must-visit": "必見",
       photographer: "写真向き",
@@ -1240,7 +1203,6 @@ export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
     poi.description,
     poiCopy?.description,
     dictionary.difficulty[poi.difficulty],
-    dictionary.category[poi.category],
     ...tags,
     ...bestTime
   ]

@@ -1,17 +1,4 @@
-import type { Difficulty, PoiMainCategory, PoiTag, Season } from "./types";
-
-export const poiMainCategories: PoiMainCategory[] = [
-  "nature",
-  "temples",
-  "castles",
-  "museums",
-  "urban",
-  "viewpoints",
-  "entertainment",
-  "gardens",
-  "monuments",
-  "unique"
-];
+import type { Difficulty, PoiTag, Season } from "./types";
 
 export const poiTags: PoiTag[] = [
   "must-visit",

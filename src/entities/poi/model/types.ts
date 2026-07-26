@@ -1,17 +1,7 @@
 import type { PublishStatus } from "@/entities/region/model/types";
 import type { Language } from "@/shared/i18n/types";
 
-export type PoiMainCategory =
-  | "nature"
-  | "temples"
-  | "castles"
-  | "museums"
-  | "urban"
-  | "viewpoints"
-  | "entertainment"
-  | "gardens"
-  | "monuments"
-  | "unique";
+export type PoiMainCategory = string;
 
 export type PoiTag =
   | "must-visit"
@@ -53,6 +43,7 @@ export type Poi = {
   description: string;
   descriptionByLanguage: Record<Language, string>;
   rating: number;
+  favoritesCount: number;
   photos: Photo[];
   category: PoiMainCategory;
   tags: PoiTag[];
@@ -67,4 +58,4 @@ export type Poi = {
   status: PublishStatus;
 };
 
-export type PoiInput = Omit<Poi, "id"> & { id?: string };
+export type PoiInput = Omit<Poi, "id" | "favoritesCount"> & { id?: string };

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { Area } from "@/entities/area/model/types";
+import type { Category } from "@/entities/category/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { Poi } from "@/entities/poi/model/types";
@@ -21,6 +22,7 @@ type ExplorerPageProps = {
   initialCountries: Country[];
   initialAreas: Area[];
   initialExplorationModes: ExplorationMode[];
+  initialCategories: Category[];
   initialSiteSettings: SiteSettings;
 };
 
@@ -30,6 +32,7 @@ export function ExplorerPage({
   initialCountries,
   initialAreas,
   initialExplorationModes,
+  initialCategories,
   initialSiteSettings
 }: ExplorerPageProps) {
   const setPois = useExplorerStore((state) => state.setPois);
@@ -37,6 +40,7 @@ export function ExplorerPage({
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
   const setExplorationModes = useExplorerStore((state) => state.setExplorationModes);
+  const setCategories = useExplorerStore((state) => state.setCategories);
   const hasHydrated = useExplorerStore((state) => state.hasHydrated);
   const hasSeenWelcome = useExplorerStore((state) => state.hasSeenWelcome);
 
@@ -48,6 +52,7 @@ export function ExplorerPage({
     setRegions(initialRegions);
     setPois(initialPois);
     setExplorationModes(initialExplorationModes);
+    setCategories(initialCategories);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

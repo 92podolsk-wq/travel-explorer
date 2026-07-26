@@ -12,6 +12,7 @@ export type AdminUser = {
   name: string | null;
   avatarId: string | null;
   isBlocked: boolean;
+  canAccessHiddenCategories: boolean;
   createdAt: string;
 };
 

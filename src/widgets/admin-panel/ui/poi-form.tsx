@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import { Languages, Plus, Star, Trash2 } from "lucide-react";
-import { poiDifficulties, poiMainCategories, poiTags, seasons } from "@/entities/poi/model/constants";
+import { poiDifficulties, poiTags, seasons } from "@/entities/poi/model/constants";
 import type { Difficulty, Poi, PoiInput, PoiMainCategory, PoiTag, Season } from "@/entities/poi/model/types";
+import type { Category } from "@/entities/category/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
@@ -208,13 +209,14 @@ const chipClass = (active: boolean) =>
 type PoiFormProps = {
   poi?: Poi;
   regions: Region[];
+  categories: Category[];
   frequentRegionIds?: string[];
   defaultRegionId?: string;
   onCancel: () => void;
   onSubmit: (input: PoiInput) => Promise<void> | void;
 };
 
-export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
+export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
   const [form, setForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -531,14 +533,14 @@ export function PoiForm({ poi, regions, frequentRegionIds = [], defaultRegionId,
           Категория
         </label>
         <div className="flex flex-wrap gap-2">
-          {poiMainCategories.map((category) => (
+          {categories.map((category) => (
             <button
-              key={category}
+              key={category.id}
               type="button"
-              className={chipClass(form.category === category)}
-              onClick={() => setForm((p) => ({ ...p, category }))}
+              className={chipClass(form.category === category.id)}
+              onClick={() => setForm((p) => ({ ...p, category: category.id }))}
             >
-              {t.category[category]}
+              {category.nameByLanguage.ru ?? category.name}
             </button>
           ))}
         </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Ban, LogOut, ShieldCheck, Trash2 } from "lucide-react";
+import { Ban, Eye, EyeOff, LogOut, ShieldCheck, Trash2 } from "lucide-react";
 import type { AdminAccount } from "@/entities/admin-account/model/types";
 import type { Area, AreaInput } from "@/entities/area/model/types";
+import type { Category, CategoryInput } from "@/entities/category/model/types";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
 import type { AdminPhoto } from "@/entities/photo/model/types";
@@ -20,6 +21,7 @@ import { missingLanguages } from "@/shared/lib/translation-completeness";
 import type { MasterDetailBadge } from "./master-detail";
 import { AdminAccountForm } from "./admin-account-form";
 import { AreaForm } from "./area-form";
+import { CategoryForm } from "./category-form";
 import { CountryForm } from "./country-form";
 import { DashboardTab } from "./dashboard-tab";
 import { ExplorationModeForm } from "./exploration-mode-form";
@@ -45,6 +47,7 @@ type Tab =
   | "locations"
   | "media"
   | "modes"
+  | "categories"
   | "reports"
   | "photos-moderation"
   | "users"
@@ -59,6 +62,7 @@ const tabLabels: Record<Tab, string> = {
   locations: "Локации",
   media: "Медиатека",
   modes: "Режимы",
+  categories: "Категории",
   reports: "Сообщения",
   "photos-moderation": "Фото на модерации",
   users: "Пользователи",
@@ -69,7 +73,7 @@ type TabGroup = "overview" | "content" | "community";
 
 const tabGroups: Record<TabGroup, Tab[]> = {
   overview: ["dashboard", "settings"],
-  content: ["countries", "areas", "cities", "locations", "media", "modes"],
+  content: ["countries", "areas", "cities", "locations", "media", "modes", "categories"],
   community: ["reports", "photos-moderation", "users", "accounts"]
 };
 
@@ -97,6 +101,7 @@ export function AdminPanel() {
   const [regions, setRegions] = useState<Region[]>([]);
   const [pois, setPois] = useState<Poi[]>([]);
   const [explorationModes, setExplorationModes] = useState<ExplorationMode[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [reports, setReports] = useState<PoiReport[]>([]);
@@ -109,6 +114,7 @@ export function AdminPanel() {
   const [locationSelection, setLocationSelection] = useState<Selection>({ mode: "empty" });
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
   const [modeSelection, setModeSelection] = useState<Selection>({ mode: "empty" });
+  const [categorySelection, setCategorySelection] = useState<Selection>({ mode: "empty" });
   const [accountSelection, setAccountSelection] = useState<Selection>({ mode: "empty" });
 
   const [countriesError, setCountriesError] = useState<string | null>(null);
@@ -116,6 +122,7 @@ export function AdminPanel() {
   const [citiesError, setCitiesError] = useState<string | null>(null);
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const [modesError, setModesError] = useState<string | null>(null);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [accountsError, setAccountsError] = useState<string | null>(null);
 
@@ -149,6 +156,11 @@ export function AdminPanel() {
     if (!res.ok) throw new Error("Failed to load exploration modes");
     setExplorationModes((await res.json()) as ExplorationMode[]);
   }
+  async function loadCategories() {
+    const res = await fetch("/api/categories");
+    if (!res.ok) throw new Error("Failed to load categories");
+    setCategories((await res.json()) as Category[]);
+  }
   async function loadUsers() {
     const res = await fetch("/api/admin/users");
     if (!res.ok) throw new Error("Failed to load users");
@@ -177,6 +189,7 @@ export function AdminPanel() {
       loadRegions(),
       loadPois(),
       loadExplorationModes(),
+      loadCategories(),
       loadUsers(),
       loadAccounts(),
       loadReports(),
@@ -508,6 +521,76 @@ export function AdminPanel() {
 
     setModeSelection({ mode: "empty" });
     await loadExplorationModes();
+  };
+
+  const handleCreateCategory = async (input: CategoryInput) => {
+    setCategoriesError(null);
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setCategoriesError(data?.error ?? "Не удалось создать категорию.");
+      return;
+    }
+
+    const created = (await res.json()) as Category;
+    await loadCategories();
+    setCategorySelection({ mode: "edit", id: created.id });
+  };
+
+  const handleUpdateCategory = async (id: string, input: CategoryInput) => {
+    setCategoriesError(null);
+    const res = await fetch(`/api/admin/categories/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setCategoriesError(data?.error ?? "Не удалось сохранить изменения.");
+      return;
+    }
+
+    await loadCategories();
+  };
+
+  const handleDeleteCategory = async (category: Category) => {
+    if (!window.confirm(`Удалить категорию «${category.name}»? Это действие нельзя отменить.`)) {
+      return;
+    }
+
+    setCategoriesError(null);
+    const res = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setCategoriesError(data?.error ?? "Не удалось удалить категорию.");
+      return;
+    }
+
+    setCategorySelection({ mode: "empty" });
+    await loadCategories();
+  };
+
+  const handleToggleUserHiddenAccess = async (user: AdminUser) => {
+    setUsersError(null);
+    const res = await fetch(`/api/admin/users/${user.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ canAccessHiddenCategories: !user.canAccessHiddenCategories })
+    });
+
+    if (!res.ok) {
+      setUsersError("Не удалось изменить доступ к скрытым категориям.");
+      return;
+    }
+
+    await loadUsers();
   };
 
   const handleToggleUserBlock = async (user: AdminUser) => {
@@ -936,7 +1019,7 @@ export function AdminPanel() {
                 subtitle: regions.find((region) => region.id === poi.regionId)?.name,
                 badges: [
                   ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
-                  { label: t.category[poi.category] },
+                  { label: categories.find((category) => category.id === poi.category)?.name ?? poi.category },
                   ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
                 ] as MasterDetailBadge[]
               }))}
@@ -955,6 +1038,7 @@ export function AdminPanel() {
             {locationSelection.mode === "create" && (
               <PoiForm
                 regions={regions}
+                categories={categories}
                 frequentRegionIds={frequentRegionIds}
                 defaultRegionId={locationCityFilter !== "all" ? locationCityFilter : undefined}
                 onCancel={() => setLocationSelection({ mode: "empty" })}
@@ -982,6 +1066,7 @@ export function AdminPanel() {
                       key={poi.id}
                       poi={poi}
                       regions={regions}
+                      categories={categories}
                       frequentRegionIds={frequentRegionIds}
                       onCancel={() => setLocationSelection({ mode: "empty" })}
                       onSubmit={(input) => handleUpdateLocation(poi.id, input)}
@@ -1057,6 +1142,65 @@ export function AdminPanel() {
         </>
       )}
 
+      {activeTab === "categories" && (
+        <>
+          {categoriesError && <p className="mb-4 text-sm font-medium text-red-600">{categoriesError}</p>}
+          <p className="mb-3 text-sm text-muted-foreground">
+            Категории определяют иконку и цвет маркера на карте, фильтр в боковой панели и бейдж на карточке места.
+            Переименовать или удалить категорию можно только если за ней не закреплено ни одной локации.
+          </p>
+          <MasterDetail
+            items={categories.map((category) => ({
+              id: category.id,
+              title: category.name,
+              subtitle: `${pois.filter((poi) => poi.category === category.id).length} локаций`,
+              badges: category.isHidden ? [{ label: "Скрыта", tone: "amber" as const }] : []
+            }))}
+            selectedId={
+              categorySelection.mode === "edit" ? categorySelection.id : categorySelection.mode === "create" ? "__create__" : null
+            }
+            onSelect={(id) => setCategorySelection({ mode: "edit", id })}
+            onAdd={() => setCategorySelection({ mode: "create" })}
+            addLabel="Добавить категорию"
+            searchPlaceholder="Поиск категории"
+            emptyLabel="Категорий пока нет"
+          >
+            {categorySelection.mode === "empty" && (
+              <p className="text-sm text-muted-foreground">Выберите категорию слева или добавьте новую.</p>
+            )}
+            {categorySelection.mode === "create" && (
+              <CategoryForm onCancel={() => setCategorySelection({ mode: "empty" })} onSubmit={handleCreateCategory} />
+            )}
+            {categorySelection.mode === "edit" &&
+              (() => {
+                const category = categories.find((item) => item.id === categorySelection.id);
+                if (!category) return null;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">{category.name}</p>
+                      <button
+                        type="button"
+                        aria-label="Удалить категорию"
+                        onClick={() => handleDeleteCategory(category)}
+                        className="text-xs font-medium text-red-600 hover:underline"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                    <CategoryForm
+                      key={category.id}
+                      category={category}
+                      onCancel={() => setCategorySelection({ mode: "empty" })}
+                      onSubmit={(input) => handleUpdateCategory(category.id, input)}
+                    />
+                  </div>
+                );
+              })()}
+          </MasterDetail>
+        </>
+      )}
+
       {activeTab === "reports" && <ReportsTab reports={reports} onReload={loadReports} />}
 
       {activeTab === "photos-moderation" && (
@@ -1104,6 +1248,18 @@ export function AdminPanel() {
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUserHiddenAccess(user)}
+                          className="flex items-center gap-1 text-xs font-medium text-foreground transition hover:underline"
+                        >
+                          {user.canAccessHiddenCategories ? (
+                            <Eye className="h-3.5 w-3.5" />
+                          ) : (
+                            <EyeOff className="h-3.5 w-3.5" />
+                          )}
+                          {user.canAccessHiddenCategories ? "Скрытые категории: вкл" : "Скрытые категории: выкл"}
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleToggleUserBlock(user)}

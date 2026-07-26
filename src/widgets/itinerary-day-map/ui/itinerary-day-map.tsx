@@ -6,7 +6,7 @@ import type { ItineraryStopPoint } from "@/entities/itinerary/model/types";
 import { stopPointColor, stopPointCoordinates } from "@/entities/itinerary/model/stop-point";
 import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { resolveMapStyle } from "@/shared/map/map-styles";
-import { categoryMarkerColors } from "@/shared/map/poi-marker-icons";
+import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
 
 const routeSourceId = "itinerary-day-route";
@@ -54,6 +54,7 @@ export function ItineraryDayMap({
   protomapsPmtilesUrl,
   heightClassName = "h-64"
 }: ItineraryDayMapProps) {
+  const categories = useExplorerStore((state) => state.categories);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<MapLibreMarker[]>([]);
@@ -135,7 +136,7 @@ export function ItineraryDayMap({
       stops.forEach((point, index) => {
         const color =
           point.kind === "poi"
-            ? (categoryMarkerColors[point.poi.category] ?? "#7a7a7a")
+            ? (categories.find((category) => category.id === point.poi.category)?.color ?? "#7a7a7a")
             : (stopPointColor(point) ?? "#7a7a7a");
         const coordinates = stopPointCoordinates(point);
         const marker = new maplibre.Marker({ element: buildNumberedMarkerEl(index + 1, color) })
@@ -167,7 +168,7 @@ export function ItineraryDayMap({
         map.fitBounds(boundsFromCoordinates(boundsCoordinates), { padding: 32, maxZoom: 16, duration: 0 });
       }
     });
-  }, [isMapReady, stops, lineCoordinates]);
+  }, [isMapReady, stops, lineCoordinates, categories]);
 
   return <div ref={containerRef} className={cn("w-full overflow-hidden rounded-md border border-border", heightClassName)} />;
 }

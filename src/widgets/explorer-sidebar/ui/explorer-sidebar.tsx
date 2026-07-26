@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { poiMainCategories, seasons } from "@/entities/poi/model/constants";
-import { categoryIcons } from "@/entities/poi/ui/category-icon";
+import { seasons } from "@/entities/poi/model/constants";
+import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
 import { SeasonWeatherStrip } from "./season-weather-strip";
@@ -31,6 +31,7 @@ const noExplorationModes: never[] = [];
 
 export function ExplorerSidebar() {
   const pois = useExplorerStore((state) => state.pois);
+  const categories = useExplorerStore((state) => state.categories);
   const regions = useExplorerStore((state) => state.regions);
   const areas = useExplorerStore((state) => state.areas);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
@@ -109,7 +110,9 @@ export function ExplorerSidebar() {
     ? [...unswipedRegionPois].sort((a, b) => computeAffinityScore(b, affinityProfile) - computeAffinityScore(a, affinityProfile))
     : shuffle(unswipedRegionPois);
   const affinityCategoryLabels = hasAffinitySignal
-    ? topAffinityCategories(affinityProfile).map((category) => t.category[category] ?? category)
+    ? topAffinityCategories(affinityProfile).map(
+        (categoryId) => categories.find((category) => category.id === categoryId)?.nameByLanguage[language] ?? categoryId
+      )
     : [];
   const activeCountryId = areas.find((area) => area.id === activeRegion.areaId)?.countryId;
   const neighboringSwipeRegions = activeCountryId
@@ -313,7 +316,7 @@ export function ExplorerSidebar() {
         >
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             {t.app.categoryFilter}
-            {selectedCategories.length < poiMainCategories.length && (
+            {selectedCategories.length < categories.length && (
               <span className="ml-1.5 text-primary">({selectedCategories.length})</span>
             )}
           </span>
@@ -324,22 +327,22 @@ export function ExplorerSidebar() {
         </button>
         {isCategoryFilterOpen && (
           <div className="flex flex-wrap gap-2 px-4 pb-4">
-            {poiMainCategories.map((category) => {
-              const CategoryIcon = categoryIcons[category];
-              const isSelected = selectedCategories.includes(category);
+            {categories.map((category) => {
+              const CategoryIcon = getCategoryIcon(categories, category.id);
+              const isSelected = selectedCategories.includes(category.id);
 
               return (
                 <Button
-                  key={category}
+                  key={category.id}
                   type="button"
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
-                  onClick={() => toggleCategory(category)}
+                  onClick={() => toggleCategory(category.id)}
                   aria-pressed={isSelected}
                   className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-white/[0.58]")}
                 >
                   <CategoryIcon className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{t.category[category]}</span>
+                  <span className="truncate">{category.nameByLanguage[language] ?? category.name}</span>
                 </Button>
               );
             })}
@@ -482,10 +485,12 @@ export function ExplorerSidebar() {
                       {localizedPoiDescription(poi.descriptionByLanguage, poi.description, language, t.poi[poi.id]?.description)}
                     </p>
                     <div className="mt-2.5 flex items-center gap-2.5 text-xs font-medium text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 text-foreground">
-                        <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                        {poi.rating.toFixed(1)}
-                      </span>
+                      {poi.favoritesCount > 0 && (
+                        <span className="inline-flex items-center gap-1 text-foreground">
+                          <Heart className="h-3.5 w-3.5 fill-primary text-primary" />
+                          {poi.favoritesCount}
+                        </span>
+                      )}
                       <span className="inline-flex items-center gap-1">
                         <Camera className="h-3.5 w-3.5" />
                         {poi.photos.length}

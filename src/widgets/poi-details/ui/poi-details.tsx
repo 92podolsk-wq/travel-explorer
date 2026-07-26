@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Sparkles, Star, SunMedium, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Sparkles, SunMedium, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
-import { categoryIcons } from "@/entities/poi/ui/category-icon";
+import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import { difficultyIcons } from "@/entities/poi/ui/difficulty-icon";
 import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { getTranslations } from "@/shared/i18n/translations";
@@ -19,6 +19,7 @@ import { UploadPhotoModal } from "./upload-photo-modal";
 
 export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
+  const categories = useExplorerStore((state) => state.categories);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const favorites = useExplorerStore((state) => state.favorites);
@@ -209,10 +210,12 @@ export function PoiDetails() {
             <div className="absolute bottom-5 left-5 right-5 text-white">
               <h2 className="text-3xl font-semibold tracking-normal">{poiName}</h2>
               <div className="mt-2 flex items-center gap-3 text-sm font-medium">
-                <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
-                  <Star className="h-4 w-4 fill-white" />
-                  {selectedPoi.rating.toFixed(1)}
-                </span>
+                {selectedPoi.favoritesCount > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
+                    <Heart className="h-4 w-4 fill-white" />
+                    {selectedPoi.favoritesCount}
+                  </span>
+                )}
                 <span className="rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
                   {t.difficulty[selectedPoi.difficulty]}
                 </span>
@@ -306,11 +309,12 @@ export function PoiDetails() {
               <h3 className="mb-2 text-sm font-semibold">{t.app.signals}</h3>
               <div className="flex flex-wrap gap-2">
                 {(() => {
-                  const CategoryIcon = categoryIcons[selectedPoi.category];
+                  const CategoryIcon = getCategoryIcon(categories, selectedPoi.category);
+                  const category = categories.find((item) => item.id === selectedPoi.category);
                   return (
                     <Badge className="gap-1">
                       <CategoryIcon className="h-3 w-3" />
-                      {t.category[selectedPoi.category]}
+                      {category?.nameByLanguage[language] ?? selectedPoi.category}
                     </Badge>
                   );
                 })()}

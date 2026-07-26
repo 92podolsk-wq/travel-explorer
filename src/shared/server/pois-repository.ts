@@ -28,8 +28,13 @@ function generateUniqueId(name: string, existingIds: Set<string>) {
 
 export const publicPhotosInclude = { where: { status: "approved" } } as const;
 export const adminFormPhotosInclude = { where: { status: "approved", uploadedByUserId: null } } as const;
+export const favoritesCountInclude = { select: { favoritedBy: true } } as const;
 
-export type PoiRow = Awaited<ReturnType<typeof prisma.poi.findFirstOrThrow<{ include: { photos: true } }>>>;
+export type PoiRow = Awaited<
+  ReturnType<
+    typeof prisma.poi.findFirstOrThrow<{ include: { photos: true; _count: { select: { favoritedBy: true } } } }>
+  >
+>;
 
 export function toPoi(row: PoiRow): Poi {
   return {
@@ -45,6 +50,7 @@ export function toPoi(row: PoiRow): Poi {
       ja: row.description
     },
     rating: row.rating,
+    favoritesCount: row._count.favoritedBy,
     photos: [...row.photos]
       .sort((a, b) => a.position - b.position)
       .map(
@@ -75,12 +81,17 @@ export function toPoi(row: PoiRow): Poi {
 }
 
 export async function readPois(): Promise<Poi[]> {
-  const rows = await prisma.poi.findMany({ include: { photos: adminFormPhotosInclude } });
+  const rows = await prisma.poi.findMany({
+    include: { photos: adminFormPhotosInclude, _count: favoritesCountInclude }
+  });
   return rows.map(toPoi);
 }
 
 export async function readPublishedPois(): Promise<Poi[]> {
-  const rows = await prisma.poi.findMany({ where: { status: "published" }, include: { photos: publicPhotosInclude } });
+  const rows = await prisma.poi.findMany({
+    where: { status: "published" },
+    include: { photos: publicPhotosInclude, _count: favoritesCountInclude }
+  });
   return rows.map(toPoi);
 }
 
@@ -154,7 +165,10 @@ export async function createPoi(input: PoiInput): Promise<Poi> {
 
   await writePoi(id, input);
 
-  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: adminFormPhotosInclude } });
+  const row = await prisma.poi.findUniqueOrThrow({
+    where: { id },
+    include: { photos: adminFormPhotosInclude, _count: favoritesCountInclude }
+  });
   return toPoi(row);
 }
 
@@ -166,7 +180,10 @@ export async function updatePoi(id: string, input: PoiInput): Promise<Poi | null
 
   await writePoi(id, input);
 
-  const row = await prisma.poi.findUniqueOrThrow({ where: { id }, include: { photos: adminFormPhotosInclude } });
+  const row = await prisma.poi.findUniqueOrThrow({
+    where: { id },
+    include: { photos: adminFormPhotosInclude, _count: favoritesCountInclude }
+  });
   return toPoi(row);
 }
 

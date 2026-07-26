@@ -99,6 +99,16 @@ model ExplorationMode {
   icon                  String
 }
 
+model Category {
+  id             String  @id
+  position       Int
+  name           String
+  nameByLanguage Json
+  icon           String
+  color          String
+  isHidden       Boolean @default(false)
+}
+
 model Photo {
   id               String    @id @default(cuid())
   poiId            String
@@ -126,6 +136,7 @@ model User {
   name         String?
   avatarId     String?
   isBlocked    Boolean  @default(false)
+  canAccessHiddenCategories Boolean @default(false)
   createdAt    DateTime @default(now())
   sessions     Session[]
   favorites    Favorite[]

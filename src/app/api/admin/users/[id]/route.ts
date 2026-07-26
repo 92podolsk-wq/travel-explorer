@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/shared/server/admin-auth";
-import { deleteUser, setUserBlocked } from "@/shared/server/users-repository";
+import { deleteUser, setUserBlocked, setUserHiddenCategoryAccess } from "@/shared/server/users-repository";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -10,19 +10,28 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 
   const { id } = await params;
-  const { isBlocked } = (await request.json()) as { isBlocked?: boolean };
+  const { isBlocked, canAccessHiddenCategories } = (await request.json()) as {
+    isBlocked?: boolean;
+    canAccessHiddenCategories?: boolean;
+  };
 
-  if (typeof isBlocked !== "boolean") {
-    return NextResponse.json({ error: "isBlocked must be a boolean" }, { status: 400 });
+  if (typeof isBlocked === "boolean") {
+    const updated = await setUserBlocked(id, isBlocked);
+    if (!updated) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(updated);
   }
 
-  const updated = await setUserBlocked(id, isBlocked);
-
-  if (!updated) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (typeof canAccessHiddenCategories === "boolean") {
+    const updated = await setUserHiddenCategoryAccess(id, canAccessHiddenCategories);
+    if (!updated) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(updated);
   }
 
-  return NextResponse.json(updated);
+  return NextResponse.json({ error: "isBlocked or canAccessHiddenCategories must be a boolean" }, { status: 400 });
 }
 
 export async function DELETE(_request: Request, { params }: RouteParams) {

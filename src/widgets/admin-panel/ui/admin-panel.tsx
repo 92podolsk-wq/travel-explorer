@@ -9,7 +9,6 @@ import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
 import type { AdminPhoto } from "@/entities/photo/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
-import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import type { PoiReport } from "@/entities/poi-report/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
@@ -27,6 +26,7 @@ import { CountryForm } from "./country-form";
 import { DashboardTab } from "./dashboard-tab";
 import { ExplorationModeForm } from "./exploration-mode-form";
 import { ImportExportPanel } from "./import-export-panel";
+import { LocationsTable } from "./locations-table";
 import { MasterDetail } from "./master-detail";
 import { MediaLibraryTab } from "./media-library-tab";
 import { PhotoModerationTab } from "./photo-moderation-tab";
@@ -1166,138 +1166,144 @@ export function AdminPanel() {
               .filter((poi) => locationCityFilter === "all" || poi.regionId === locationCityFilter)
               .filter((poi) => !showDraftsOnly || poi.status === "draft");
 
-            return (
-              <MasterDetail
-                items={visiblePois.map((poi) => ({
-                  id: poi.id,
-                  title: poi.name,
-                  subtitle: regions.find((region) => region.id === poi.regionId)?.name,
-                  icon: getCategoryIcon(categories, poi.category),
-                  photoCount: poi.photos.length,
-                  badges: [
-                    ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
-                    { label: categories.find((category) => category.id === poi.category)?.name ?? poi.category, tone: "neutral" as const },
-                    ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
-                  ] as MasterDetailBadge[]
-                }))}
-                selectedId={
-                  locationSelection.mode === "edit" ? locationSelection.id : locationSelection.mode === "create" ? "__create__" : null
-                }
-                onSelect={(id) => setLocationSelection({ mode: "edit", id })}
-                onAdd={() => setLocationSelection({ mode: "create" })}
-                addLabel="Добавить локацию"
-                searchPlaceholder="Поиск локации"
-                emptyLabel="Локаций пока нет"
-                selection={{
-                  selectedIds: locationSelectedIds,
-                  onToggle: toggleLocationSelected,
-                  onToggleAll: toggleAllLocationsSelected,
-                  actions: (
-                    <>
-                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("published")}>
-                        Опубликовать
-                      </Button>
-                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("draft")}>
-                        В черновик
-                      </Button>
-                      <select
-                        className="rounded-md border border-border px-2 py-1 text-xs"
-                        value={bulkCityTarget}
-                        onChange={(e) => setBulkCityTarget(e.target.value)}
-                      >
-                        <option value="">Город…</option>
-                        {regions.map((region) => (
-                          <option key={region.id} value={region.id}>
-                            {region.name}
-                          </option>
-                        ))}
-                      </select>
-                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking || !bulkCityTarget} onClick={handleBulkChangeCity}>
-                        Применить город
-                      </Button>
-                      <select
-                        className="rounded-md border border-border px-2 py-1 text-xs"
-                        value={bulkCategoryTarget}
-                        onChange={(e) => setBulkCategoryTarget(e.target.value)}
-                      >
-                        <option value="">Категория…</option>
-                        {categories.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={isBulkWorking || !bulkCategoryTarget}
-                        onClick={handleBulkChangeCategory}
-                      >
-                        Применить категорию
-                      </Button>
-                      <Button type="button" size="sm" variant="outline" className="text-red-600" disabled={isBulkWorking} onClick={handleBulkDeleteLocations}>
-                        Удалить
-                      </Button>
-                      <Button type="button" size="sm" variant="ghost" disabled={isBulkWorking} onClick={() => setLocationSelectedIds(new Set())}>
-                        Снять выделение
-                      </Button>
-                    </>
-                  )
-                }}
-              >
-            {locationSelection.mode === "empty" && (
-              <p className="text-sm text-muted-foreground">Выберите локацию слева или добавьте новую.</p>
-            )}
-            {locationSelection.mode === "create" && (
-              <PoiForm
-                regions={regions}
-                categories={categories}
-                frequentRegionIds={frequentRegionIds}
-                defaultRegionId={locationCityFilter !== "all" ? locationCityFilter : undefined}
-                onCancel={() => setLocationSelection({ mode: "empty" })}
-                onSubmit={handleCreateLocation}
-              />
-            )}
-            {locationSelection.mode === "edit" &&
-              (() => {
-                const poi = pois.find((p) => p.id === locationSelection.id);
-                if (!poi) return null;
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">{poi.name}</p>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => handleDuplicateLocation(poi)}
-                          className="text-xs font-medium text-primary hover:underline"
-                        >
-                          Дублировать
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Удалить локацию"
-                          onClick={() => handleDeleteLocation(poi)}
-                          className="text-xs font-medium text-red-600 hover:underline"
-                        >
-                          Удалить
-                        </button>
-                      </div>
-                    </div>
-                    <PoiForm
-                      key={poi.id}
-                      poi={poi}
-                      regions={regions}
-                      categories={categories}
-                      frequentRegionIds={frequentRegionIds}
-                      onCancel={() => setLocationSelection({ mode: "empty" })}
-                      onSubmit={(input) => handleUpdateLocation(poi.id, input)}
-                    />
+            const bulkActions = (
+              <>
+                <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("published")}>
+                  Опубликовать
+                </Button>
+                <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("draft")}>
+                  В черновик
+                </Button>
+                <select
+                  className="rounded-md border border-border px-2 py-1 text-xs"
+                  value={bulkCityTarget}
+                  onChange={(e) => setBulkCityTarget(e.target.value)}
+                >
+                  <option value="">Город…</option>
+                  {regions.map((region) => (
+                    <option key={region.id} value={region.id}>
+                      {region.name}
+                    </option>
+                  ))}
+                </select>
+                <Button type="button" size="sm" variant="outline" disabled={isBulkWorking || !bulkCityTarget} onClick={handleBulkChangeCity}>
+                  Применить город
+                </Button>
+                <select
+                  className="rounded-md border border-border px-2 py-1 text-xs"
+                  value={bulkCategoryTarget}
+                  onChange={(e) => setBulkCategoryTarget(e.target.value)}
+                >
+                  <option value="">Категория…</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isBulkWorking || !bulkCategoryTarget}
+                  onClick={handleBulkChangeCategory}
+                >
+                  Применить категорию
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="text-red-600" disabled={isBulkWorking} onClick={handleBulkDeleteLocations}>
+                  Удалить
+                </Button>
+                <Button type="button" size="sm" variant="ghost" disabled={isBulkWorking} onClick={() => setLocationSelectedIds(new Set())}>
+                  Снять выделение
+                </Button>
+              </>
+            );
+
+            if (locationSelection.mode === "empty") {
+              return (
+                <LocationsTable
+                  pois={visiblePois}
+                  regions={regions}
+                  categories={categories}
+                  onSelect={(id) => setLocationSelection({ mode: "edit", id })}
+                  onAdd={() => setLocationSelection({ mode: "create" })}
+                  selection={{
+                    selectedIds: locationSelectedIds,
+                    onToggle: toggleLocationSelected,
+                    onToggleAll: toggleAllLocationsSelected,
+                    actions: bulkActions
+                  }}
+                />
+              );
+            }
+
+            if (locationSelection.mode === "create") {
+              return (
+                <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setLocationSelection({ mode: "empty" })}
+                      className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      ← Назад к списку
+                    </button>
+                    <p className="text-sm font-semibold">Новая локация</p>
                   </div>
-                );
-              })()}
-              </MasterDetail>
+                  <PoiForm
+                    regions={regions}
+                    categories={categories}
+                    frequentRegionIds={frequentRegionIds}
+                    defaultRegionId={locationCityFilter !== "all" ? locationCityFilter : undefined}
+                    onCancel={() => setLocationSelection({ mode: "empty" })}
+                    onSubmit={handleCreateLocation}
+                  />
+                </div>
+              );
+            }
+
+            const poi = pois.find((p) => p.id === locationSelection.id);
+            if (!poi) return null;
+
+            return (
+              <div className="space-y-4 rounded-lg border border-border bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setLocationSelection({ mode: "empty" })}
+                    className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    ← Назад к списку
+                  </button>
+                  <p className="text-sm font-semibold">{poi.name}</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicateLocation(poi)}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Дублировать
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Удалить локацию"
+                      onClick={() => handleDeleteLocation(poi)}
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+                <PoiForm
+                  key={poi.id}
+                  poi={poi}
+                  regions={regions}
+                  categories={categories}
+                  frequentRegionIds={frequentRegionIds}
+                  onCancel={() => setLocationSelection({ mode: "empty" })}
+                  onSubmit={(input) => handleUpdateLocation(poi.id, input)}
+                />
+              </div>
             );
           })()}
         </>

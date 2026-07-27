@@ -9,6 +9,7 @@ import type { Country, CountryInput } from "@/entities/country/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
 import type { AdminPhoto } from "@/entities/photo/model/types";
 import type { Poi, PoiInput } from "@/entities/poi/model/types";
+import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import type { PoiReport } from "@/entities/poi-report/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
@@ -113,6 +114,11 @@ export function AdminPanel() {
   const [citySelection, setCitySelection] = useState<Selection>({ mode: "empty" });
   const [locationSelection, setLocationSelection] = useState<Selection>({ mode: "empty" });
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
+  const [showDraftsOnly, setShowDraftsOnly] = useState(false);
+  const [locationSelectedIds, setLocationSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkCityTarget, setBulkCityTarget] = useState<string>("");
+  const [bulkCategoryTarget, setBulkCategoryTarget] = useState<string>("");
+  const [isBulkWorking, setIsBulkWorking] = useState(false);
   const [modeSelection, setModeSelection] = useState<Selection>({ mode: "empty" });
   const [categorySelection, setCategorySelection] = useState<Selection>({ mode: "empty" });
   const [accountSelection, setAccountSelection] = useState<Selection>({ mode: "empty" });
@@ -469,6 +475,145 @@ export function AdminPanel() {
 
     setLocationSelection({ mode: "empty" });
     await loadPois();
+  };
+
+  const handleDuplicateLocation = async (poi: Poi) => {
+    setLocationsError(null);
+    const input: PoiInput = {
+      regionId: poi.regionId,
+      name: `${poi.name} (копия)`,
+      nameByLanguage: poi.nameByLanguage,
+      coordinates: poi.coordinates,
+      description: poi.description,
+      descriptionByLanguage: poi.descriptionByLanguage,
+      rating: poi.rating,
+      photos: poi.photos,
+      category: poi.category,
+      tags: poi.tags,
+      seasons: poi.seasons,
+      photoScore: poi.photoScore,
+      mustVisit: poi.mustVisit,
+      bestTime: poi.bestTime,
+      bestTimeByLanguage: poi.bestTimeByLanguage,
+      difficulty: poi.difficulty,
+      durationMinutes: poi.durationMinutes,
+      importance: poi.importance,
+      status: "draft"
+    };
+    const res = await fetch("/api/pois", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      setLocationsError("Не удалось дублировать локацию.");
+      return;
+    }
+
+    const created = (await res.json()) as Poi;
+    await loadPois();
+    setLocationSelection({ mode: "edit", id: created.id });
+  };
+
+  const toggleLocationSelected = (id: string) => {
+    setLocationSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllLocationsSelected = (ids: string[]) => {
+    setLocationSelectedIds((prev) => {
+      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
+      return allSelected ? new Set() : new Set(ids);
+    });
+  };
+
+  const handleBulkSetStatus = async (status: "draft" | "published") => {
+    setLocationsError(null);
+    setIsBulkWorking(true);
+    try {
+      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
+      await Promise.all(
+        targets.map((poi) =>
+          fetch(`/api/pois/${poi.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...poi, status })
+          })
+        )
+      );
+      setLocationSelectedIds(new Set());
+      await loadPois();
+    } finally {
+      setIsBulkWorking(false);
+    }
+  };
+
+  const handleBulkDeleteLocations = async () => {
+    if (!window.confirm(`Удалить выбранные локации (${locationSelectedIds.size})? Это действие нельзя отменить.`)) {
+      return;
+    }
+
+    setLocationsError(null);
+    setIsBulkWorking(true);
+    try {
+      await Promise.all([...locationSelectedIds].map((id) => fetch(`/api/pois/${id}`, { method: "DELETE" })));
+      setLocationSelectedIds(new Set());
+      setLocationSelection({ mode: "empty" });
+      await loadPois();
+    } finally {
+      setIsBulkWorking(false);
+    }
+  };
+
+  const handleBulkChangeCity = async () => {
+    if (!bulkCityTarget) return;
+    setLocationsError(null);
+    setIsBulkWorking(true);
+    try {
+      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
+      await Promise.all(
+        targets.map((poi) =>
+          fetch(`/api/pois/${poi.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...poi, regionId: bulkCityTarget })
+          })
+        )
+      );
+      setLocationSelectedIds(new Set());
+      setBulkCityTarget("");
+      await loadPois();
+    } finally {
+      setIsBulkWorking(false);
+    }
+  };
+
+  const handleBulkChangeCategory = async () => {
+    if (!bulkCategoryTarget) return;
+    setLocationsError(null);
+    setIsBulkWorking(true);
+    try {
+      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
+      await Promise.all(
+        targets.map((poi) =>
+          fetch(`/api/pois/${poi.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...poi, category: bulkCategoryTarget })
+          })
+        )
+      );
+      setLocationSelectedIds(new Set());
+      setBulkCategoryTarget("");
+      await loadPois();
+    } finally {
+      setIsBulkWorking(false);
+    }
   };
 
   const handleCreateMode = async (input: ExplorationModeInput) => {
@@ -996,42 +1141,111 @@ export function AdminPanel() {
         <>
           {locationsError && <p className="mb-4 text-sm font-medium text-red-600">{locationsError}</p>}
           <ImportExportPanel pois={pois} regions={regions} cityFilter={locationCityFilter} onImported={loadPois} />
-          <div className="mb-3 flex items-center gap-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Город</label>
-            <CityPicker
-              className="w-56"
-              options={regions.map((region) => ({ id: region.id, name: region.name }))}
-              value={locationCityFilter}
-              onChange={(id) => {
-                setLocationCityFilter(id);
-                setLocationSelection({ mode: "empty" });
-              }}
-              frequentIds={frequentRegionIds}
-              allowAll
-            />
+          <div className="mb-3 flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Город</label>
+              <CityPicker
+                className="w-56"
+                options={regions.map((region) => ({ id: region.id, name: region.name }))}
+                value={locationCityFilter}
+                onChange={(id) => {
+                  setLocationCityFilter(id);
+                  setLocationSelection({ mode: "empty" });
+                }}
+                frequentIds={frequentRegionIds}
+                allowAll
+              />
+            </div>
+            <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+              <input type="checkbox" checked={showDraftsOnly} onChange={(e) => setShowDraftsOnly(e.target.checked)} />
+              Только черновики
+            </label>
           </div>
-          <MasterDetail
-            items={pois
+          {(() => {
+            const visiblePois = pois
               .filter((poi) => locationCityFilter === "all" || poi.regionId === locationCityFilter)
-              .map((poi) => ({
-                id: poi.id,
-                title: poi.name,
-                subtitle: regions.find((region) => region.id === poi.regionId)?.name,
-                badges: [
-                  ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
-                  { label: categories.find((category) => category.id === poi.category)?.name ?? poi.category },
-                  ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
-                ] as MasterDetailBadge[]
-              }))}
-            selectedId={
-              locationSelection.mode === "edit" ? locationSelection.id : locationSelection.mode === "create" ? "__create__" : null
-            }
-            onSelect={(id) => setLocationSelection({ mode: "edit", id })}
-            onAdd={() => setLocationSelection({ mode: "create" })}
-            addLabel="Добавить локацию"
-            searchPlaceholder="Поиск локации"
-            emptyLabel="Локаций пока нет"
-          >
+              .filter((poi) => !showDraftsOnly || poi.status === "draft");
+
+            return (
+              <MasterDetail
+                items={visiblePois.map((poi) => ({
+                  id: poi.id,
+                  title: poi.name,
+                  subtitle: regions.find((region) => region.id === poi.regionId)?.name,
+                  icon: getCategoryIcon(categories, poi.category),
+                  photoCount: poi.photos.length,
+                  badges: [
+                    ...(poi.status === "draft" ? [{ label: "Черновик" }] : []),
+                    { label: categories.find((category) => category.id === poi.category)?.name ?? poi.category, tone: "neutral" as const },
+                    ...translationBadge(poi.nameByLanguage, poi.descriptionByLanguage)
+                  ] as MasterDetailBadge[]
+                }))}
+                selectedId={
+                  locationSelection.mode === "edit" ? locationSelection.id : locationSelection.mode === "create" ? "__create__" : null
+                }
+                onSelect={(id) => setLocationSelection({ mode: "edit", id })}
+                onAdd={() => setLocationSelection({ mode: "create" })}
+                addLabel="Добавить локацию"
+                searchPlaceholder="Поиск локации"
+                emptyLabel="Локаций пока нет"
+                selection={{
+                  selectedIds: locationSelectedIds,
+                  onToggle: toggleLocationSelected,
+                  onToggleAll: toggleAllLocationsSelected,
+                  actions: (
+                    <>
+                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("published")}>
+                        Опубликовать
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking} onClick={() => handleBulkSetStatus("draft")}>
+                        В черновик
+                      </Button>
+                      <select
+                        className="rounded-md border border-border px-2 py-1 text-xs"
+                        value={bulkCityTarget}
+                        onChange={(e) => setBulkCityTarget(e.target.value)}
+                      >
+                        <option value="">Город…</option>
+                        {regions.map((region) => (
+                          <option key={region.id} value={region.id}>
+                            {region.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button type="button" size="sm" variant="outline" disabled={isBulkWorking || !bulkCityTarget} onClick={handleBulkChangeCity}>
+                        Применить город
+                      </Button>
+                      <select
+                        className="rounded-md border border-border px-2 py-1 text-xs"
+                        value={bulkCategoryTarget}
+                        onChange={(e) => setBulkCategoryTarget(e.target.value)}
+                      >
+                        <option value="">Категория…</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={isBulkWorking || !bulkCategoryTarget}
+                        onClick={handleBulkChangeCategory}
+                      >
+                        Применить категорию
+                      </Button>
+                      <Button type="button" size="sm" variant="outline" className="text-red-600" disabled={isBulkWorking} onClick={handleBulkDeleteLocations}>
+                        Удалить
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" disabled={isBulkWorking} onClick={() => setLocationSelectedIds(new Set())}>
+                        Снять выделение
+                      </Button>
+                    </>
+                  )
+                }}
+              >
             {locationSelection.mode === "empty" && (
               <p className="text-sm text-muted-foreground">Выберите локацию слева или добавьте новую.</p>
             )}
@@ -1053,14 +1267,23 @@ export function AdminPanel() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-semibold">{poi.name}</p>
-                      <button
-                        type="button"
-                        aria-label="Удалить локацию"
-                        onClick={() => handleDeleteLocation(poi)}
-                        className="text-xs font-medium text-red-600 hover:underline"
-                      >
-                        Удалить
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleDuplicateLocation(poi)}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          Дублировать
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Удалить локацию"
+                          onClick={() => handleDeleteLocation(poi)}
+                          className="text-xs font-medium text-red-600 hover:underline"
+                        >
+                          Удалить
+                        </button>
+                      </div>
                     </div>
                     <PoiForm
                       key={poi.id}
@@ -1074,7 +1297,9 @@ export function AdminPanel() {
                   </div>
                 );
               })()}
-          </MasterDetail>
+              </MasterDetail>
+            );
+          })()}
         </>
       )}
 

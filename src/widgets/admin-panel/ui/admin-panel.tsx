@@ -17,14 +17,14 @@ import { Button } from "@/shared/ui/button";
 import { CityPicker } from "@/shared/ui/city-picker";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
-import { missingLanguages } from "@/shared/lib/translation-completeness";
-import type { MasterDetailBadge } from "./master-detail";
 import { AdminAccountForm } from "./admin-account-form";
 import { AreaForm } from "./area-form";
 import { CategoryForm } from "./category-form";
+import { CitiesTable } from "./cities-table";
 import { CountryForm } from "./country-form";
 import { DashboardTab } from "./dashboard-tab";
 import { ExplorationModeForm } from "./exploration-mode-form";
+import { GlobalSearch, type GlobalSearchResult } from "./global-search";
 import { ImportExportPanel } from "./import-export-panel";
 import { LocationsTable } from "./locations-table";
 import { MasterDetail } from "./master-detail";
@@ -875,21 +875,52 @@ export function AdminPanel() {
   }
 
   const findAreaCountry = (area: Area) => countries.find((country) => country.id === area.countryId);
-  const findCityArea = (region: Region) => areas.find((area) => area.id === region.areaId);
   const unreadReportsCount = reports.filter((report) => report.status === "new").length;
   const pendingPhotosCount = photos.filter((photo) => photo.status === "pending").length;
   const communityBadgeCount = unreadReportsCount + pendingPhotosCount;
-
-  const translationBadge = (...fields: Record<string, string>[]): MasterDetailBadge[] => {
-    const missing = missingLanguages(fields);
-    if (missing.length === 0) return [];
-    return [{ label: `Нет перевода: ${missing.map((lang) => lang.toUpperCase()).join("/")}`, tone: "red" }];
-  };
 
   const frequentRegionIds = [...regions]
     .sort((a, b) => pois.filter((poi) => poi.regionId === b.id).length - pois.filter((poi) => poi.regionId === a.id).length)
     .slice(0, 5)
     .map((region) => region.id);
+
+  const globalSearchResults: GlobalSearchResult[] = [
+    ...pois.map((poi): GlobalSearchResult => ({
+      type: "location",
+      id: poi.id,
+      label: poi.name,
+      sublabel: regions.find((region) => region.id === poi.regionId)?.name
+    })),
+    ...regions.map((region): GlobalSearchResult => ({ type: "city", id: region.id, label: region.name })),
+    ...countries.map((country): GlobalSearchResult => ({ type: "country", id: country.id, label: country.name })),
+    ...areas.map((area): GlobalSearchResult => ({ type: "area", id: area.id, label: area.name })),
+    ...explorationModes.map((mode): GlobalSearchResult => ({ type: "mode", id: mode.id, label: mode.name })),
+    ...categories.map((category): GlobalSearchResult => ({ type: "category", id: category.id, label: category.name }))
+  ];
+
+  const handleGlobalSearchSelect = (result: GlobalSearchResult) => {
+    if (result.type === "location") {
+      setLocationCityFilter("all");
+      setShowDraftsOnly(false);
+      setActiveTab("locations");
+      setLocationSelection({ mode: "edit", id: result.id });
+    } else if (result.type === "city") {
+      setActiveTab("cities");
+      setCitySelection({ mode: "edit", id: result.id });
+    } else if (result.type === "country") {
+      setActiveTab("countries");
+      setCountrySelection({ mode: "edit", id: result.id });
+    } else if (result.type === "area") {
+      setActiveTab("areas");
+      setAreaSelection({ mode: "edit", id: result.id });
+    } else if (result.type === "mode") {
+      setActiveTab("modes");
+      setModeSelection({ mode: "edit", id: result.id });
+    } else if (result.type === "category") {
+      setActiveTab("categories");
+      setCategorySelection({ mode: "edit", id: result.id });
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -913,6 +944,8 @@ export function AdminPanel() {
           </Button>
         </div>
       </div>
+
+      <GlobalSearch results={globalSearchResults} onSelect={handleGlobalSearchSelect} className="mb-4 max-w-md" />
 
       <div className="mb-3 flex gap-1 rounded-md border border-border bg-muted/60 p-0.5">
         {(Object.keys(tabGroups) as TabGroup[]).map((group) => (
@@ -1080,60 +1113,67 @@ export function AdminPanel() {
       {activeTab === "cities" && (
         <>
           {citiesError && <p className="mb-4 text-sm font-medium text-red-600">{citiesError}</p>}
-          <MasterDetail
-            items={regions.map((region) => {
-              const area = findCityArea(region);
-              const country = area ? findAreaCountry(area) : undefined;
-              const subtitle = area && country ? `${area.name}, ${country.name}` : area?.name;
-              const badges: MasterDetailBadge[] = [
-                ...(region.status === "draft" ? [{ label: "Черновик" }] : []),
-                ...translationBadge(region.nameByLanguage)
-              ];
-              return { id: region.id, title: region.name, subtitle, badges };
-            })}
-            selectedId={citySelection.mode === "edit" ? citySelection.id : citySelection.mode === "create" ? "__create__" : null}
-            onSelect={(id) => setCitySelection({ mode: "edit", id })}
-            onAdd={() => setCitySelection({ mode: "create" })}
-            addLabel="Добавить город"
-            searchPlaceholder="Поиск города"
-            emptyLabel="Городов пока нет"
-          >
-            {citySelection.mode === "empty" && (
-              <p className="text-sm text-muted-foreground">Выберите город слева или добавьте новый.</p>
-            )}
-            {citySelection.mode === "create" && (
+          {citySelection.mode === "empty" && (
+            <CitiesTable
+              regions={regions}
+              areas={areas}
+              countries={countries}
+              pois={pois}
+              onSelect={(id) => setCitySelection({ mode: "edit", id })}
+              onAdd={() => setCitySelection({ mode: "create" })}
+            />
+          )}
+          {citySelection.mode === "create" && (
+            <div className="rounded-lg border border-border bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCitySelection({ mode: "empty" })}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  ← Назад к списку
+                </button>
+                <p className="text-sm font-semibold">Новый город</p>
+              </div>
               <RegionForm areas={areas} onCancel={() => setCitySelection({ mode: "empty" })} onSubmit={handleCreateCity} />
-            )}
-            {citySelection.mode === "edit" &&
-              (() => {
-                const region = regions.find((r) => r.id === citySelection.id);
-                if (!region) return null;
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">
-                        {region.name} <span className="text-muted-foreground">({region.sealCharacter})</span>
-                      </p>
-                      <button
-                        type="button"
-                        aria-label="Удалить город"
-                        onClick={() => handleDeleteCity(region)}
-                        className="text-xs font-medium text-red-600 hover:underline"
-                      >
-                        Удалить
-                      </button>
-                    </div>
-                    <RegionForm
-                      key={region.id}
-                      region={region}
-                      areas={areas}
-                      onCancel={() => setCitySelection({ mode: "empty" })}
-                      onSubmit={(input) => handleUpdateCity(region.id, input)}
-                    />
+            </div>
+          )}
+          {citySelection.mode === "edit" &&
+            (() => {
+              const region = regions.find((r) => r.id === citySelection.id);
+              if (!region) return null;
+              return (
+                <div className="space-y-4 rounded-lg border border-border bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setCitySelection({ mode: "empty" })}
+                      className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                    >
+                      ← Назад к списку
+                    </button>
+                    <p className="text-sm font-semibold">
+                      {region.name} <span className="text-muted-foreground">({region.sealCharacter})</span>
+                    </p>
+                    <button
+                      type="button"
+                      aria-label="Удалить город"
+                      onClick={() => handleDeleteCity(region)}
+                      className="text-xs font-medium text-red-600 hover:underline"
+                    >
+                      Удалить
+                    </button>
                   </div>
-                );
-              })()}
-          </MasterDetail>
+                  <RegionForm
+                    key={region.id}
+                    region={region}
+                    areas={areas}
+                    onCancel={() => setCitySelection({ mode: "empty" })}
+                    onSubmit={(input) => handleUpdateCity(region.id, input)}
+                  />
+                </div>
+              );
+            })()}
         </>
       )}
 

@@ -7,6 +7,7 @@ import type { Poi } from "@/entities/poi/model/types";
 import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import type { Region } from "@/entities/region/model/types";
 import { cn } from "@/shared/lib/cn";
+import { missingLanguages } from "@/shared/lib/translation-completeness";
 
 type SortKey = "name" | "city" | "status" | "photos";
 type SortDir = "asc" | "desc";
@@ -153,8 +154,13 @@ export function LocationsTable({ pois, regions, categories, onSelect, onAdd, sel
                     )}
                   </td>
                   <td className="px-3 py-2 font-medium text-foreground">
-                    <button type="button" onClick={() => onSelect(poi.id)} className="hover:underline">
+                    <button type="button" onClick={() => onSelect(poi.id)} className="inline-flex items-center gap-1.5 hover:underline">
                       {poi.name}
+                      {missingLanguages([poi.nameByLanguage, poi.descriptionByLanguage]).length > 0 && (
+                        <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+                          Нет перевода
+                        </span>
+                      )}
                     </button>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">{cityName(poi.regionId)}</td>

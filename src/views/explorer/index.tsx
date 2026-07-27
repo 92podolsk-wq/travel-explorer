@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Area } from "@/entities/area/model/types";
 import type { Category } from "@/entities/category/model/types";
 import type { Country } from "@/entities/country/model/types";
@@ -41,8 +42,12 @@ export function ExplorerPage({
   const setAreas = useExplorerStore((state) => state.setAreas);
   const setExplorationModes = useExplorerStore((state) => state.setExplorationModes);
   const setCategories = useExplorerStore((state) => state.setCategories);
+  const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
+  const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hasHydrated = useExplorerStore((state) => state.hasHydrated);
   const hasSeenWelcome = useExplorerStore((state) => state.hasSeenWelcome);
+  const searchParams = useSearchParams();
+  const sharedPoiId = searchParams.get("poi");
 
   useHydrateAuth();
 
@@ -53,6 +58,12 @@ export function ExplorerPage({
     setPois(initialPois);
     setExplorationModes(initialExplorationModes);
     setCategories(initialCategories);
+
+    const sharedPoi = sharedPoiId ? initialPois.find((poi) => poi.id === sharedPoiId) : undefined;
+    if (sharedPoi) {
+      setActiveRegion(sharedPoi.regionId);
+      selectPoiFromMap(sharedPoi.id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

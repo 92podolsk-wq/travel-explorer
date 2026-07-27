@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Sparkles, SunMedium, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Share2, Sparkles, SunMedium, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -39,6 +39,7 @@ export function PoiDetails() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isUploadPhotoOpen, setIsUploadPhotoOpen] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
 
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
 
@@ -60,6 +61,27 @@ export function PoiDetails() {
   const isFavorite = favorites.includes(selectedPoi.id);
   const isVisited = visitedPoiIds.includes(selectedPoi.id);
   const poiName = selectedPoi.nameByLanguage[language] ?? selectedPoi.name;
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/?poi=${selectedPoi.id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: poiName, url });
+        return;
+      } catch {
+        return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setIsLinkCopied(true);
+      setTimeout(() => setIsLinkCopied(false), 2000);
+    } catch {
+      // Clipboard unavailable; nothing more we can do silently.
+    }
+  }
   const poiCopy = t.poi[selectedPoi.id];
   const bestTime = localizedPoiBestTime(
     selectedPoi.bestTimeByLanguage,
@@ -349,29 +371,39 @@ export function PoiDetails() {
             </div>
           )}
 
-          {currentUser && (
-            <div
-              className="flex shrink-0 items-center gap-4 border-t border-white/70 px-5 py-3"
-              style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          <div
+            className="flex shrink-0 items-center gap-4 border-t border-white/70 px-5 py-3"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+          >
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
             >
-              <button
-                type="button"
-                onClick={() => setIsUploadPhotoOpen(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-              >
-                <ImagePlus className="h-3.5 w-3.5" />
-                {t.photoUpload.cta}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsReportOpen(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
-              >
-                <AlertTriangle className="h-3.5 w-3.5" />
-                {t.report.cta}
-              </button>
-            </div>
-          )}
+              <Share2 className="h-3.5 w-3.5" />
+              {isLinkCopied ? t.app.linkCopied : t.app.share}
+            </button>
+            {currentUser && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIsUploadPhotoOpen(true)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+                >
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  {t.photoUpload.cta}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsReportOpen(true)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {t.report.cta}
+                </button>
+              </>
+            )}
+          </div>
           </motion.section>
         )}
       </AnimatePresence>

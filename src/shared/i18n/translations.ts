@@ -50,6 +50,8 @@ type TranslationDictionary = {
     noResultsTitle: string;
     noResultsHint: string;
     resetFilters: string;
+    share: string;
+    linkCopied: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
@@ -294,6 +296,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noResultsTitle: "No places found",
       noResultsHint: "Try a different search or reset your filters.",
       resetFilters: "Reset filters",
+      share: "Share",
+      linkCopied: "Link copied",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
       now: "Now",
@@ -610,6 +614,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noResultsTitle: "Ничего не найдено",
       noResultsHint: "Попробуйте другой запрос или сбросьте фильтры.",
       resetFilters: "Сбросить фильтры",
+      share: "Поделиться",
+      linkCopied: "Ссылка скопирована",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
       now: "Сейчас",
@@ -926,6 +932,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       noResultsTitle: "場所が見つかりません",
       noResultsHint: "別のキーワードを試すか、フィルターをリセットしてください。",
       resetFilters: "フィルターをリセット",
+      share: "共有",
+      linkCopied: "リンクをコピーしました",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
       now: "現在",

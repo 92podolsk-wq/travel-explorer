@@ -47,6 +47,9 @@ type TranslationDictionary = {
     kyotoGreeting: string;
     seasonFilter: string;
     categoryFilter: string;
+    noResultsTitle: string;
+    noResultsHint: string;
+    resetFilters: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
@@ -288,6 +291,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Konnichiwa!",
       seasonFilter: "Season",
       categoryFilter: "Category",
+      noResultsTitle: "No places found",
+      noResultsHint: "Try a different search or reset your filters.",
+      resetFilters: "Reset filters",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
       now: "Now",
@@ -601,6 +607,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "Коничива!",
       seasonFilter: "Сезон",
       categoryFilter: "Категория",
+      noResultsTitle: "Ничего не найдено",
+      noResultsHint: "Попробуйте другой запрос или сбросьте фильтры.",
+      resetFilters: "Сбросить фильтры",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
       now: "Сейчас",
@@ -914,6 +923,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       kyotoGreeting: "こんにちは！",
       seasonFilter: "季節",
       categoryFilter: "カテゴリー",
+      noResultsTitle: "場所が見つかりません",
+      noResultsHint: "別のキーワードを試すか、フィルターをリセットしてください。",
+      resetFilters: "フィルターをリセット",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
       now: "現在",

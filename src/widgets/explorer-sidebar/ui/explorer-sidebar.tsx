@@ -38,6 +38,7 @@ export function ExplorerSidebar() {
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const selectedCategories = useExplorerStore((state) => state.selectedCategories);
   const toggleCategory = useExplorerStore((state) => state.toggleCategory);
+  const selectAllCategories = useExplorerStore((state) => state.selectAllCategories);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
@@ -157,6 +158,21 @@ export function ExplorerSidebar() {
       selectedCategories
     }
   );
+
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 ||
+    selectedCategories.length < categories.length ||
+    hideViewedOnMap ||
+    hideFavoritesOnMap ||
+    hideVisitedOnMap;
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    selectAllCategories();
+    if (hideViewedOnMap) toggleHideViewedOnMap();
+    if (hideFavoritesOnMap) toggleHideFavoritesOnMap();
+    if (hideVisitedOnMap) toggleHideVisitedOnMap();
+  };
 
   const sunTimes = useMemo(
     () =>
@@ -444,6 +460,19 @@ export function ExplorerSidebar() {
             </button>
           </div>
         </div>
+
+        {visiblePois.length === 0 && (
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-border p-6 text-center">
+            <Search className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm font-semibold text-foreground">{t.app.noResultsTitle}</p>
+            <p className="text-xs text-muted-foreground">{t.app.noResultsHint}</p>
+            {hasActiveFilters && (
+              <Button type="button" variant="outline" size="sm" onClick={handleResetFilters} className="mt-1">
+                {t.app.resetFilters}
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="space-y-3">
           {visiblePois.map((poi) => {

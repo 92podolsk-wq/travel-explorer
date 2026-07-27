@@ -1,6 +1,7 @@
 import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { Coordinates, Poi, PoiMainCategory } from "@/entities/poi/model/types";
 import { computeModeScore } from "@/features/exploration-mode/model/score";
+import { fuzzyMatch } from "@/shared/lib/fuzzy-match";
 import { haversineDistanceMeters } from "@/shared/lib/geo";
 
 const zoomThreshold = (zoom: number) => {
@@ -57,10 +58,10 @@ export function getVisiblePois(
       const matchesFilterTags = !hasActiveFilter || poi.tags.some((tag) => selectedTags.has(tag));
       const matchesSearch =
         normalizedQuery.length === 0 ||
-        poi.name.toLowerCase().includes(normalizedQuery) ||
+        fuzzyMatch(poi.name, normalizedQuery) ||
         poi.category.includes(normalizedQuery) ||
         poi.tags.some((tag) => tag.includes(normalizedQuery)) ||
-        getSearchText(poi).includes(normalizedQuery);
+        fuzzyMatch(getSearchText(poi), normalizedQuery);
 
       const visibleWhenViewed = !hideViewed || !viewedPoiIds.includes(poi.id);
       const visibleWhenFavorite = !hideFavorites || !favoritePoiIds.includes(poi.id);

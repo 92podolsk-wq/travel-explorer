@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, animate as animateValue, motion, useDragControls, useMotionValue } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
 import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
@@ -74,6 +74,40 @@ export function ExplorerSidebar() {
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
+
+  const collapsedSheetHeight = 236;
+  const [collapsedOffset, setCollapsedOffset] = useState(0);
+  const sheetY = useMotionValue(0);
+  const sheetDragControls = useDragControls();
+
+  useEffect(() => {
+    function measure() {
+      if (window.innerWidth >= 1024) {
+        setCollapsedOffset(0);
+        return;
+      }
+      const expandedPx = window.innerHeight * 0.85;
+      setCollapsedOffset(Math.max(expandedPx - collapsedSheetHeight, 0));
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    const controls = animateValue(sheetY, isMobileSheetExpanded ? 0 : collapsedOffset, {
+      type: "spring",
+      damping: 32,
+      stiffness: 320
+    });
+    return () => controls.stop();
+  }, [isMobileSheetExpanded, collapsedOffset, sheetY]);
+
+  function handleSheetDragEnd(_: unknown, info: { offset: { y: number }; velocity: { y: number } }) {
+    const current = sheetY.get();
+    const projected = current + info.velocity.y * 0.15;
+    setIsMobileSheetExpanded(projected < collapsedOffset / 2);
+  }
 
   async function handleNearMeClick() {
     if (sortByDistance) {
@@ -189,19 +223,26 @@ export function ExplorerSidebar() {
     <>
     <motion.aside
       initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
+      style={{ y: sheetY }}
+      drag="y"
+      dragListener={false}
+      dragControls={sheetDragControls}
+      dragConstraints={{ top: 0, bottom: collapsedOffset }}
+      dragElastic={0.06}
+      onDragEnd={handleSheetDragEnd}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden rounded-t-2xl border-t border-white/70 bg-white/[0.92] shadow-panel backdrop-blur-xl transition-[height] duration-300 ease-out",
-        isMobileSheetExpanded ? "h-[85dvh]" : "h-[236px]",
-        "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border lg:transition-none"
+        "fixed inset-x-0 bottom-0 z-10 flex h-[85dvh] flex-col overflow-hidden rounded-t-2xl border-t border-white/70 bg-white/[0.92] shadow-panel backdrop-blur-xl",
+        "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border"
       )}
     >
       <button
         type="button"
+        onPointerDown={(event) => sheetDragControls.start(event)}
         onClick={() => setIsMobileSheetExpanded(!isMobileSheetExpanded)}
         aria-label={isMobileSheetExpanded ? t.app.hideDetails : t.app.showDetails}
-        className="flex w-full shrink-0 flex-col items-center gap-1 pb-1 pt-2.5 lg:hidden"
+        className="flex w-full shrink-0 touch-none flex-col items-center gap-1 pb-1 pt-2.5 lg:hidden"
       >
         <span className="h-1 w-9 rounded-full bg-border" />
       </button>

@@ -8,6 +8,7 @@ import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { useNetworkStatus } from "@/shared/lib/use-network-status";
 import { showOfflineToast } from "@/shared/lib/offline-toast";
+import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 
 const REMOTE_ORIGIN = "https://wayora.ru";
@@ -20,6 +21,7 @@ function MobileAppTabBarInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const language = useExplorerStore((state) => state.language);
+  const currentUser = useExplorerStore((state) => state.currentUser);
   const dict = getTranslations(language);
 
   if (!isNative || pathname.startsWith("/admin")) {
@@ -87,6 +89,7 @@ function MobileAppTabBarInner() {
     >
       {items.map((item) => {
         const Icon = item.icon;
+        const showAvatar = item.key === "profile" && Boolean(currentUser);
         return (
           <button
             key={item.key}
@@ -97,7 +100,21 @@ function MobileAppTabBarInner() {
               item.active ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <Icon className="h-5 w-5" />
+            <span
+              className={cn(
+                "flex h-7 min-w-7 items-center justify-center rounded-full px-3 transition-colors",
+                item.active && "bg-primary/10"
+              )}
+            >
+              {showAvatar ? (
+                <ProfileAvatar
+                  avatarId={currentUser?.avatarId}
+                  className={cn("h-5 w-5 ring-2 ring-offset-1", item.active ? "ring-primary" : "ring-transparent")}
+                />
+              ) : (
+                <Icon className="h-5 w-5" />
+              )}
+            </span>
             {item.label}
           </button>
         );

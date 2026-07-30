@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { isPushDisabledByUser, savePushToken } from "@/shared/lib/push-token-storage";
 
 export function PushNotificationRegister() {
   const isNative = useIsNativeApp();
 
   useEffect(() => {
-    if (!isNative) {
+    if (!isNative || isPushDisabledByUser()) {
       return;
     }
 
@@ -18,6 +19,7 @@ export function PushNotificationRegister() {
 
       PushNotifications.addListener("registration", (token) => {
         if (!isMounted) return;
+        savePushToken(token.value);
         fetch("/api/me/push-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

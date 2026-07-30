@@ -18,6 +18,7 @@ import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
 import { PoiDetails } from "@/widgets/poi-details/ui/poi-details";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
+import { HeaderSearchBar } from "@/widgets/site-header/ui/header-search-bar";
 
 const BOOTSTRAP_URL = "https://wayora.ru/api/bootstrap";
 
@@ -136,6 +137,7 @@ export function ExplorerPage({
       style={isNative ? { paddingBottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
     >
       <SiteHeader />
+      <HeaderSearchBar />
       <div className="relative flex-1 overflow-hidden">
         <ExplorerMap
           initialMapStyleId={siteSettings.mapStyleId}

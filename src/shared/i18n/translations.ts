@@ -191,6 +191,12 @@ type TranslationDictionary = {
     tabRoute: string;
     tabSaved: string;
     tabHistory: string;
+    tabProfile: string;
+    pushNotificationsTitle: string;
+    pushNotificationsEnabled: string;
+    pushNotificationsDisabled: string;
+    pushNotificationsEnable: string;
+    pushNotificationsDenied: string;
   };
   report: {
     cta: string;
@@ -515,7 +521,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       lunchDuration: "Lunch duration",
       tabRoute: "Route",
       tabSaved: "Saved",
-      tabHistory: "History"
+      tabHistory: "History",
+      tabProfile: "Profile",
+      pushNotificationsTitle: "Push notifications",
+      pushNotificationsEnabled: "Notifications are on",
+      pushNotificationsDisabled: "Notifications are off",
+      pushNotificationsEnable: "Enable notifications",
+      pushNotificationsDenied: "Notifications are blocked in phone settings"
     },
     report: {
       cta: "Found an inaccuracy in this description?",
@@ -838,7 +850,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       lunchDuration: "Длительность обеда",
       tabRoute: "Маршрут",
       tabSaved: "Избранное",
-      tabHistory: "История"
+      tabHistory: "История",
+      tabProfile: "Профиль",
+      pushNotificationsTitle: "Push-уведомления",
+      pushNotificationsEnabled: "Уведомления включены",
+      pushNotificationsDisabled: "Уведомления выключены",
+      pushNotificationsEnable: "Включить уведомления",
+      pushNotificationsDenied: "Уведомления заблокированы в настройках телефона"
     },
     report: {
       cta: "Нашли неточность в описании локации?",
@@ -1160,7 +1178,13 @@ export const translations: Record<Language, TranslationDictionary> = {
       lunchDuration: "昼食の長さ",
       tabRoute: "旅程",
       tabSaved: "お気に入り",
-      tabHistory: "履歴"
+      tabHistory: "履歴",
+      tabProfile: "プロフィール",
+      pushNotificationsTitle: "プッシュ通知",
+      pushNotificationsEnabled: "通知はオンです",
+      pushNotificationsDisabled: "通知はオフです",
+      pushNotificationsEnable: "通知を有効にする",
+      pushNotificationsDenied: "通知は端末の設定でブロックされています"
     },
     report: {
       cta: "この説明に誤りがありましたか?",

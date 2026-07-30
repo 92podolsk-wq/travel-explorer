@@ -24,6 +24,10 @@ export async function registerPushToken(token: string, userId: string | null) {
   });
 }
 
+export async function unregisterPushToken(token: string) {
+  await prisma.pushToken.deleteMany({ where: { token } });
+}
+
 export type BroadcastResult = {
   sent: number;
   failed: number;

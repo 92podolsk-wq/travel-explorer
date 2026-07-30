@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Bookmark, Eye, Map as MapIcon, Route } from "lucide-react";
+import { Bookmark, Map as MapIcon, Route, User } from "lucide-react";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
@@ -45,11 +45,11 @@ function MobileAppTabBarInner() {
       onClick: () => router.push("/account?tab=saved")
     },
     {
-      key: "history",
-      label: dict.auth.tabHistory,
-      icon: Eye,
-      active: accountTab === "history",
-      onClick: () => router.push("/account?tab=history")
+      key: "profile",
+      label: dict.auth.tabProfile,
+      icon: User,
+      active: accountTab === "profile",
+      onClick: () => router.push("/account?tab=profile")
     }
   ];
 

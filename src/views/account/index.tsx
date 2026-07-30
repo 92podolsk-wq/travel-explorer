@@ -78,6 +78,7 @@ import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 import { FavoritesMap } from "@/widgets/favorites-map/ui/favorites-map";
 import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
+import { ProfileTab } from "@/widgets/profile-tab/ui/profile-tab";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
 const DEFAULT_DAY_START_MINUTES = 540; // 09:00
@@ -91,7 +92,7 @@ type DayConfigPatch = Partial<{
   lunchDurationMinutes: number | null;
 }>;
 
-type AccountTab = "route" | "saved" | "history";
+type AccountTab = "route" | "saved" | "history" | "profile";
 
 type AccountPageProps = {
   initialPois: Poi[];
@@ -683,7 +684,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   useEffect(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    if (tab === "saved" || tab === "history" || tab === "route") {
+    if (tab === "saved" || tab === "history" || tab === "route" || tab === "profile") {
       setActiveTab(tab);
     }
   }, []);
@@ -1207,29 +1208,33 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
             </section>
           )}
 
-          <div className="flex gap-1.5 rounded-lg border border-border bg-white/[0.62] p-1">
-            {(
-              [
-                { id: "route", label: t.tabRoute },
-                { id: "saved", label: t.tabSaved },
-                { id: "history", label: t.tabHistory }
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-2 text-sm font-semibold transition",
-                  activeTab === tab.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          {activeTab !== "profile" && (
+            <div className="flex gap-1.5 rounded-lg border border-border bg-white/[0.62] p-1">
+              {(
+                [
+                  { id: "route", label: t.tabRoute },
+                  { id: "saved", label: t.tabSaved },
+                  { id: "history", label: t.tabHistory }
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "flex-1 rounded-md px-3 py-2 text-sm font-semibold transition",
+                    activeTab === tab.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "profile" && <ProfileTab />}
 
           <section className={cn("flex flex-col gap-3", activeTab !== "saved" && "hidden")}>
             <div className="flex items-center justify-between gap-2">

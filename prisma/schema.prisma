@@ -146,6 +146,18 @@ model User {
   itineraries  Itinerary[]
   customMarkers CustomMarker[]
   uploadedPhotos Photo[]
+  pushTokens   PushToken[]
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  platform  String   @default("android")
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Session {

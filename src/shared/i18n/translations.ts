@@ -52,6 +52,11 @@ type TranslationDictionary = {
     resetFilters: string;
     share: string;
     linkCopied: string;
+    mobileNavMap: string;
+    offlineMapDownload: string;
+    offlineMapDownloading: string;
+    offlineMapDownloaded: string;
+    offlineMapError: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
@@ -298,6 +303,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       resetFilters: "Reset filters",
       share: "Share",
       linkCopied: "Link copied",
+      mobileNavMap: "Map",
+      offlineMapDownload: "Download offline",
+      offlineMapDownloading: "Downloading",
+      offlineMapDownloaded: "Downloaded",
+      offlineMapError: "Download failed",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
       now: "Now",
@@ -616,6 +626,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       resetFilters: "Сбросить фильтры",
       share: "Поделиться",
       linkCopied: "Ссылка скопирована",
+      mobileNavMap: "Карта",
+      offlineMapDownload: "Скачать офлайн",
+      offlineMapDownloading: "Скачивание",
+      offlineMapDownloaded: "Скачано",
+      offlineMapError: "Ошибка скачивания",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
       now: "Сейчас",
@@ -934,6 +949,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       resetFilters: "フィルターをリセット",
       share: "共有",
       linkCopied: "リンクをコピーしました",
+      mobileNavMap: "地図",
+      offlineMapDownload: "オフライン保存",
+      offlineMapDownloading: "ダウンロード中",
+      offlineMapDownloaded: "保存済み",
+      offlineMapError: "ダウンロード失敗",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
       now: "現在",

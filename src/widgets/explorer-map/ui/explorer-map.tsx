@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bookmark, CheckCircle2, Eye, LocateFixed, MapPin, MapPinPlus, Minus, Plus, Sparkles } from "lucide-react";
+import { Bookmark, Check, CheckCircle2, Download, Eye, LocateFixed, MapPin, MapPinPlus, Minus, Plus, Sparkles } from "lucide-react";
 import type {
   ExpressionSpecification,
   GeoJSONSource,
@@ -24,7 +24,9 @@ import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/transl
 import type { Language } from "@/shared/i18n/types";
 import { cn } from "@/shared/lib/cn";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
-import { resolveMapStyle } from "@/shared/map/map-styles";
+import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { downloadRegionForOffline } from "@/shared/lib/offline-map-download";
+import { presetMapStyleUrl, resolveMapStyle } from "@/shared/map/map-styles";
 import { registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -691,6 +693,37 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
   const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const isNative = useIsNativeApp();
+  const [offlineDownloadState, setOfflineDownloadState] = useState<"idle" | "downloading" | "done" | "error">("idle");
+  const [offlineDownloadProgress, setOfflineDownloadProgress] = useState(0);
+
+  async function handleDownloadOfflineMap() {
+    const activeRegions = regions.filter((region) => activeRegionIds.includes(region.id));
+    const styleUrl = presetMapStyleUrl(initialMapStyleId);
+    if (activeRegions.length === 0 || !styleUrl) {
+      return;
+    }
+
+    const bounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
+
+    setOfflineDownloadState("downloading");
+    setOfflineDownloadProgress(0);
+
+    try {
+      await downloadRegionForOffline({
+        bounds,
+        minZoom: 10,
+        maxZoom: 16,
+        styleUrl,
+        onProgress: ({ loaded, total }) => {
+          setOfflineDownloadProgress(total > 0 ? Math.round((loaded / total) * 100) : 0);
+        }
+      });
+      setOfflineDownloadState("done");
+    } catch {
+      setOfflineDownloadState("error");
+    }
+  }
 
   async function handleLocateMe() {
     const map = mapRef.current;
@@ -1326,6 +1359,34 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         >
           <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
         </button>
+        {isNative && presetMapStyleUrl(initialMapStyleId) && (
+          <button
+            type="button"
+            onClick={() => void handleDownloadOfflineMap()}
+            disabled={offlineDownloadState === "downloading"}
+            aria-label={t.app.offlineMapDownload}
+            title={t.app.offlineMapDownload}
+            className={cn(
+              "flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium shadow-panel transition disabled:opacity-70",
+              offlineDownloadState === "done" ? "bg-primary/10 text-primary" : "bg-white text-foreground hover:bg-muted/60"
+            )}
+          >
+            {offlineDownloadState === "downloading" ? (
+              <span>{offlineDownloadProgress}%</span>
+            ) : offlineDownloadState === "done" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {offlineDownloadState === "downloading"
+              ? t.app.offlineMapDownloading
+              : offlineDownloadState === "done"
+                ? t.app.offlineMapDownloaded
+                : offlineDownloadState === "error"
+                  ? t.app.offlineMapError
+                  : t.app.offlineMapDownload}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleToggleAddMarker}

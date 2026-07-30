@@ -72,6 +72,7 @@ import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
 import { fetchWalkingRoute, type WalkingRoute } from "@/shared/lib/osrm-route";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
+import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
@@ -636,6 +637,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isNative = useIsNativeApp();
   const language = useExplorerStore((state) => state.language);
   const authStatus = useExplorerStore((state) => state.authStatus);
   const currentUser = useExplorerStore((state) => state.currentUser);
@@ -1141,7 +1143,10 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   return (
     <main className="flex min-h-dvh flex-col bg-muted">
       <SiteHeader />
-      <div className="flex-1 px-6 py-10">
+      <div
+        className="flex-1 px-6 py-10"
+        style={isNative ? { paddingBottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
+      >
         <div className="mx-auto flex max-w-2xl flex-col gap-8">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3">

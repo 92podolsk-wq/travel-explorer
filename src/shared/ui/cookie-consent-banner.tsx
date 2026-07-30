@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { Button } from "@/shared/ui/button";
 
 const consentStorageKey = "travel-explorer-cookie-consent";
@@ -10,6 +11,7 @@ const consentStorageKey = "travel-explorer-cookie-consent";
 export function CookieConsentBanner() {
   const language = useExplorerStore((state) => state.language);
   const t = getTranslations(language);
+  const isNative = useIsNativeApp();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export function CookieConsentBanner() {
     }
   }, []);
 
-  if (!isVisible) {
+  if (!isVisible || isNative) {
     return null;
   }
 

@@ -63,6 +63,7 @@ type ExplorerState = {
   authStatus: "loading" | "guest" | "authenticated";
   hasSeenWelcome: boolean;
   hasHydrated: boolean;
+  hasAutoDetectedLanguage: boolean;
   hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
@@ -106,6 +107,7 @@ type ExplorerState = {
   setIsAddingMarker: (value: boolean) => void;
   setHasSeenWelcome: (value: boolean) => void;
   setHasHydrated: (value: boolean) => void;
+  setHasAutoDetectedLanguage: (value: boolean) => void;
 };
 
 export const useExplorerStore = create<ExplorerState>()(
@@ -147,6 +149,7 @@ export const useExplorerStore = create<ExplorerState>()(
   authStatus: "loading",
   hasSeenWelcome: false,
   hasHydrated: false,
+  hasAutoDetectedLanguage: false,
   hydrateAuth: (user, poiState) =>
     set({
       currentUser: user,
@@ -293,7 +296,8 @@ export const useExplorerStore = create<ExplorerState>()(
   setCustomMarkerLimit: (limit) => set({ customMarkerLimit: limit }),
   setIsAddingMarker: (value) => set({ isAddingMarker: value }),
   setHasSeenWelcome: (value) => set({ hasSeenWelcome: value }),
-  setHasHydrated: (value) => set({ hasHydrated: value })
+  setHasHydrated: (value) => set({ hasHydrated: value }),
+  setHasAutoDetectedLanguage: (value) => set({ hasAutoDetectedLanguage: value })
     }),
     {
       name: "travel-explorer-settings",
@@ -301,7 +305,8 @@ export const useExplorerStore = create<ExplorerState>()(
         language: state.language,
         activeRegionIds: state.activeRegionIds,
         activeItineraryId: state.activeItineraryId,
-        hasSeenWelcome: state.hasSeenWelcome
+        hasSeenWelcome: state.hasSeenWelcome,
+        hasAutoDetectedLanguage: state.hasAutoDetectedLanguage
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHasHydrated(true);

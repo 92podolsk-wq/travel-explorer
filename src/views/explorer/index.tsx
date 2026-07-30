@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Area } from "@/entities/area/model/types";
 import type { Category } from "@/entities/category/model/types";
@@ -11,11 +11,25 @@ import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
+import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { detectDeviceLanguage } from "@/shared/lib/detect-device-language";
 import { WelcomePage } from "@/views/welcome";
 import { ExplorerMap } from "@/widgets/explorer-map/ui/explorer-map";
 import { ExplorerSidebar } from "@/widgets/explorer-sidebar/ui/explorer-sidebar";
 import { PoiDetails } from "@/widgets/poi-details/ui/poi-details";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
+
+const BOOTSTRAP_URL = "https://wayora.ru/api/bootstrap";
+
+type BootstrapData = {
+  pois: Poi[];
+  regions: Region[];
+  countries: Country[];
+  areas: Area[];
+  explorationModes: ExplorationMode[];
+  categories: Category[];
+  siteSettings: SiteSettings;
+};
 
 type ExplorerPageProps = {
   initialPois: Poi[];
@@ -46,28 +60,69 @@ export function ExplorerPage({
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hasHydrated = useExplorerStore((state) => state.hasHydrated);
   const hasSeenWelcome = useExplorerStore((state) => state.hasSeenWelcome);
+  const hasAutoDetectedLanguage = useExplorerStore((state) => state.hasAutoDetectedLanguage);
+  const setLanguage = useExplorerStore((state) => state.setLanguage);
+  const setHasAutoDetectedLanguage = useExplorerStore((state) => state.setHasAutoDetectedLanguage);
   const searchParams = useSearchParams();
   const sharedPoiId = searchParams.get("poi");
+  const isNative = useIsNativeApp();
+  const isLocalShell = initialRegions.length === 0;
+  const [isBootstrapping, setIsBootstrapping] = useState(isLocalShell);
+  const [siteSettings, setSiteSettings] = useState(initialSiteSettings);
 
   useHydrateAuth();
 
   useEffect(() => {
-    setCountries(initialCountries);
-    setAreas(initialAreas);
-    setRegions(initialRegions);
-    setPois(initialPois);
-    setExplorationModes(initialExplorationModes);
-    setCategories(initialCategories);
+    async function bootstrap() {
+      let data: BootstrapData = {
+        pois: initialPois,
+        regions: initialRegions,
+        countries: initialCountries,
+        areas: initialAreas,
+        explorationModes: initialExplorationModes,
+        categories: initialCategories,
+        siteSettings: initialSiteSettings
+      };
 
-    const sharedPoi = sharedPoiId ? initialPois.find((poi) => poi.id === sharedPoiId) : undefined;
-    if (sharedPoi) {
-      setActiveRegion(sharedPoi.regionId);
-      selectPoiFromMap(sharedPoi.id);
+      if (isLocalShell) {
+        try {
+          const response = await fetch(BOOTSTRAP_URL);
+          data = (await response.json()) as BootstrapData;
+        } catch {
+          setIsBootstrapping(false);
+          return;
+        }
+      }
+
+      setCountries(data.countries);
+      setAreas(data.areas);
+      setRegions(data.regions);
+      setPois(data.pois);
+      setExplorationModes(data.explorationModes);
+      setCategories(data.categories);
+      setSiteSettings(data.siteSettings);
+
+      const sharedPoi = sharedPoiId ? data.pois.find((poi) => poi.id === sharedPoiId) : undefined;
+      if (sharedPoi) {
+        setActiveRegion(sharedPoi.regionId);
+        selectPoiFromMap(sharedPoi.id);
+      }
+
+      setIsBootstrapping(false);
     }
+
+    bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!hasHydrated) {
+  useEffect(() => {
+    if (hasHydrated && isNative && !hasAutoDetectedLanguage) {
+      setLanguage(detectDeviceLanguage());
+      setHasAutoDetectedLanguage(true);
+    }
+  }, [hasHydrated, isNative, hasAutoDetectedLanguage, setLanguage, setHasAutoDetectedLanguage]);
+
+  if (!hasHydrated || isBootstrapping) {
     return <main className="h-dvh w-full bg-muted" />;
   }
 
@@ -76,12 +131,15 @@ export function ExplorerPage({
   }
 
   return (
-    <main className="flex h-dvh w-full flex-col overflow-hidden bg-muted">
+    <main
+      className="flex h-dvh w-full flex-col overflow-hidden bg-muted"
+      style={isNative ? { paddingBottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
+    >
       <SiteHeader />
       <div className="relative flex-1 overflow-hidden">
         <ExplorerMap
-          initialMapStyleId={initialSiteSettings.mapStyleId}
-          initialProtomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+          initialMapStyleId={siteSettings.mapStyleId}
+          initialProtomapsPmtilesUrl={siteSettings.protomapsPmtilesUrl}
         />
         <ExplorerSidebar />
         <PoiDetails />

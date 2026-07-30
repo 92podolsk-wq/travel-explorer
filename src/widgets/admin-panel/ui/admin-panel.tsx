@@ -30,6 +30,7 @@ import { LocationsTable } from "./locations-table";
 import { MasterDetail } from "./master-detail";
 import { MediaLibraryTab } from "./media-library-tab";
 import { PhotoModerationTab } from "./photo-moderation-tab";
+import { PushNotificationsTab } from "./push-notifications-tab";
 import { ReportsTab } from "./reports-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
@@ -52,7 +53,8 @@ type Tab =
   | "reports"
   | "photos-moderation"
   | "users"
-  | "accounts";
+  | "accounts"
+  | "push";
 
 const tabLabels: Record<Tab, string> = {
   dashboard: "Дашборд",
@@ -67,7 +69,8 @@ const tabLabels: Record<Tab, string> = {
   reports: "Сообщения",
   "photos-moderation": "Фото на модерации",
   users: "Пользователи",
-  accounts: "Администраторы"
+  accounts: "Администраторы",
+  push: "Push-рассылка"
 };
 
 type TabGroup = "overview" | "content" | "community";
@@ -75,7 +78,7 @@ type TabGroup = "overview" | "content" | "community";
 const tabGroups: Record<TabGroup, Tab[]> = {
   overview: ["dashboard", "settings"],
   content: ["countries", "areas", "cities", "locations", "media", "modes", "categories"],
-  community: ["reports", "photos-moderation", "users", "accounts"]
+  community: ["reports", "photos-moderation", "users", "accounts", "push"]
 };
 
 const groupLabels: Record<TabGroup, string> = {
@@ -1610,6 +1613,8 @@ export function AdminPanel() {
           </MasterDetail>
         </>
       )}
+
+      {activeTab === "push" && <PushNotificationsTab />}
     </div>
   );
 }

@@ -3,6 +3,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/shared/ui/service-worker-register";
 import { CookieConsentBanner } from "@/shared/ui/cookie-consent-banner";
+import { PushNotificationRegister } from "@/shared/ui/push-notification-register";
+import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 
 const siteTitle = "Wayora — Explore Japan";
 const siteDescription =
@@ -55,6 +57,8 @@ export default function RootLayout({
         {children}
         <ServiceWorkerRegister />
         <CookieConsentBanner />
+        <PushNotificationRegister />
+        <MobileAppTabBar />
       </body>
     </html>
   );

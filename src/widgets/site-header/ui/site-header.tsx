@@ -11,6 +11,7 @@ import { AuthMenu } from "@/features/auth/ui/auth-menu";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { CityIcon } from "@/shared/ui/city-icon";
 import { CountryFlagIcon } from "@/shared/ui/country-flag-icon";
 import { cn } from "@/shared/lib/cn";
@@ -30,6 +31,7 @@ export function SiteHeader() {
   const setActiveArea = useExplorerStore((state) => state.setActiveArea);
   const language = useExplorerStore((state) => state.language);
   const t = getTranslations(language);
+  const isNative = useIsNativeApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
 
@@ -134,7 +136,10 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3 sm:gap-3 sm:px-5">
+    <header
+      className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3 sm:gap-3 sm:px-5"
+      style={isNative ? { height: "calc(4rem + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" } : undefined}
+    >
       <button
         type="button"
         onClick={() => router.push("/")}
@@ -259,7 +264,7 @@ export function SiteHeader() {
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
-        <LanguageSwitcher />
+        {!isNative && <LanguageSwitcher />}
         <AuthMenu />
       </div>
     </header>

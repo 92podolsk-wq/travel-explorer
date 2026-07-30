@@ -26,6 +26,7 @@ import { cn } from "@/shared/lib/cn";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { downloadRegionForOffline } from "@/shared/lib/offline-map-download";
+import { areRegionsDownloaded, markRegionsDownloaded } from "@/shared/lib/offline-maps-storage";
 import { presetMapStyleUrl, resolveMapStyle } from "@/shared/map/map-styles";
 import { registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
@@ -697,6 +698,11 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const [offlineDownloadState, setOfflineDownloadState] = useState<"idle" | "downloading" | "done" | "error">("idle");
   const [offlineDownloadProgress, setOfflineDownloadProgress] = useState(0);
 
+  useEffect(() => {
+    setOfflineDownloadState(areRegionsDownloaded(activeRegionIds) ? "done" : "idle");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRegionIds.join(",")]);
+
   async function handleDownloadOfflineMap() {
     const activeRegions = regions.filter((region) => activeRegionIds.includes(region.id));
     const styleUrl = presetMapStyleUrl(initialMapStyleId);
@@ -719,6 +725,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           setOfflineDownloadProgress(total > 0 ? Math.round((loaded / total) * 100) : 0);
         }
       });
+      markRegionsDownloaded(activeRegionIds);
       setOfflineDownloadState("done");
     } catch {
       setOfflineDownloadState("error");

@@ -73,3 +73,24 @@ input {
   width: 34px;
   height: 34px;
 }
+
+/* Native app shell: strip web-only touch affordances so taps/scrolls/swipes feel native. */
+html[data-native-app] * {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html[data-native-app] button,
+html[data-native-app] a,
+html[data-native-app] [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html[data-native-app] .overflow-y-auto,
+html[data-native-app] .overflow-auto,
+html[data-native-app] .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}

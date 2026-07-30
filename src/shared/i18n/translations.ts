@@ -57,6 +57,14 @@ type TranslationDictionary = {
     offlineMapDownloading: string;
     offlineMapDownloaded: string;
     offlineMapError: string;
+    offlineMessage: string;
+    offlineMapsManageTitle: string;
+    offlineMapsManageEmpty: string;
+    offlineMapsManageDelete: string;
+    offlineMapsManageDeleted: string;
+    offlineFirstLaunchTitle: string;
+    offlineFirstLaunchHint: string;
+    retryButton: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
     now: string;
@@ -314,6 +322,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapDownloading: "Downloading",
       offlineMapDownloaded: "Downloaded",
       offlineMapError: "Download failed",
+      offlineMessage: "No internet connection",
+      offlineMapsManageTitle: "Downloaded maps",
+      offlineMapsManageEmpty: "No maps downloaded yet",
+      offlineMapsManageDelete: "Delete downloaded maps",
+      offlineMapsManageDeleted: "Downloaded maps deleted",
+      offlineFirstLaunchTitle: "No internet connection",
+      offlineFirstLaunchHint: "Connect to the internet at least once to load the map.",
+      retryButton: "Try again",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
       now: "Now",
@@ -643,6 +659,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapDownloading: "Скачивание",
       offlineMapDownloaded: "Скачано",
       offlineMapError: "Ошибка скачивания",
+      offlineMessage: "Нет подключения к интернету",
+      offlineMapsManageTitle: "Скачанные карты",
+      offlineMapsManageEmpty: "Пока ничего не скачано",
+      offlineMapsManageDelete: "Удалить скачанные карты",
+      offlineMapsManageDeleted: "Скачанные карты удалены",
+      offlineFirstLaunchTitle: "Нет подключения к интернету",
+      offlineFirstLaunchHint: "Подключитесь к интернету хотя бы раз, чтобы загрузить карту.",
+      retryButton: "Повторить",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
       now: "Сейчас",
@@ -972,6 +996,14 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapDownloading: "ダウンロード中",
       offlineMapDownloaded: "保存済み",
       offlineMapError: "ダウンロード失敗",
+      offlineMessage: "インターネット接続がありません",
+      offlineMapsManageTitle: "保存済みの地図",
+      offlineMapsManageEmpty: "まだ地図が保存されていません",
+      offlineMapsManageDelete: "保存済みの地図を削除",
+      offlineMapsManageDeleted: "保存済みの地図を削除しました",
+      offlineFirstLaunchTitle: "インターネット接続がありません",
+      offlineFirstLaunchHint: "地図を読み込むには、一度インターネットに接続してください。",
+      retryButton: "再試行",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",
       now: "現在",

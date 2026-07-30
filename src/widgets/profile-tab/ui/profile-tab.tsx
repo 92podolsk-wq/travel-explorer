@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, BellOff, LogOut } from "lucide-react";
+import { Bell, BellOff, LogOut, Map as MapIcon, Trash2 } from "lucide-react";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Button } from "@/shared/ui/button";
@@ -13,13 +13,16 @@ import {
   savePushToken,
   setPushDisabledByUser
 } from "@/shared/lib/push-token-storage";
+import { clearDownloadedMaps, getDownloadedRegionIds } from "@/shared/lib/offline-maps-storage";
 
 type PermissionState = "granted" | "denied" | "prompt" | "unknown";
 
 export function ProfileTab() {
   const router = useRouter();
   const language = useExplorerStore((state) => state.language);
-  const t = getTranslations(language).auth;
+  const dict = getTranslations(language);
+  const t = dict.auth;
+  const appT = dict.app;
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const setItinerary = useExplorerStore((state) => state.setItinerary);
   const setItineraries = useExplorerStore((state) => state.setItineraries);
@@ -28,6 +31,18 @@ export function ProfileTab() {
 
   const [permission, setPermission] = useState<PermissionState>("unknown");
   const [isBusy, setIsBusy] = useState(false);
+  const [downloadedCount, setDownloadedCount] = useState(0);
+  const [mapsDeleted, setMapsDeleted] = useState(false);
+
+  useEffect(() => {
+    setDownloadedCount(getDownloadedRegionIds().length);
+  }, []);
+
+  async function handleDeleteDownloadedMaps() {
+    await clearDownloadedMaps();
+    setDownloadedCount(0);
+    setMapsDeleted(true);
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -129,6 +144,35 @@ export function ProfileTab() {
             </Button>
           </div>
         )}
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
+        <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+          <MapIcon className="h-4 w-4 text-primary" />
+          {appT.offlineMapsManageTitle}
+        </h2>
+
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            {mapsDeleted
+              ? appT.offlineMapsManageDeleted
+              : downloadedCount === 0
+                ? appT.offlineMapsManageEmpty
+                : `${downloadedCount}`}
+          </p>
+          {downloadedCount > 0 && !mapsDeleted && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="text-red-600"
+              onClick={() => void handleDeleteDownloadedMaps()}
+            >
+              <Trash2 className="h-4 w-4" />
+              {appT.offlineMapsManageDelete}
+            </Button>
+          )}
+        </div>
       </section>
 
       <Button type="button" variant="outline" onClick={() => void handleLogout()} className="self-start">

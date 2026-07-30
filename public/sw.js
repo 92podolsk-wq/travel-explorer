@@ -32,6 +32,24 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
+  // The app-shell bundle's bootstrap call is cross-origin (bundled shell -> wayora.ru),
+  // so it's handled before the generic cross-origin branch: fresh data when online,
+  // last-known data when offline.
+  if (url.pathname === "/api/bootstrap") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const clone = response.clone();
+            caches.open(DATA_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
   // Cross-origin: map tiles, styles, glyphs, sprites, and any externally-hosted
   // photo URLs. These are effectively immutable content, so cache-first keeps the
   // map and previously-seen photos available offline.

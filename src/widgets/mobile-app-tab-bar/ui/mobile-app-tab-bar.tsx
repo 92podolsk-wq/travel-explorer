@@ -6,10 +6,16 @@ import { Bookmark, Map as MapIcon, Route, User } from "lucide-react";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { useNetworkStatus } from "@/shared/lib/use-network-status";
+import { showOfflineToast } from "@/shared/lib/offline-toast";
 import { cn } from "@/shared/lib/cn";
+
+const REMOTE_ORIGIN = "https://wayora.ru";
+const LOCAL_SHELL_URL = "https://localhost/index.html";
 
 function MobileAppTabBarInner() {
   const isNative = useIsNativeApp();
+  const isOnline = useNetworkStatus();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -21,35 +27,56 @@ function MobileAppTabBarInner() {
   }
 
   const accountTab = pathname === "/account" ? (searchParams.get("tab") ?? "route") : null;
+  const isOnMap = pathname === "/" || pathname === "/app-shell";
+
+  function goHome() {
+    if (window.location.origin === REMOTE_ORIGIN) {
+      window.location.href = LOCAL_SHELL_URL;
+      return;
+    }
+    router.push(pathname === "/app-shell" ? "/app-shell" : "/");
+  }
+
+  function goAccountTab(tab: "route" | "saved" | "profile") {
+    if (!isOnline) {
+      showOfflineToast();
+      return;
+    }
+    if (window.location.origin === REMOTE_ORIGIN) {
+      router.push(`/account?tab=${tab}`);
+      return;
+    }
+    window.location.href = `${REMOTE_ORIGIN}/account?tab=${tab}`;
+  }
 
   const items = [
     {
       key: "map",
       label: dict.app.mobileNavMap,
       icon: MapIcon,
-      active: pathname === "/",
-      onClick: () => router.push("/")
+      active: isOnMap,
+      onClick: goHome
     },
     {
       key: "route",
       label: dict.auth.tabRoute,
       icon: Route,
       active: accountTab === "route",
-      onClick: () => router.push("/account?tab=route")
+      onClick: () => goAccountTab("route")
     },
     {
       key: "saved",
       label: dict.auth.tabSaved,
       icon: Bookmark,
       active: accountTab === "saved",
-      onClick: () => router.push("/account?tab=saved")
+      onClick: () => goAccountTab("saved")
     },
     {
       key: "profile",
       label: dict.auth.tabProfile,
       icon: User,
       active: accountTab === "profile",
-      onClick: () => router.push("/account?tab=profile")
+      onClick: () => goAccountTab("profile")
     }
   ];
 

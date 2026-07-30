@@ -6,6 +6,7 @@ import { CookieConsentBanner } from "@/shared/ui/cookie-consent-banner";
 import { PushNotificationRegister } from "@/shared/ui/push-notification-register";
 import { NativeAppClass } from "@/shared/ui/native-app-class";
 import { OfflineToast } from "@/shared/ui/offline-toast";
+import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 
 const siteTitle = "Wayora — Explore Japan";
@@ -62,6 +63,7 @@ export default function RootLayout({
         <PushNotificationRegister />
         <NativeAppClass />
         <OfflineToast />
+        <DeepLinkHandler />
         <MobileAppTabBar />
       </body>
     </html>

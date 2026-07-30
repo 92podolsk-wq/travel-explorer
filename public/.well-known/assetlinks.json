@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "ru.wayora.app",
+      "sha256_cert_fingerprints": [
+        "41:14:65:E0:0A:1E:5C:AF:91:C8:EF:AC:EA:DE:C9:72:36:9F:44:C6:B6:73:52:FD:96:99:FC:F7:5C:7F:A8:C5"
+      ]
+    }
+  }
+]

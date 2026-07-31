@@ -699,7 +699,13 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const [offlineDownloadProgress, setOfflineDownloadProgress] = useState(0);
 
   useEffect(() => {
-    setOfflineDownloadState(areRegionsDownloaded(activeRegionIds) ? "done" : "idle");
+    let cancelled = false;
+    areRegionsDownloaded(activeRegionIds).then((downloaded) => {
+      if (!cancelled) setOfflineDownloadState(downloaded ? "done" : "idle");
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRegionIds.join(",")]);
 
@@ -725,7 +731,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           setOfflineDownloadProgress(total > 0 ? Math.round((loaded / total) * 100) : 0);
         }
       });
-      markRegionsDownloaded(activeRegionIds);
+      await markRegionsDownloaded(activeRegionIds);
       setOfflineDownloadState("done");
     } catch {
       setOfflineDownloadState("error");

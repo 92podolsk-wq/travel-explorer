@@ -9,6 +9,7 @@ import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { useNetworkStatus } from "@/shared/lib/use-network-status";
 import { showOfflineToast } from "@/shared/lib/offline-toast";
 import { showNavigationTransition } from "@/shared/lib/navigation-transition";
+import { emitAccountTabChange } from "@/shared/lib/account-tab-navigation";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 
@@ -47,6 +48,7 @@ function MobileAppTabBarInner() {
       return;
     }
     if (window.location.origin === REMOTE_ORIGIN) {
+      emitAccountTabChange(tab);
       router.push(`/account?tab=${tab}`);
       return;
     }

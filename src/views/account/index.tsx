@@ -73,6 +73,7 @@ import { fetchWalkingRoute, type WalkingRoute } from "@/shared/lib/osrm-route";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { subscribeAccountTabChange } from "@/shared/lib/account-tab-navigation";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
@@ -687,6 +688,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (tab === "saved" || tab === "history" || tab === "route" || tab === "profile") {
       setActiveTab(tab);
     }
+    return subscribeAccountTabChange(setActiveTab);
   }, []);
 
   const sensors = useSensors(

@@ -35,7 +35,13 @@ export function ProfileTab() {
   const [mapsDeleted, setMapsDeleted] = useState(false);
 
   useEffect(() => {
-    setDownloadedCount(getDownloadedRegionIds().length);
+    let cancelled = false;
+    getDownloadedRegionIds().then((ids) => {
+      if (!cancelled) setDownloadedCount(ids.length);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleDeleteDownloadedMaps() {

@@ -1431,16 +1431,22 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         >
           <Minus className="h-4 w-4" />
         </button>
-        <button
-          type="button"
-          onClick={() => setIsSwipeOpen(true)}
-          title={t.app.swipeDiscoveryHint}
-          className="flex h-9 items-center justify-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-soft transition hover:bg-primary/90"
-        >
-          <Sparkles className="h-3.5 w-3.5 shrink-0" />
-          {t.app.swipeDiscovery}
-        </button>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setIsSwipeOpen(true)}
+        aria-label={t.app.swipeDiscovery}
+        title={t.app.swipeDiscoveryHint}
+        className={cn(
+          "absolute left-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition hover:bg-primary/90",
+          "bottom-[252px] lg:bottom-5 lg:left-[402px]",
+          isNative && "bottom-[calc(252px+56px+env(safe-area-inset-bottom))]",
+          isMobileSheetExpanded && "hidden lg:flex"
+        )}
+      >
+        <Sparkles className="h-5 w-5" />
+      </button>
 
       {isAddingMarker && !pendingMarkerCoords && (
         <div className="absolute left-1/2 top-6 z-30 -translate-x-1/2 rounded-full border border-white/70 bg-white/[0.92] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl">

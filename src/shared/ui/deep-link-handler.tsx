@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
+import { showNavigationTransition } from "@/shared/lib/navigation-transition";
 
 const REMOTE_ORIGIN = "https://wayora.ru";
 const LOCAL_SHELL_URL = "https://localhost/index.html";
@@ -17,6 +18,8 @@ function handleIncomingUrl(rawUrl: string) {
   if (url.origin !== REMOTE_ORIGIN) {
     return;
   }
+
+  showNavigationTransition();
 
   if (url.pathname === "/" || url.pathname === "/app-shell") {
     window.location.href = LOCAL_SHELL_URL + url.search;

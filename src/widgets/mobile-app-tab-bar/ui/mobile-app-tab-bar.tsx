@@ -8,6 +8,7 @@ import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { useNetworkStatus } from "@/shared/lib/use-network-status";
 import { showOfflineToast } from "@/shared/lib/offline-toast";
+import { showNavigationTransition } from "@/shared/lib/navigation-transition";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 
@@ -33,6 +34,7 @@ function MobileAppTabBarInner() {
 
   function goHome() {
     if (window.location.origin === REMOTE_ORIGIN) {
+      showNavigationTransition();
       window.location.href = LOCAL_SHELL_URL;
       return;
     }
@@ -48,6 +50,7 @@ function MobileAppTabBarInner() {
       router.push(`/account?tab=${tab}`);
       return;
     }
+    showNavigationTransition();
     window.location.href = `${REMOTE_ORIGIN}/account?tab=${tab}`;
   }
 

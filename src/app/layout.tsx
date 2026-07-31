@@ -6,6 +6,7 @@ import { CookieConsentBanner } from "@/shared/ui/cookie-consent-banner";
 import { PushNotificationRegister } from "@/shared/ui/push-notification-register";
 import { NativeAppClass } from "@/shared/ui/native-app-class";
 import { OfflineToast } from "@/shared/ui/offline-toast";
+import { NavigationTransitionOverlay } from "@/shared/ui/navigation-transition-overlay";
 import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
         <PushNotificationRegister />
         <NativeAppClass />
         <OfflineToast />
+        <NavigationTransitionOverlay />
         <DeepLinkHandler />
         <MobileAppTabBar />
       </body>

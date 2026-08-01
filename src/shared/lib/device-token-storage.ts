@@ -1,4 +1,9 @@
+import { withTimeout } from "./with-timeout";
+
 const STORAGE_KEY = "travel-explorer-device-token";
+// Native plugin bridge calls are local (no network) and should be near-
+// instant — this is purely a safety net against a hung bridge call.
+const PREFS_TIMEOUT_MS = 3000;
 
 // The device token authenticates API calls made from the local app-shell
 // (https://localhost) origin, which can't use the httpOnly session cookie set
@@ -21,7 +26,7 @@ export async function getDeviceToken(): Promise<string | null> {
   const prefs = await getNativePreferences();
   if (prefs) {
     try {
-      const { value } = await prefs.get({ key: STORAGE_KEY });
+      const { value } = await withTimeout(prefs.get({ key: STORAGE_KEY }), PREFS_TIMEOUT_MS, { value: null });
       return value ?? null;
     } catch {
       return null;
@@ -38,7 +43,7 @@ export async function saveDeviceToken(token: string) {
   const prefs = await getNativePreferences();
   if (prefs) {
     try {
-      await prefs.set({ key: STORAGE_KEY, value: token });
+      await withTimeout(prefs.set({ key: STORAGE_KEY, value: token }), PREFS_TIMEOUT_MS, undefined);
       return;
     } catch {
       // fall through to localStorage
@@ -55,7 +60,7 @@ export async function clearDeviceToken() {
   const prefs = await getNativePreferences();
   if (prefs) {
     try {
-      await prefs.remove({ key: STORAGE_KEY });
+      await withTimeout(prefs.remove({ key: STORAGE_KEY }), PREFS_TIMEOUT_MS, undefined);
     } catch {
       // ignore
     }

@@ -8,6 +8,10 @@ import { useState } from "react";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 
+// Bumped by hand on every deploy so a screenshot can confirm whether the
+// device is actually running this build, or still serving a stale cached one.
+const BUILD_TAG = "2026-08-02a";
+
 export function AuthDebugOverlay() {
   const isNative = useIsNativeApp();
   const log = useExplorerStore((state) => state.authDebugLog);
@@ -24,7 +28,7 @@ export function AuthDebugOverlay() {
       style={{ marginTop: "env(safe-area-inset-top)" }}
     >
       <button type="button" onClick={() => setCollapsed((v) => !v)} className="mb-1 block font-bold text-white">
-        AUTH DEBUG [{authStatus}] {collapsed ? "▸" : "▾"}
+        AUTH DEBUG [{authStatus}] build:{BUILD_TAG} {collapsed ? "▸" : "▾"}
       </button>
       {!collapsed && (
         <>

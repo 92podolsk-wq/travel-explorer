@@ -1,5 +1,5 @@
-const STATIC_CACHE = "travel-explorer-static-v1";
-const DATA_CACHE = "travel-explorer-data-v1";
+const STATIC_CACHE = "travel-explorer-static-v2";
+const DATA_CACHE = "travel-explorer-data-v2";
 const TILE_CACHE = "travel-explorer-tiles-v1";
 const ALL_CACHES = [STATIC_CACHE, DATA_CACHE, TILE_CACHE];
 

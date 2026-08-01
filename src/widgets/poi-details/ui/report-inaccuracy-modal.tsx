@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { apiFetch } from "@/shared/lib/api-fetch";
 import { Button } from "@/shared/ui/button";
 
 type ReportInaccuracyModalProps = {
@@ -26,7 +27,7 @@ export function ReportInaccuracyModal({ poiId, language, onClose }: ReportInaccu
     setError(null);
 
     try {
-      const res = await fetch("/api/me/reports", {
+      const res = await apiFetch("/api/me/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ poiId, message: message.trim() })

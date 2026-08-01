@@ -3,9 +3,7 @@
 import { useEffect } from "react";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { showNavigationTransition } from "@/shared/lib/navigation-transition";
-
-const REMOTE_ORIGIN = "https://wayora.ru";
-const LOCAL_SHELL_URL = "https://localhost/index.html";
+import { REMOTE_ORIGIN, LOCAL_SHELL_URL } from "@/shared/lib/native-origins";
 
 function handleIncomingUrl(rawUrl: string) {
   let url: URL;

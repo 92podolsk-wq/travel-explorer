@@ -4,6 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BellOff, LogOut, Map as MapIcon, Trash2 } from "lucide-react";
 import { getTranslations } from "@/shared/i18n/translations";
+import { apiFetch } from "@/shared/lib/api-fetch";
+import { navigateShell } from "@/shared/lib/shell-navigation";
+import { isNativeLocalShell } from "@/shared/lib/native-origins";
+import { getDeviceToken, clearDeviceToken } from "@/shared/lib/device-token-storage";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Button } from "@/shared/ui/button";
 import {
@@ -83,7 +87,7 @@ export function ProfileTab() {
         setPushDisabledByUser(false);
         PushNotifications.addListener("registration", (token) => {
           savePushToken(token.value);
-          fetch("/api/me/push-token", {
+          apiFetch("/api/me/push-token", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: token.value })
@@ -101,7 +105,7 @@ export function ProfileTab() {
     try {
       const token = readPushToken();
       if (token) {
-        await fetch("/api/me/push-token", {
+        await apiFetch("/api/me/push-token", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token })
@@ -115,12 +119,25 @@ export function ProfileTab() {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    const deviceToken = await getDeviceToken();
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    if (deviceToken) {
+      await apiFetch("/api/auth/device-token", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: deviceToken })
+      }).catch(() => {});
+    }
+    await clearDeviceToken();
     hydrateAuth(null);
     setItinerary(null);
     setItineraries([]);
     setActiveItineraryId(null);
     setCustomMarkers([]);
+    if (isNativeLocalShell()) {
+      navigateShell("map");
+      return;
+    }
     router.push("/");
   }
 

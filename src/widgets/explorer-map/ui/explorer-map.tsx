@@ -22,6 +22,7 @@ import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { apiFetch } from "@/shared/lib/api-fetch";
 import { cn } from "@/shared/lib/cn";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
@@ -781,7 +782,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       return { ok: true };
     }
 
-    const res = await fetch("/api/me/custom-markers", {
+    const res = await apiFetch("/api/me/custom-markers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lat: pendingMarkerCoords.lat, lng: pendingMarkerCoords.lng, color, label })
@@ -805,14 +806,14 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   async function handleDeleteMarker(id: string) {
     useExplorerStore.getState().removeCustomMarkerFromState(id);
     if (useExplorerStore.getState().currentUser && !id.startsWith("local-")) {
-      await fetch(`/api/me/custom-markers/${id}`, { method: "DELETE" }).catch(() => {});
+      await apiFetch(`/api/me/custom-markers/${id}`, { method: "DELETE" }).catch(() => {});
     }
   }
 
   async function handleAddMarkerToItineraryClick(customMarkerId: string) {
     const state = useExplorerStore.getState();
     if (!state.currentUser || !state.itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${state.itinerary.id}/stops`, {
+    const res = await apiFetch(`/api/me/itineraries/${state.itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ customMarkerId })
@@ -825,7 +826,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     if (!state.itinerary) return;
     const stop = state.itinerary.stops.find((s) => s.point.kind === "marker" && s.point.marker.id === customMarkerId);
     if (!stop) return;
-    const res = await fetch(`/api/me/itineraries/${state.itinerary.id}/stops/${stop.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/me/itineraries/${state.itinerary.id}/stops/${stop.id}`, { method: "DELETE" });
     if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
   }
 

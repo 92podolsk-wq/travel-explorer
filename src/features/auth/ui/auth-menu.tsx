@@ -5,6 +5,10 @@ import Link from "next/link";
 import { ChevronDown, LogOut } from "lucide-react";
 import type { AuthMeResponse } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
+import { apiFetch } from "@/shared/lib/api-fetch";
+import { navigateShell } from "@/shared/lib/shell-navigation";
+import { isNativeLocalShell } from "@/shared/lib/native-origins";
+import { getDeviceToken, saveDeviceToken, clearDeviceToken } from "@/shared/lib/device-token-storage";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -48,20 +52,24 @@ export function AuthMenu() {
       const endpoint = formMode === "login" ? "/api/auth/login" : "/api/auth/register";
       const body = formMode === "login" ? { email, password } : { email, password, name };
 
-      const res = await fetch(endpoint, {
+      const res = await apiFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
 
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; token?: string };
 
       if (!res.ok) {
         setError(data.error ?? "Что-то пошло не так.");
         return;
       }
 
-      const meRes = await fetch("/api/auth/me");
+      if (data.token && typeof window !== "undefined" && window.Capacitor?.isNativePlatform?.()) {
+        await saveDeviceToken(data.token);
+      }
+
+      const meRes = await apiFetch("/api/auth/me");
       const meData = (await meRes.json()) as AuthMeResponse;
       hydrateAuth(
         meData.user,
@@ -81,13 +89,30 @@ export function AuthMenu() {
   }
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
+    const deviceToken = await getDeviceToken();
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    if (deviceToken) {
+      await apiFetch("/api/auth/device-token", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: deviceToken })
+      }).catch(() => {});
+    }
+    await clearDeviceToken();
     hydrateAuth(null);
     setItinerary(null);
     setItineraries([]);
     setActiveItineraryId(null);
     setCustomMarkers([]);
     setIsUserMenuOpen(false);
+  }
+
+  function goToAccount() {
+    setIsUserMenuOpen(false);
+    if (isNativeLocalShell()) {
+      navigateShell("account");
+      return;
+    }
   }
 
   if (authStatus === "loading") {
@@ -120,13 +145,23 @@ export function AuthMenu() {
               onClick={() => setIsUserMenuOpen(false)}
             />
             <div className="absolute right-0 top-full z-40 mt-2 w-48 rounded-lg border border-border bg-white p-1.5 shadow-panel">
-              <Link
-                href="/account"
-                onClick={() => setIsUserMenuOpen(false)}
-                className="block rounded px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted/60"
-              >
-                {t.account}
-              </Link>
+              {isNativeLocalShell() ? (
+                <button
+                  type="button"
+                  onClick={goToAccount}
+                  className="block w-full rounded px-3 py-2 text-left text-sm font-medium text-foreground transition hover:bg-muted/60"
+                >
+                  {t.account}
+                </button>
+              ) : (
+                <Link
+                  href="/account"
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="block rounded px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted/60"
+                >
+                  {t.account}
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={handleLogout}

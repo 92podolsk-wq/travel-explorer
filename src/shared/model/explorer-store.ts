@@ -14,7 +14,9 @@ import type { ExplorationMode } from "@/entities/exploration-mode/model/types";
 import type { User, UserPoiState } from "@/entities/user/model/types";
 import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/types";
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
+import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { Language } from "@/shared/i18n/types";
+import { apiFetch } from "@/shared/lib/api-fetch";
 
 const DEFAULT_CUSTOM_MARKER_LIMIT = 200;
 
@@ -33,6 +35,7 @@ type ExplorerState = {
   areas: Area[];
   explorationModes: ExplorationMode[];
   categories: Category[];
+  siteSettings: SiteSettings | null;
   activeRegionIds: string[];
   selectedPoiId: string;
   selectedCategories: PoiMainCategory[];
@@ -92,6 +95,7 @@ type ExplorerState = {
   setAreas: (areas: Area[]) => void;
   setExplorationModes: (explorationModes: ExplorationMode[]) => void;
   setCategories: (categories: Category[]) => void;
+  setSiteSettings: (siteSettings: SiteSettings) => void;
   toggleSeason: (season: Season) => void;
   setUserLocation: (location: Coordinates | null) => void;
   setIsLocatingUser: (value: boolean) => void;
@@ -119,6 +123,7 @@ export const useExplorerStore = create<ExplorerState>()(
   areas: seedAreas,
   explorationModes: seedExplorationModes,
   categories: [],
+  siteSettings: null,
   activeRegionIds: [defaultRegion.id],
   selectedPoiId: firstPoiIdForRegion(kyotoPois, defaultRegion.id),
   selectedCategories: [],
@@ -200,7 +205,7 @@ export const useExplorerStore = create<ExplorerState>()(
         : [...state.favorites, poiId]
     }));
     if (get().currentUser) {
-      fetch(`/api/me/favorites/${poiId}`, { method: "POST" }).catch(() => {});
+      apiFetch(`/api/me/favorites/${poiId}`, { method: "POST" }).catch(() => {});
     }
   },
   toggleVisited: (poiId) => {
@@ -210,7 +215,7 @@ export const useExplorerStore = create<ExplorerState>()(
         : [...state.visitedPoiIds, poiId]
     }));
     if (get().currentUser) {
-      fetch(`/api/me/visited/${poiId}`, { method: "POST" }).catch(() => {});
+      apiFetch(`/api/me/visited/${poiId}`, { method: "POST" }).catch(() => {});
     }
   },
   markPoiViewed: (poiId) => {
@@ -218,25 +223,25 @@ export const useExplorerStore = create<ExplorerState>()(
       state.viewedPoiIds.includes(poiId) ? state : { viewedPoiIds: [...state.viewedPoiIds, poiId] }
     );
     if (get().currentUser) {
-      fetch(`/api/me/viewed/${poiId}`, { method: "POST" }).catch(() => {});
+      apiFetch(`/api/me/viewed/${poiId}`, { method: "POST" }).catch(() => {});
     }
   },
   clearViewedPois: () => {
     set({ viewedPoiIds: [] });
     if (get().currentUser) {
-      fetch("/api/me/viewed", { method: "DELETE" }).catch(() => {});
+      apiFetch("/api/me/viewed", { method: "DELETE" }).catch(() => {});
     }
   },
   clearFavoritePois: () => {
     set({ favorites: [] });
     if (get().currentUser) {
-      fetch("/api/me/favorites", { method: "DELETE" }).catch(() => {});
+      apiFetch("/api/me/favorites", { method: "DELETE" }).catch(() => {});
     }
   },
   clearVisitedPois: () => {
     set({ visitedPoiIds: [] });
     if (get().currentUser) {
-      fetch("/api/me/visited", { method: "DELETE" }).catch(() => {});
+      apiFetch("/api/me/visited", { method: "DELETE" }).catch(() => {});
     }
   },
   toggleHideViewedOnMap: () => set((state) => ({ hideViewedOnMap: !state.hideViewedOnMap })),
@@ -270,6 +275,7 @@ export const useExplorerStore = create<ExplorerState>()(
   setCountries: (countries) => set({ countries }),
   setAreas: (areas) => set({ areas }),
   setExplorationModes: (explorationModes) => set({ explorationModes }),
+  setSiteSettings: (siteSettings) => set({ siteSettings }),
   setCategories: (categories) =>
     set((state) => {
       const isInitialLoad = state.categories.length === 0;

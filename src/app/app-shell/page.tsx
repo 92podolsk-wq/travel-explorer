@@ -1,4 +1,4 @@
-import { ExplorerPage } from "@/views/explorer";
+import { AppShellRouter } from "@/views/app-shell-router";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 
 export const dynamic = "force-static";
@@ -12,15 +12,5 @@ const placeholderSiteSettings: SiteSettings = {
 };
 
 export default function AppShellPage() {
-  return (
-    <ExplorerPage
-      initialPois={[]}
-      initialRegions={[]}
-      initialCountries={[]}
-      initialAreas={[]}
-      initialExplorationModes={[]}
-      initialCategories={[]}
-      initialSiteSettings={placeholderSiteSettings}
-    />
-  );
+  return <AppShellRouter placeholderSiteSettings={placeholderSiteSettings} />;
 }

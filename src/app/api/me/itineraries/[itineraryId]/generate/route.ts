@@ -6,6 +6,7 @@ import { readPublishedPois } from "@/shared/server/pois-repository";
 import { readPublishedRegions } from "@/shared/server/regions-repository";
 import { getCurrentUser } from "@/shared/server/user-auth";
 import { getUserPoiState } from "@/shared/server/user-pois-repository";
+import { corsPreflight, withCors } from "@/shared/server/cors";
 
 const supportedLanguages: Language[] = ["en", "ru", "ja"];
 
@@ -14,10 +15,14 @@ const MAX_HOURS_PER_DAY = 14;
 
 type RouteParams = { params: Promise<{ itineraryId: string }> };
 
+export async function OPTIONS(request: Request) {
+  return corsPreflight(request);
+}
+
 export async function POST(request: Request, { params }: RouteParams) {
   const user = await getCurrentUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), request);
   }
 
   const { itineraryId } = await params;
@@ -37,13 +42,13 @@ export async function POST(request: Request, { params }: RouteParams) {
     : "en";
 
   if (!regionId || !days || !hoursPerDay) {
-    return NextResponse.json({ error: "regionId, days and hoursPerDay are required" }, { status: 400 });
+    return withCors(NextResponse.json({ error: "regionId, days and hoursPerDay are required" }, { status: 400 }), request);
   }
 
   const [regions, allPois] = await Promise.all([readPublishedRegions(), readPublishedPois()]);
   const region = regions.find((r) => r.id === regionId);
   if (!region) {
-    return NextResponse.json({ error: "Region not found" }, { status: 404 });
+    return withCors(NextResponse.json({ error: "Region not found" }, { status: 404 }), request);
   }
 
   const regionPois = allPois.filter((poi) => poi.regionId === regionId);
@@ -61,8 +66,8 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const result = await generateItinerary(user.id, itineraryId, plan, title);
   if (!result) {
-    return NextResponse.json({ error: "Itinerary not found" }, { status: 404 });
+    return withCors(NextResponse.json({ error: "Itinerary not found" }, { status: 404 }), request);
   }
 
-  return NextResponse.json(result);
+  return withCors(NextResponse.json(result), request);
 }

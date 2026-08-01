@@ -60,6 +60,7 @@ export function ExplorerPage({
   const setAreas = useExplorerStore((state) => state.setAreas);
   const setExplorationModes = useExplorerStore((state) => state.setExplorationModes);
   const setCategories = useExplorerStore((state) => state.setCategories);
+  const setSiteSettingsInStore = useExplorerStore((state) => state.setSiteSettings);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hasHydrated = useExplorerStore((state) => state.hasHydrated);
@@ -111,6 +112,7 @@ export function ExplorerPage({
       setExplorationModes(data.explorationModes);
       setCategories(data.categories);
       setSiteSettings(data.siteSettings);
+      setSiteSettingsInStore(data.siteSettings);
 
       const sharedPoi = sharedPoiId ? data.pois.find((poi) => poi.id === sharedPoiId) : undefined;
       if (sharedPoi) {

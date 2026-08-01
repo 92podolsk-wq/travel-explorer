@@ -10,11 +10,10 @@ import { useNetworkStatus } from "@/shared/lib/use-network-status";
 import { showOfflineToast } from "@/shared/lib/offline-toast";
 import { showNavigationTransition } from "@/shared/lib/navigation-transition";
 import { emitAccountTabChange } from "@/shared/lib/account-tab-navigation";
+import { navigateShell, useShellNavigation } from "@/shared/lib/shell-navigation";
+import { REMOTE_ORIGIN, LOCAL_SHELL_URL } from "@/shared/lib/native-origins";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
-
-const REMOTE_ORIGIN = "https://wayora.ru";
-const LOCAL_SHELL_URL = "https://localhost/index.html";
 
 function MobileAppTabBarInner() {
   const isNative = useIsNativeApp();
@@ -24,22 +23,30 @@ function MobileAppTabBarInner() {
   const router = useRouter();
   const language = useExplorerStore((state) => state.language);
   const currentUser = useExplorerStore((state) => state.currentUser);
+  const shellNav = useShellNavigation();
   const dict = getTranslations(language);
 
   if (!isNative || pathname.startsWith("/admin")) {
     return null;
   }
 
-  const accountTab = pathname === "/account" ? (searchParams.get("tab") ?? "route") : null;
-  const isOnMap = pathname === "/" || pathname === "/app-shell";
+  const onRemote = typeof window !== "undefined" && window.location.origin === REMOTE_ORIGIN;
+  const accountTab = onRemote
+    ? pathname === "/account"
+      ? (searchParams.get("tab") ?? "route")
+      : null
+    : shellNav.screen === "account"
+      ? shellNav.accountTab
+      : null;
+  const isOnMap = onRemote ? pathname === "/" || pathname === "/app-shell" : shellNav.screen === "map";
 
   function goHome() {
-    if (window.location.origin === REMOTE_ORIGIN) {
+    if (onRemote) {
       showNavigationTransition();
       window.location.href = LOCAL_SHELL_URL;
       return;
     }
-    router.push(pathname === "/app-shell" ? "/app-shell" : "/");
+    navigateShell("map");
   }
 
   function goAccountTab(tab: "route" | "saved" | "profile") {
@@ -47,13 +54,12 @@ function MobileAppTabBarInner() {
       showOfflineToast();
       return;
     }
-    if (window.location.origin === REMOTE_ORIGIN) {
+    if (onRemote) {
       emitAccountTabChange(tab);
       router.push(`/account?tab=${tab}`);
       return;
     }
-    showNavigationTransition();
-    window.location.href = `${REMOTE_ORIGIN}/account?tab=${tab}`;
+    navigateShell("account", tab);
   }
 
   const items = [

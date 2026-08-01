@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
+import { apiFetch } from "@/shared/lib/api-fetch";
 import { Button } from "@/shared/ui/button";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -43,7 +44,7 @@ export function UploadPhotoModal({ poiId, language, onClose }: UploadPhotoModalP
       formData.append("poiId", poiId);
       formData.append("file", file);
 
-      const res = await fetch("/api/me/poi-photos", { method: "POST", body: formData });
+      const res = await apiFetch("/api/me/poi-photos", { method: "POST", body: formData });
 
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string; limit?: number } | null;

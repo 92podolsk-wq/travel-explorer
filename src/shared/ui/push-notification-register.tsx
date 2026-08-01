@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { apiFetch } from "@/shared/lib/api-fetch";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { isPushDisabledByUser, savePushToken } from "@/shared/lib/push-token-storage";
 
@@ -20,7 +21,7 @@ export function PushNotificationRegister() {
       PushNotifications.addListener("registration", (token) => {
         if (!isMounted) return;
         savePushToken(token.value);
-        fetch("/api/me/push-token", {
+        apiFetch("/api/me/push-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: token.value })

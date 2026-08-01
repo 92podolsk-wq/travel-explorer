@@ -4,6 +4,7 @@ import "./globals.css";
 import { ServiceWorkerRegister } from "@/shared/ui/service-worker-register";
 import { CookieConsentBanner } from "@/shared/ui/cookie-consent-banner";
 import { PushNotificationRegister } from "@/shared/ui/push-notification-register";
+import { DeviceTokenRegister } from "@/shared/ui/device-token-register";
 import { NativeAppClass } from "@/shared/ui/native-app-class";
 import { OfflineToast } from "@/shared/ui/offline-toast";
 import { NavigationTransitionOverlay } from "@/shared/ui/navigation-transition-overlay";
@@ -62,6 +63,7 @@ export default function RootLayout({
         <ServiceWorkerRegister />
         <CookieConsentBanner />
         <PushNotificationRegister />
+        <DeviceTokenRegister />
         <NativeAppClass />
         <OfflineToast />
         <NavigationTransitionOverlay />

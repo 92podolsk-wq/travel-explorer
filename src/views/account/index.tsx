@@ -70,10 +70,12 @@ type Translations = ReturnType<typeof getTranslations>;
 import { estimateTransitionMinutes, sequenceByNearestNeighbor } from "@/shared/lib/itinerary-planner";
 import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
 import { fetchWalkingRoute, type WalkingRoute } from "@/shared/lib/osrm-route";
+import { apiFetch } from "@/shared/lib/api-fetch";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { subscribeAccountTabChange } from "@/shared/lib/account-tab-navigation";
+import { navigateShell, useShellNavigation } from "@/shared/lib/shell-navigation";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
@@ -101,6 +103,9 @@ type AccountPageProps = {
   initialCountries: Country[];
   initialAreas: Area[];
   initialSiteSettings: SiteSettings;
+  // True when rendered inside the native app-shell (see AppShellRouter)
+  // instead of as the standalone /account page.
+  isEmbedded?: boolean;
 };
 
 function PoiThumbnail({ poi, className }: { poi: Poi; className?: string }) {
@@ -622,22 +627,46 @@ function ItineraryDayCard({
   );
 }
 
-export function AccountPage({ initialPois, initialRegions, initialCountries, initialAreas, initialSiteSettings }: AccountPageProps) {
+export function AccountPage({
+  initialPois,
+  initialRegions,
+  initialCountries,
+  initialAreas,
+  initialSiteSettings,
+  isEmbedded = false
+}: AccountPageProps) {
   const router = useRouter();
   const setPois = useExplorerStore((state) => state.setPois);
   const setRegions = useExplorerStore((state) => state.setRegions);
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
+  const storeSiteSettings = useExplorerStore((state) => state.siteSettings);
 
   useHydrateAuth();
 
   useEffect(() => {
+    // Embedded in the native shell, the map screen already bootstrapped this
+    // data into the store — seeding from (empty) placeholder props here would
+    // stomp it.
+    if (isEmbedded) {
+      return;
+    }
     setCountries(initialCountries);
     setAreas(initialAreas);
     setRegions(initialRegions);
     setPois(initialPois);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  function goToMap() {
+    if (isEmbedded) {
+      navigateShell("map");
+      return;
+    }
+    router.push("/");
+  }
+
+  const effectiveSiteSettings = isEmbedded ? (storeSiteSettings ?? initialSiteSettings) : initialSiteSettings;
 
   const isNative = useIsNativeApp();
   const language = useExplorerStore((state) => state.language);
@@ -683,13 +712,19 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
   const [activeTab, setActiveTab] = useState<AccountTab>("route");
   const [collapsedFavoriteRegionIds, setCollapsedFavoriteRegionIds] = useState<Set<string>>(new Set());
 
+  const shellAccountTab = useShellNavigation().accountTab;
+
   useEffect(() => {
+    if (isEmbedded) {
+      setActiveTab(shellAccountTab);
+      return;
+    }
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab === "saved" || tab === "history" || tab === "route" || tab === "profile") {
       setActiveTab(tab);
     }
     return subscribeAccountTabChange(setActiveTab);
-  }, []);
+  }, [isEmbedded, shellAccountTab]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -710,7 +745,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleAddToItinerary(poiId: string) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiId })
@@ -722,7 +757,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (!itinerary) return;
     const poiIds = favoritePois.filter((poi) => !itineraryPoiIds.has(poi.id)).map((poi) => poi.id);
     if (poiIds.length === 0) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiIds })
@@ -736,7 +771,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       .filter((poi) => poi.regionId === regionId && !itineraryPoiIds.has(poi.id))
       .map((poi) => poi.id);
     if (poiIds.length === 0) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ poiIds })
@@ -763,13 +798,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleClearItinerary() {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops`, { method: "DELETE" });
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
   async function handleRemoveStopById(stopId: string) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
@@ -782,7 +817,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleMoveStopToDay(stopId: string, day: number) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day })
@@ -792,7 +827,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleSetStopDuration(stopId: string, minutes: number | null) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ durationOverrideMinutes: minutes })
@@ -802,7 +837,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleReorderItinerary(day: number, orderedStopIds: string[]) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/reorder`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day, orderedStopIds })
@@ -828,7 +863,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     if (!itinerary) return;
     setIsAddingDay(true);
     try {
-      const res = await fetch(`/api/me/itineraries/${itinerary.id}/days`, { method: "POST" });
+      const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/days`, { method: "POST" });
       if (res.ok) setItinerary(await res.json());
     } finally {
       setIsAddingDay(false);
@@ -837,13 +872,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleRemoveDay(day: number) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
   }
 
   async function updateDayConfig(day: number, patch: DayConfigPatch) {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/days/${day}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch)
@@ -866,7 +901,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     setGeneratorError(null);
     setIsGenerating(true);
     try {
-      const res = await fetch(`/api/me/itineraries/${itinerary.id}/generate`, {
+      const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -907,7 +942,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
     setIsEditingTitle(false);
     if (!trimmed || !itinerary || trimmed === itinerary.title) return;
 
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: trimmed })
@@ -939,13 +974,13 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleSwitchItinerary(id: string) {
     setActiveItineraryId(id);
-    const res = await fetch(`/api/me/itineraries/${id}`);
+    const res = await apiFetch(`/api/me/itineraries/${id}`);
     if (res.ok) setItinerary(await res.json());
   }
 
   async function handleCreateItinerary() {
     if (itineraries.length >= 3) return;
-    const res = await fetch("/api/me/itineraries", { method: "POST" });
+    const res = await apiFetch("/api/me/itineraries", { method: "POST" });
     if (res.ok) {
       const created = await res.json();
       setItineraries([...itineraries, { id: created.id, title: created.title }]);
@@ -956,14 +991,14 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   async function handleDeleteItinerary() {
     if (!itinerary) return;
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}`, { method: "DELETE" });
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}`, { method: "DELETE" });
     if (res.ok) {
       const remaining = itineraries.filter((i) => i.id !== itinerary.id);
       setItineraries(remaining);
       const nextId = remaining[0]?.id ?? null;
       setActiveItineraryId(nextId);
       if (nextId) {
-        const nextRes = await fetch(`/api/me/itineraries/${nextId}`);
+        const nextRes = await apiFetch(`/api/me/itineraries/${nextId}`);
         setItinerary(nextRes.ok ? await nextRes.json() : null);
       } else {
         setItinerary(null);
@@ -979,7 +1014,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
   function goToPoi(poiId: string) {
     selectPoiFromMap(poiId);
-    router.push("/");
+    goToMap();
   }
 
   async function confirmPendingClear() {
@@ -1016,7 +1051,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
           : t.clearViewed;
 
   async function handleSelectAvatar(avatarId: AvatarId) {
-    const res = await fetch("/api/me/avatar", {
+    const res = await apiFetch("/api/me/avatar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ avatarId })
@@ -1099,7 +1134,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
       stops: itinerary.stops.map((s) => (s.id === activeStop.id ? { ...s, day: targetDay } : s))
     });
 
-    const res = await fetch(`/api/me/itineraries/${itinerary.id}/stops/${activeStop.id}/move`, {
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${activeStop.id}/move`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ day: targetDay, orderedStopIds })
@@ -1121,7 +1156,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
         <SiteHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-sm text-muted-foreground">{t.loginTitle}</p>
-          <Button onClick={() => router.push("/")}>{t.login}</Button>
+          <Button onClick={goToMap}>{t.login}</Button>
         </div>
       </main>
     );
@@ -1340,7 +1375,7 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       </h3>
                       <button
                         type="button"
-                        onClick={() => router.push("/")}
+                        onClick={goToMap}
                         className="flex items-center gap-0.5 text-[11px] font-medium text-primary underline-offset-2 hover:underline"
                       >
                         {t.favoritesProgressViewAll}
@@ -1369,10 +1404,10 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
 
                 <FavoritesMap
                   pois={favoritePois}
-                  mapStyleId={initialSiteSettings.mapStyleId}
-                  protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+                  mapStyleId={effectiveSiteSettings.mapStyleId}
+                  protomapsPmtilesUrl={effectiveSiteSettings.protomapsPmtilesUrl}
                   onSelectPoi={goToPoi}
-                  onOpenFullMap={() => router.push("/")}
+                  onOpenFullMap={goToMap}
                   openMapLabel={t.favoritesMapOpen}
                 />
               </div>
@@ -1654,8 +1689,8 @@ export function AccountPage({ initialPois, initialRegions, initialCountries, ini
                       title={dayInfo.title}
                       stops={itinerary.stops.filter((stop) => stop.day === dayInfo.day)}
                       route={dayRoutes[dayInfo.day] ?? null}
-                      mapStyleId={initialSiteSettings.mapStyleId}
-                      protomapsPmtilesUrl={initialSiteSettings.protomapsPmtilesUrl}
+                      mapStyleId={effectiveSiteSettings.mapStyleId}
+                      protomapsPmtilesUrl={effectiveSiteSettings.protomapsPmtilesUrl}
                       startMinutes={dayInfo.startMinutes}
                       lunchEnabled={dayInfo.lunchEnabled}
                       lunchStartMinutes={dayInfo.lunchStartMinutes}

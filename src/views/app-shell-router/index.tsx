@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import type { Area } from "@/entities/area/model/types";
 import type { Category } from "@/entities/category/model/types";
 import type { Country } from "@/entities/country/model/types";
@@ -22,31 +23,52 @@ const emptyAreas: Area[] = [];
 const emptyExplorationModes: ExplorationMode[] = [];
 const emptyCategories: Category[] = [];
 
+const screenTransition = { type: "tween", duration: 0.28, ease: [0.32, 0.72, 0, 1] } as const;
+
 export function AppShellRouter({ placeholderSiteSettings }: AppShellRouterProps) {
   const { screen } = useShellNavigation();
-
-  if (screen === "account") {
-    return (
-      <AccountPage
-        isEmbedded
-        initialPois={emptyPois}
-        initialRegions={emptyRegions}
-        initialCountries={emptyCountries}
-        initialAreas={emptyAreas}
-        initialSiteSettings={placeholderSiteSettings}
-      />
-    );
-  }
+  const isMap = screen === "map";
 
   return (
-    <ExplorerPage
-      initialPois={emptyPois}
-      initialRegions={emptyRegions}
-      initialCountries={emptyCountries}
-      initialAreas={emptyAreas}
-      initialExplorationModes={emptyExplorationModes}
-      initialCategories={emptyCategories}
-      initialSiteSettings={placeholderSiteSettings}
-    />
+    <div className="relative h-dvh w-full overflow-hidden">
+      {/* Both screens stay mounted so the map (and its WebGL context) never
+          reloads when switching to Route/Saved/Profile and back. */}
+      <motion.div
+        className="absolute inset-0"
+        style={{ pointerEvents: isMap ? "auto" : "none" }}
+        animate={{ x: isMap ? "0%" : "-25%", opacity: isMap ? 1 : 0 }}
+        transition={screenTransition}
+        aria-hidden={!isMap}
+        inert={!isMap || undefined}
+      >
+        <ExplorerPage
+          initialPois={emptyPois}
+          initialRegions={emptyRegions}
+          initialCountries={emptyCountries}
+          initialAreas={emptyAreas}
+          initialExplorationModes={emptyExplorationModes}
+          initialCategories={emptyCategories}
+          initialSiteSettings={placeholderSiteSettings}
+        />
+      </motion.div>
+
+      <motion.div
+        className="absolute inset-0"
+        style={{ pointerEvents: isMap ? "none" : "auto" }}
+        animate={{ x: isMap ? "100%" : "0%", opacity: isMap ? 0 : 1 }}
+        transition={screenTransition}
+        aria-hidden={isMap}
+        inert={isMap || undefined}
+      >
+        <AccountPage
+          isEmbedded
+          initialPois={emptyPois}
+          initialRegions={emptyRegions}
+          initialCountries={emptyCountries}
+          initialAreas={emptyAreas}
+          initialSiteSettings={placeholderSiteSettings}
+        />
+      </motion.div>
+    </div>
   );
 }

@@ -13,6 +13,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
+import { hapticMedium } from "@/shared/lib/haptics";
 import { localizedPoiBestTime, localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 import { UploadPhotoModal } from "./upload-photo-modal";
@@ -281,10 +282,21 @@ export function PoiDetails() {
               <Button
                 type="button"
                 variant={isFavorite ? "default" : "outline"}
-                onClick={() => toggleFavorite(selectedPoi.id)}
+                onClick={() => {
+                  void hapticMedium();
+                  toggleFavorite(selectedPoi.id);
+                }}
                 className="h-11 flex-1"
               >
-                <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+                <motion.span
+                  key={String(isFavorite)}
+                  initial={{ scale: 0.6 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  className="inline-flex"
+                >
+                  <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
+                </motion.span>
                 {t.app.save}
               </Button>
               <Button

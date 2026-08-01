@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import { motion } from "framer-motion";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Bookmark, Map as MapIcon, Route, User } from "lucide-react";
 import { getTranslations } from "@/shared/i18n/translations";
@@ -12,6 +13,7 @@ import { showNavigationTransition } from "@/shared/lib/navigation-transition";
 import { emitAccountTabChange } from "@/shared/lib/account-tab-navigation";
 import { navigateShell, useShellNavigation } from "@/shared/lib/shell-navigation";
 import { REMOTE_ORIGIN, LOCAL_SHELL_URL } from "@/shared/lib/native-origins";
+import { hapticLight } from "@/shared/lib/haptics";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 
@@ -41,6 +43,7 @@ function MobileAppTabBarInner() {
   const isOnMap = onRemote ? pathname === "/" || pathname === "/app-shell" : shellNav.screen === "map";
 
   function goHome() {
+    void hapticLight();
     if (onRemote) {
       showNavigationTransition();
       window.location.href = LOCAL_SHELL_URL;
@@ -50,6 +53,7 @@ function MobileAppTabBarInner() {
   }
 
   function goAccountTab(tab: "route" | "saved" | "profile") {
+    void hapticLight();
     if (!isOnline) {
       showOfflineToast();
       return;
@@ -111,19 +115,24 @@ function MobileAppTabBarInner() {
               item.active ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <span
-              className={cn(
-                "flex h-7 min-w-7 items-center justify-center rounded-full px-3 transition-colors",
-                item.active && "bg-primary/10"
+            <span className="relative flex h-7 min-w-7 items-center justify-center rounded-full px-3">
+              {item.active && (
+                <motion.span
+                  layoutId="mobile-nav-active-pill"
+                  className="absolute inset-0 rounded-full bg-primary/10"
+                  transition={{ type: "spring", damping: 28, stiffness: 320 }}
+                />
               )}
-            >
               {showAvatar ? (
                 <ProfileAvatar
                   avatarId={currentUser?.avatarId}
-                  className={cn("h-5 w-5 ring-2 ring-offset-1", item.active ? "ring-primary" : "ring-transparent")}
+                  className={cn(
+                    "relative z-10 h-5 w-5 ring-2 ring-offset-1",
+                    item.active ? "ring-primary" : "ring-transparent"
+                  )}
                 />
               ) : (
-                <Icon className="h-5 w-5" />
+                <Icon className="relative z-10 h-5 w-5" />
               )}
             </span>
             {item.label}

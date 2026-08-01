@@ -7,6 +7,11 @@ import type { AuthMeResponse } from "@/entities/user/model/types";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { useExplorerStore } from "./explorer-store";
 
+// Set synchronously (before any await) so that two instances of this hook
+// mounting in the same commit — e.g. the map and account views are both kept
+// mounted at once in the native app-shell — can't both start hydrating.
+let hydrationStarted = false;
+
 export function useHydrateAuth() {
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const setItinerary = useExplorerStore((state) => state.setItinerary);
@@ -16,12 +21,10 @@ export function useHydrateAuth() {
   const setCustomMarkerLimit = useExplorerStore((state) => state.setCustomMarkerLimit);
 
   useEffect(() => {
-    // In the native app-shell, switching between the map and account views
-    // remounts whichever one isn't showing (see AppShellRouter) — skip
-    // re-fetching everything if this session already hydrated once.
-    if (useExplorerStore.getState().authStatus !== "loading") {
+    if (hydrationStarted) {
       return;
     }
+    hydrationStarted = true;
 
     (async () => {
       const res = await apiFetch("/api/auth/me");

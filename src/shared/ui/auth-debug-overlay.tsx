@@ -10,7 +10,7 @@ import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 
 // Bumped by hand on every deploy so a screenshot can confirm whether the
 // device is actually running this build, or still serving a stale cached one.
-const BUILD_TAG = "2026-08-02a";
+const BUILD_TAG = "2026-08-02b";
 
 export function AuthDebugOverlay() {
   const isNative = useIsNativeApp();

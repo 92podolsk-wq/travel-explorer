@@ -15,8 +15,8 @@ async function getNativePreferences() {
     return null;
   }
   try {
-    const { Preferences } = await import("@capacitor/preferences");
-    return Preferences;
+    const mod = await withTimeout(import("@capacitor/preferences"), PREFS_TIMEOUT_MS, null);
+    return mod?.Preferences ?? null;
   } catch {
     return null;
   }

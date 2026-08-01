@@ -83,6 +83,8 @@ export function AuthMenu() {
       );
       setIsFormOpen(false);
       resetForm();
+    } catch {
+      setError("Что-то пошло не так. Проверьте подключение к интернету.");
     } finally {
       setIsSubmitting(false);
     }

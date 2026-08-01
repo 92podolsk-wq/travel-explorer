@@ -9,6 +9,7 @@ import { NativeAppClass } from "@/shared/ui/native-app-class";
 import { OfflineToast } from "@/shared/ui/offline-toast";
 import { NavigationTransitionOverlay } from "@/shared/ui/navigation-transition-overlay";
 import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
+import { AuthDebugOverlay } from "@/shared/ui/auth-debug-overlay";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 
 const siteTitle = "Wayora — Explore Japan";
@@ -68,6 +69,7 @@ export default function RootLayout({
         <OfflineToast />
         <NavigationTransitionOverlay />
         <DeepLinkHandler />
+        <AuthDebugOverlay />
         <MobileAppTabBar />
       </body>
     </html>

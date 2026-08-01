@@ -5,6 +5,8 @@ import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/typ
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { AuthMeResponse } from "@/entities/user/model/types";
 import { apiFetch } from "@/shared/lib/api-fetch";
+import { isNativeLocalShell } from "@/shared/lib/native-origins";
+import { getDeviceToken } from "@/shared/lib/device-token-storage";
 import { useExplorerStore } from "./explorer-store";
 
 // Set synchronously (before any await) so that two instances of this hook
@@ -20,16 +22,25 @@ export function useHydrateAuth() {
   const setCustomMarkers = useExplorerStore((state) => state.setCustomMarkers);
   const setCustomMarkerLimit = useExplorerStore((state) => state.setCustomMarkerLimit);
 
+  const pushAuthDebugLog = useExplorerStore((state) => state.pushAuthDebugLog);
+
   useEffect(() => {
     if (hydrationStarted) {
+      pushAuthDebugLog("skip: already started");
       return;
     }
     hydrationStarted = true;
+    pushAuthDebugLog(`start: onLocalShell=${isNativeLocalShell()}`);
 
     (async () => {
       try {
+        const token = await getDeviceToken();
+        pushAuthDebugLog(`token: ${token ? "present" : "none"}`);
+        pushAuthDebugLog("fetching /api/auth/me...");
         const res = await apiFetch("/api/auth/me");
+        pushAuthDebugLog(`/api/auth/me -> ${res.status}`);
         const data = (await res.json()) as AuthMeResponse;
+        pushAuthDebugLog(`parsed json, user=${data.user ? data.user.email : "null"}`);
         hydrateAuth(
           data.user,
           data.user
@@ -78,10 +89,11 @@ export function useHydrateAuth() {
           setCustomMarkers(markersData.markers);
           setCustomMarkerLimit(markersData.limit);
         }
-      } catch {
+      } catch (error) {
         // Network/CORS failure (e.g. the native app briefly offline) — don't
         // leave authStatus stuck on "loading" forever; fall back to guest so
         // the UI resolves, and allow a future mount to retry.
+        pushAuthDebugLog(`ERROR: ${error instanceof Error ? `${error.name}: ${error.message}` : String(error)}`);
         hydrationStarted = false;
         if (useExplorerStore.getState().authStatus === "loading") {
           hydrateAuth(null);

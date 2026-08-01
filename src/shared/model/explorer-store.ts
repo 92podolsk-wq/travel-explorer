@@ -67,6 +67,9 @@ type ExplorerState = {
   hasSeenWelcome: boolean;
   hasHydrated: boolean;
   hasAutoDetectedLanguage: boolean;
+  // TEMP-DIAGNOSTIC: remove once the blank Route/Saved/Profile issue is confirmed fixed.
+  authDebugLog: string[];
+  pushAuthDebugLog: (entry: string) => void;
   hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
@@ -155,6 +158,9 @@ export const useExplorerStore = create<ExplorerState>()(
   hasSeenWelcome: false,
   hasHydrated: false,
   hasAutoDetectedLanguage: false,
+  authDebugLog: [],
+  pushAuthDebugLog: (entry) =>
+    set((state) => ({ authDebugLog: [...state.authDebugLog, `${new Date().toISOString().slice(11, 19)} ${entry}`] })),
   hydrateAuth: (user, poiState) =>
     set({
       currentUser: user,

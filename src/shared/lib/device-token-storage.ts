@@ -10,23 +10,32 @@ const PREFS_TIMEOUT_MS = 3000;
 // on https://wayora.ru. Mirrors offline-maps-storage.ts's storage pattern:
 // Capacitor Preferences (native, visible from any origin in the app) with a
 // localStorage fallback for the plain-web/PWA case.
-async function getNativePreferences() {
+// TEMP-DIAGNOSTIC: optional logger param, threaded through from the on-screen
+// debug overlay, to pin down exactly which line hangs. Remove once resolved.
+async function getNativePreferences(log?: (msg: string) => void) {
+  log?.("gnp: checking window.Capacitor");
   if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) {
+    log?.("gnp: not native, returning null");
     return null;
   }
+  log?.("gnp: isNativePlatform=true, starting dynamic import");
   try {
     const mod = await withTimeout(import("@capacitor/preferences"), PREFS_TIMEOUT_MS, null);
+    log?.(`gnp: import settled, mod=${mod ? "present" : "null/timeout"}`);
     return mod?.Preferences ?? null;
-  } catch {
+  } catch (error) {
+    log?.(`gnp: import threw: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 }
 
-export async function getDeviceToken(): Promise<string | null> {
-  const prefs = await getNativePreferences();
+export async function getDeviceToken(log?: (msg: string) => void): Promise<string | null> {
+  const prefs = await getNativePreferences(log);
+  log?.(`gdt: got prefs=${prefs ? "present" : "null"}`);
   if (prefs) {
     try {
       const { value } = await withTimeout(prefs.get({ key: STORAGE_KEY }), PREFS_TIMEOUT_MS, { value: null });
+      log?.("gdt: prefs.get settled");
       return value ?? null;
     } catch {
       return null;

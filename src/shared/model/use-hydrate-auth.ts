@@ -35,7 +35,7 @@ export function useHydrateAuth() {
     (async () => {
       try {
         pushAuthDebugLog("calling getDeviceToken()...");
-        const token = await getDeviceToken();
+        const token = await getDeviceToken(pushAuthDebugLog);
         pushAuthDebugLog(`token: ${token ? "present" : "none"}`);
         pushAuthDebugLog("fetching /api/auth/me...");
         const res = await apiFetch("/api/auth/me");

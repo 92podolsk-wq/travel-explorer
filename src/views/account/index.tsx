@@ -641,6 +641,7 @@ export function AccountPage({
   const setCountries = useExplorerStore((state) => state.setCountries);
   const setAreas = useExplorerStore((state) => state.setAreas);
   const storeSiteSettings = useExplorerStore((state) => state.siteSettings);
+  const requestAuthFormOpen = useExplorerStore((state) => state.requestAuthFormOpen);
 
   useHydrateAuth();
 
@@ -661,6 +662,15 @@ export function AccountPage({
   function goToMap() {
     if (isEmbedded) {
       navigateShell("map");
+      return;
+    }
+    router.push("/");
+  }
+
+  function goToLogin() {
+    if (isEmbedded) {
+      navigateShell("map");
+      requestAuthFormOpen();
       return;
     }
     router.push("/");
@@ -1156,7 +1166,7 @@ export function AccountPage({
         <SiteHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-sm text-muted-foreground">{t.loginTitle}</p>
-          <Button onClick={goToMap}>{t.login}</Button>
+          <Button onClick={goToLogin}>{t.login}</Button>
         </div>
       </main>
     );

@@ -161,7 +161,7 @@ export function ExplorerPage({
       className="flex h-dvh w-full flex-col overflow-hidden bg-muted"
       style={isNative ? { paddingBottom: "calc(56px + env(safe-area-inset-bottom))" } : undefined}
     >
-      <SiteHeader />
+      <SiteHeader autoOpenAuthOnRequest />
       <HeaderSearchBar />
       <div className="relative flex-1 overflow-hidden">
         <ExplorerMap

@@ -70,6 +70,13 @@ type ExplorerState = {
   // TEMP-DIAGNOSTIC: remove once the blank Route/Saved/Profile issue is confirmed fixed.
   authDebugLog: string[];
   pushAuthDebugLog: (entry: string) => void;
+  // Lets the embedded Profile screen's guest CTA open the header's login
+  // form: the map and account screens are both kept mounted at once in the
+  // native app-shell, but AuthMenu (with the login form) lives in the map
+  // screen's header, so switching screens alone doesn't open it.
+  authFormOpenRequested: boolean;
+  requestAuthFormOpen: () => void;
+  clearAuthFormOpenRequest: () => void;
   hydrateAuth: (user: User | null, poiState?: UserPoiState) => void;
   selectPoi: (poiId: string) => void;
   selectPoiFromMap: (poiId: string) => void;
@@ -161,6 +168,9 @@ export const useExplorerStore = create<ExplorerState>()(
   authDebugLog: [],
   pushAuthDebugLog: (entry) =>
     set((state) => ({ authDebugLog: [...state.authDebugLog, `${new Date().toISOString().slice(11, 19)} ${entry}`] })),
+  authFormOpenRequested: false,
+  requestAuthFormOpen: () => set({ authFormOpenRequested: true }),
+  clearAuthFormOpenRequest: () => set({ authFormOpenRequested: false }),
   hydrateAuth: (user, poiState) =>
     set({
       currentUser: user,

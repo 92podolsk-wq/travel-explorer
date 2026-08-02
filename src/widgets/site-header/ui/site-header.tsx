@@ -21,7 +21,11 @@ type CountryGroup = {
   areaGroups: Array<{ area: Area; regions: Region[] }>;
 };
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  autoOpenAuthOnRequest?: boolean;
+};
+
+export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
   const router = useRouter();
   const regions = useExplorerStore((state) => state.regions);
   const areas = useExplorerStore((state) => state.areas);
@@ -265,7 +269,7 @@ export function SiteHeader() {
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
         {!isNative && <LanguageSwitcher />}
-        <AuthMenu />
+        <AuthMenu autoOpenOnRequest={autoOpenAuthOnRequest} />
       </div>
     </header>
   );

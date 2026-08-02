@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, LogOut } from "lucide-react";
 import type { AuthMeResponse } from "@/entities/user/model/types";
@@ -16,7 +16,16 @@ import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 
 type FormMode = "login" | "register";
 
-export function AuthMenu() {
+type AuthMenuProps = {
+  // The map and account screens each render their own SiteHeader/AuthMenu
+  // instance (kept mounted at once in the native app-shell) — only the one
+  // on the screen requestAuthFormOpen() actually lands on (the map) should
+  // react to it, otherwise both would try to open their own local modal and
+  // one would be stuck open behind an inert, invisible screen.
+  autoOpenOnRequest?: boolean;
+};
+
+export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
   const language = useExplorerStore((state) => state.language);
   const currentUser = useExplorerStore((state) => state.currentUser);
   const authStatus = useExplorerStore((state) => state.authStatus);
@@ -25,6 +34,8 @@ export function AuthMenu() {
   const setItineraries = useExplorerStore((state) => state.setItineraries);
   const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
   const setCustomMarkers = useExplorerStore((state) => state.setCustomMarkers);
+  const authFormOpenRequested = useExplorerStore((state) => state.authFormOpenRequested);
+  const clearAuthFormOpenRequest = useExplorerStore((state) => state.clearAuthFormOpenRequest);
   const t = getTranslations(language).auth;
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -35,6 +46,20 @@ export function AuthMenu() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // True when this form was opened via requestAuthFormOpen() (the embedded
+  // Profile screen's guest CTA) rather than the button below — on success we
+  // return the user to the account screen instead of leaving them on the map.
+  const [returnToAccountOnSuccess, setReturnToAccountOnSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!autoOpenOnRequest || !authFormOpenRequested) return;
+    setFormMode("login");
+    resetForm();
+    setIsFormOpen(true);
+    setReturnToAccountOnSuccess(true);
+    clearAuthFormOpenRequest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authFormOpenRequested]);
 
   function resetForm() {
     setEmail("");
@@ -83,6 +108,12 @@ export function AuthMenu() {
       );
       setIsFormOpen(false);
       resetForm();
+      if (returnToAccountOnSuccess) {
+        setReturnToAccountOnSuccess(false);
+        if (isNativeLocalShell()) {
+          navigateShell("account");
+        }
+      }
     } catch {
       setError("Что-то пошло не так. Проверьте подключение к интернету.");
     } finally {
@@ -189,6 +220,7 @@ export function AuthMenu() {
           setFormMode("login");
           resetForm();
           setIsFormOpen(true);
+          setReturnToAccountOnSuccess(false);
         }}
       >
         {t.login}
@@ -200,7 +232,10 @@ export function AuthMenu() {
             type="button"
             aria-label="Close"
             className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setIsFormOpen(false)}
+            onClick={() => {
+              setIsFormOpen(false);
+              setReturnToAccountOnSuccess(false);
+            }}
           />
           <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
             <h2 className="text-base font-semibold text-foreground">

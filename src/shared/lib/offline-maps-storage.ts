@@ -7,24 +7,33 @@ const TILE_CACHE_NAME = "travel-explorer-tiles-v1";
 // instant — this is purely a safety net against a hung bridge call.
 const PREFS_TIMEOUT_MS = 3000;
 
+type PreferencesPlugin = typeof import("@capacitor/preferences")["Preferences"];
+
 // Downloads can be triggered from the local app-shell (https://localhost) while
 // the profile screen reads this back from https://wayora.ru — different origins
 // don't share localStorage, but Capacitor's Preferences plugin is bridged natively
 // and is visible from any origin loaded inside the same app, so it's used when available.
-async function getNativePreferences() {
+//
+// Returns { plugin } rather than the plugin object directly: Capacitor's
+// plugin proxies respond to arbitrary property access (routing it to a
+// native call), so a plugin object returned straight from an async function
+// gets treated as "thenable" by the JS engine's promise-resolution algorithm
+// — it calls plugin.then(...), which the native side doesn't implement, and
+// the outer await never settles. Wrapping in a plain object avoids that.
+async function getNativePreferences(): Promise<{ plugin: PreferencesPlugin | null }> {
   if (typeof window === "undefined" || !window.Capacitor?.isNativePlatform?.()) {
-    return null;
+    return { plugin: null };
   }
   try {
     const mod = await withTimeout(import("@capacitor/preferences"), PREFS_TIMEOUT_MS, null);
-    return mod?.Preferences ?? null;
+    return { plugin: mod?.Preferences ?? null };
   } catch {
-    return null;
+    return { plugin: null };
   }
 }
 
 export async function getDownloadedRegionIds(): Promise<string[]> {
-  const prefs = await getNativePreferences();
+  const { plugin: prefs } = await getNativePreferences();
   if (prefs) {
     try {
       const { value } = await withTimeout(prefs.get({ key: STORAGE_KEY }), PREFS_TIMEOUT_MS, { value: null });
@@ -46,7 +55,7 @@ export async function markRegionsDownloaded(regionIds: string[]) {
   for (const id of regionIds) ids.add(id);
   const serialized = JSON.stringify([...ids]);
 
-  const prefs = await getNativePreferences();
+  const { plugin: prefs } = await getNativePreferences();
   if (prefs) {
     try {
       await withTimeout(prefs.set({ key: STORAGE_KEY, value: serialized }), PREFS_TIMEOUT_MS, undefined);
@@ -69,7 +78,7 @@ export async function areRegionsDownloaded(regionIds: string[]): Promise<boolean
 }
 
 export async function clearDownloadedMaps() {
-  const prefs = await getNativePreferences();
+  const { plugin: prefs } = await getNativePreferences();
   if (prefs) {
     try {
       await withTimeout(prefs.remove({ key: STORAGE_KEY }), PREFS_TIMEOUT_MS, undefined);

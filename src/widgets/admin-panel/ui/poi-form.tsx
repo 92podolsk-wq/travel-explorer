@@ -225,6 +225,7 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
   const [uploadingPhotoIndex, setUploadingPhotoIndex] = useState<number | null>(null);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
   const photoFileInputs = useRef<Array<HTMLInputElement | null>>([]);
+  const lastCheckedPhotoUrls = useRef<Array<string | null>>([]);
 
   const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
   const missingDescription = missingLanguages([{ en: form.descriptionEn, ja: form.descriptionJa }]);
@@ -295,6 +296,33 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
     } finally {
       setUploadingPhotoIndex(null);
     }
+  };
+
+  const downloadPhotoFromUrl = async (index: number, url: string) => {
+    setPhotoUploadError(null);
+    setUploadingPhotoIndex(index);
+    try {
+      const res = await fetch("/api/admin/photos/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+      if (!res.ok) throw new Error();
+      const data = (await res.json()) as { url: string };
+      updatePhoto(index, { url: data.url });
+    } catch {
+      setPhotoUploadError("Не удалось скачать фото по ссылке. Проверьте адрес или загрузите файл вручную.");
+    } finally {
+      setUploadingPhotoIndex(null);
+    }
+  };
+
+  const handlePhotoUrlBlur = (index: number, url: string) => {
+    const trimmed = url.trim();
+    if (!/^https?:\/\//i.test(trimmed)) return;
+    if (lastCheckedPhotoUrls.current[index] === trimmed) return;
+    lastCheckedPhotoUrls.current[index] = trimmed;
+    void downloadPhotoFromUrl(index, trimmed);
   };
 
   const setMainPhoto = (index: number) => {
@@ -669,7 +697,8 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
                 <Input
                   value={photo.url}
                   onChange={(e) => updatePhoto(index, { url: e.target.value })}
-                  placeholder="/photos/place/1.jpg или https://..."
+                  onBlur={(e) => handlePhotoUrlBlur(index, e.target.value)}
+                  placeholder="/photos/place/1.jpg или https://... (внешняя ссылка скачается автоматически)"
                   className="col-span-3"
                 />
                 <Input value={photo.alt} onChange={(e) => updatePhoto(index, { alt: e.target.value })} placeholder="Альтернативный текст" />

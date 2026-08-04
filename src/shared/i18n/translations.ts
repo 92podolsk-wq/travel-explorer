@@ -1291,7 +1291,6 @@ export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
   const dictionary = getTranslations(language);
   const poiCopy = dictionary.poi[poi.id];
   const tags = poi.tags.map((tag) => dictionary.tag[tag]);
-  const bestTime = poiCopy?.bestTime ?? poi.bestTime;
 
   return [
     poi.name,
@@ -1300,7 +1299,7 @@ export function getLocalizedPoiSearchText(poi: Poi, language: Language) {
     poiCopy?.description,
     dictionary.difficulty[poi.difficulty],
     ...tags,
-    ...bestTime
+    ...(poiCopy?.bestTime ?? [])
   ]
     .filter(Boolean)
     .join(" ")

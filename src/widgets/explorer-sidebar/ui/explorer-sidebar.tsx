@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, Search, Star, Sunrise, Sunset, X } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, animate as animateValue, motion, useDragControls, useMotionValue } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -14,7 +14,6 @@ import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
-import { getUpcomingSeasonReminder } from "@/shared/lib/season-reminder";
 import { shuffle } from "@/shared/lib/shuffle";
 import { getSunTimes } from "@/shared/lib/sun-times";
 import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
@@ -72,7 +71,6 @@ export function ExplorerSidebar() {
   const setIsMobileSheetExpanded = useExplorerStore((state) => state.setIsMobileSheetExpanded);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
-  const [dismissedReminders, setDismissedReminders] = useState<Set<string>>(new Set());
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
 
   const collapsedSheetHeight = 236;
@@ -170,10 +168,6 @@ export function ExplorerSidebar() {
   const activeArea = areas.find((area) => area.id === activeRegion.areaId);
   const headingText =
     isAreaActive && activeArea ? activeArea.nameByLanguage[language] : activeRegion.nameByLanguage[language];
-
-  const seasonReminder = !isAreaActive ? getUpcomingSeasonReminder(activeRegion.seasonWindows) : null;
-  const reminderKey = seasonReminder ? `${activeRegion.id}:${seasonReminder.season}` : null;
-  const showSeasonReminder = seasonReminder && reminderKey && !dismissedReminders.has(reminderKey);
 
   const visiblePois = getVisiblePois(
     regionPois,
@@ -310,29 +304,6 @@ export function ExplorerSidebar() {
             tomorrowLabel={t.app.tomorrow}
           />
         </div>
-
-        {showSeasonReminder && seasonReminder && reminderKey && (
-          <div className="mb-3 flex items-center gap-2 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary">
-            {(() => {
-              const SeasonIcon = seasonIcons[seasonReminder.season];
-              return <SeasonIcon className="h-3.5 w-3.5 shrink-0" />;
-            })()}
-            <span className="flex-1">
-              {(seasonReminder.daysUntil === 0 ? t.app.seasonReminderToday : t.app.seasonReminder)
-                .replace("{season}", t.season[seasonReminder.season])
-                .replace("{city}", headingText)
-                .replace("{days}", String(seasonReminder.daysUntil))}
-            </span>
-            <button
-              type="button"
-              onClick={() => setDismissedReminders((prev) => new Set(prev).add(reminderKey))}
-              aria-label={t.report.close}
-              className="shrink-0 text-primary/70 transition hover:text-primary"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
 
         <div className="flex items-center gap-1.5">
           <div className="relative flex-1">

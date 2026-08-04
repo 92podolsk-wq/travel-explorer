@@ -20,9 +20,5 @@ export const osakaRegion: Region = {
     ja: "大阪"
   },
   sealCharacter: "阪",
-  status: "published",
-  seasonWindows: {
-    spring: { start: "03-28", end: "04-10" },
-    autumn: { start: "11-18", end: "12-02" }
-  }
+  status: "published"
 };

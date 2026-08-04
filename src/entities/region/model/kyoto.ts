@@ -20,9 +20,5 @@ export const kyotoRegion: Region = {
     ja: "京都"
   },
   sealCharacter: "京",
-  status: "published",
-  seasonWindows: {
-    spring: { start: "03-25", end: "04-08" },
-    autumn: { start: "11-15", end: "11-30" }
-  }
+  status: "published"
 };

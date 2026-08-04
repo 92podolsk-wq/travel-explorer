@@ -44,9 +44,6 @@ type FormState = {
   category: PoiMainCategory;
   tags: PoiTag[];
   seasons: string;
-  bestTimeEn: string;
-  bestTimeRu: string;
-  bestTimeJa: string;
   photos: PhotoFormState[];
   status: "draft" | "published";
 };
@@ -73,9 +70,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       category: "unique",
       tags: [],
       seasons: "all year",
-      bestTimeEn: "",
-      bestTimeRu: "Утро",
-      bestTimeJa: "",
       photos: [{ url: "", alt: "", author: "", season: "" }],
       status: "draft"
     };
@@ -101,9 +95,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     category: poi.category,
     tags: poi.tags,
     seasons: poi.seasons.join(", "),
-    bestTimeEn: poi.bestTimeByLanguage.en.join(", "),
-    bestTimeRu: poi.bestTimeByLanguage.ru.join(", "),
-    bestTimeJa: poi.bestTimeByLanguage.ja.join(", "),
     photos:
       poi.photos.length > 0
         ? poi.photos.map((p) => ({ url: p.url, alt: p.alt, author: p.author ?? "", season: p.season ?? "" }))
@@ -156,9 +147,6 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
 
   const name = form.name.trim();
   const descriptionRu = form.descriptionRu.trim();
-  const bestTimeRu = splitList(form.bestTimeRu);
-  const bestTimeEn = splitList(form.bestTimeEn);
-  const bestTimeJa = splitList(form.bestTimeJa);
 
   return {
     regionId: form.regionId,
@@ -182,12 +170,6 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     seasons: splitList(form.seasons),
     photoScore,
     mustVisit: form.mustVisit,
-    bestTime: bestTimeRu,
-    bestTimeByLanguage: {
-      en: bestTimeEn.length > 0 ? bestTimeEn : bestTimeRu,
-      ru: bestTimeRu,
-      ja: bestTimeJa.length > 0 ? bestTimeJa : bestTimeRu
-    },
     difficulty: form.difficulty,
     durationMinutes,
     importance,
@@ -229,13 +211,11 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
 
   const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
   const missingDescription = missingLanguages([{ en: form.descriptionEn, ja: form.descriptionJa }]);
-  const missingBestTime = missingLanguages([{ en: form.bestTimeEn, ja: form.bestTimeJa }]);
 
   const handleAutoTranslate = async () => {
     const items = [
       ...(form.nameRu.trim() ? [{ key: "name", text: form.nameRu.trim() }] : []),
-      ...(form.descriptionRu.trim() ? [{ key: "description", text: form.descriptionRu.trim() }] : []),
-      ...(form.bestTimeRu.trim() ? [{ key: "bestTime", text: form.bestTimeRu.trim() }] : [])
+      ...(form.descriptionRu.trim() ? [{ key: "description", text: form.descriptionRu.trim() }] : [])
     ];
 
     if (items.length === 0) {
@@ -254,9 +234,6 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
           : {}),
         ...(translations.description
           ? { descriptionEn: translations.description.en ?? p.descriptionEn, descriptionJa: translations.description.ja ?? p.descriptionJa }
-          : {}),
-        ...(translations.bestTime
-          ? { bestTimeEn: translations.bestTime.en ?? p.bestTimeEn, bestTimeJa: translations.bestTime.ja ?? p.bestTimeJa }
           : {})
       }));
     } catch (err) {
@@ -593,47 +570,6 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
             </button>
           ))}
         </div>
-      </div>
-
-      <div>
-        <label
-          className={fieldLabel}
-          title="Сезоны, характерные для места. Сейчас это поле не используется в интерфейсе сайта (фильтр сезонов слева работает по фото, см. ниже) — оставлено для будущего использования."
-        >
-          Сезоны (через запятую)
-        </label>
-        <Input value={form.seasons} onChange={(e) => setForm((p) => ({ ...p, seasons: e.target.value }))} placeholder="весна, осень" />
-      </div>
-
-      <div>
-        <label
-          className={fieldLabel}
-          title="Лучшее время суток или периода для посещения на разных языках сайта — показывается в карточке места (метрика «Лучшее» и раздел «Лучшее время») в зависимости от выбранного языка интерфейса. Несколько значений через запятую, первое используется как основное."
-        >
-          Лучшее время по языкам (через запятую)
-        </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            value={form.bestTimeEn}
-            onChange={(e) => setForm((p) => ({ ...p, bestTimeEn: e.target.value }))}
-            placeholder="EN — Morning, Sunset"
-          />
-          <Input
-            value={form.bestTimeRu}
-            onChange={(e) => setForm((p) => ({ ...p, bestTimeRu: e.target.value }))}
-            placeholder="RU — Утро, Закат"
-          />
-          <Input
-            value={form.bestTimeJa}
-            onChange={(e) => setForm((p) => ({ ...p, bestTimeJa: e.target.value }))}
-            placeholder="JA — 朝, 夕方"
-          />
-        </div>
-        {missingBestTime.length > 0 && (
-          <p className="mt-1 text-xs font-medium text-amber-600">
-            Похоже, не переведено: {missingBestTime.map((lang) => lang.toUpperCase()).join(", ")}
-          </p>
-        )}
       </div>
 
       <div>

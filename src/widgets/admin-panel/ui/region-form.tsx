@@ -27,10 +27,6 @@ type FormState = {
   nameJa: string;
   sealCharacter: string;
   status: PublishStatus;
-  sakuraStart: string;
-  sakuraEnd: string;
-  autumnStart: string;
-  autumnEnd: string;
 };
 
 function toFormState(region: Region | undefined, defaultAreaId: string): FormState {
@@ -50,11 +46,7 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
       nameRu: "",
       nameJa: "",
       sealCharacter: "",
-      status: "draft",
-      sakuraStart: "",
-      sakuraEnd: "",
-      autumnStart: "",
-      autumnEnd: ""
+      status: "draft"
     };
   }
 
@@ -73,11 +65,7 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
     nameRu: region.nameByLanguage.ru,
     nameJa: region.nameByLanguage.ja,
     sealCharacter: region.sealCharacter,
-    status: region.status,
-    sakuraStart: region.seasonWindows.spring?.start ?? "",
-    sakuraEnd: region.seasonWindows.spring?.end ?? "",
-    autumnStart: region.seasonWindows.autumn?.start ?? "",
-    autumnEnd: region.seasonWindows.autumn?.end ?? ""
+    status: region.status
   };
 }
 
@@ -131,15 +119,7 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
       ja: form.nameJa.trim() || name
     },
     sealCharacter: form.sealCharacter.trim() || name.charAt(0),
-    status: form.status,
-    seasonWindows: {
-      ...(form.sakuraStart.trim() && form.sakuraEnd.trim()
-        ? { spring: { start: form.sakuraStart.trim(), end: form.sakuraEnd.trim() } }
-        : {}),
-      ...(form.autumnStart.trim() && form.autumnEnd.trim()
-        ? { autumn: { start: form.autumnStart.trim(), end: form.autumnEnd.trim() } }
-        : {})
-    }
+    status: form.status
   };
 }
 
@@ -343,32 +323,6 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
             Символ печати
           </label>
           <Input value={form.sealCharacter} onChange={(e) => setForm((p) => ({ ...p, sealCharacter: e.target.value }))} placeholder="東" />
-        </div>
-      </div>
-
-      <div>
-        <label
-          className={fieldLabel}
-          title="Даты сезона цветения сакуры (день-месяц, например 25-03). За неделю до начала на сайте показывается напоминание пользователям, которые сейчас смотрят этот город. Оставьте пустым, чтобы не показывать."
-        >
-          Сезон сакуры (день-месяц)
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <Input value={form.sakuraStart} onChange={(e) => setForm((p) => ({ ...p, sakuraStart: e.target.value }))} placeholder="Начало, 03-25" />
-          <Input value={form.sakuraEnd} onChange={(e) => setForm((p) => ({ ...p, sakuraEnd: e.target.value }))} placeholder="Конец, 04-08" />
-        </div>
-      </div>
-
-      <div>
-        <label
-          className={fieldLabel}
-          title="Даты сезона осенних красок (день-месяц). За неделю до начала на сайте показывается напоминание пользователям, которые сейчас смотрят этот город. Оставьте пустым, чтобы не показывать."
-        >
-          Сезон осенних красок (день-месяц)
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <Input value={form.autumnStart} onChange={(e) => setForm((p) => ({ ...p, autumnStart: e.target.value }))} placeholder="Начало, 11-15" />
-          <Input value={form.autumnEnd} onChange={(e) => setForm((p) => ({ ...p, autumnEnd: e.target.value }))} placeholder="Конец, 11-30" />
         </div>
       </div>
 

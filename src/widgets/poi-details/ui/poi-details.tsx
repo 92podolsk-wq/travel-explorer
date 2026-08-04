@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Share2, Sparkles, SunMedium, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Share2, Sparkles, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -14,7 +14,7 @@ import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
 import { hapticMedium } from "@/shared/lib/haptics";
-import { localizedPoiBestTime, localizedPoiDescription } from "@/shared/lib/translation-completeness";
+import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { ReportInaccuracyModal } from "./report-inaccuracy-modal";
 import { UploadPhotoModal } from "./upload-photo-modal";
 
@@ -84,12 +84,6 @@ export function PoiDetails() {
     }
   }
   const poiCopy = t.poi[selectedPoi.id];
-  const bestTime = localizedPoiBestTime(
-    selectedPoi.bestTimeByLanguage,
-    selectedPoi.bestTime,
-    language,
-    poiCopy?.bestTime
-  );
   const description = localizedPoiDescription(
     selectedPoi.descriptionByLanguage,
     selectedPoi.description,
@@ -312,12 +306,7 @@ export function PoiDetails() {
 
             <p className="text-[15px] leading-7 text-muted-foreground">{description}</p>
 
-            <div className="mt-6 grid grid-cols-3 gap-2.5">
-              <Metric
-                icon={<SunMedium className="h-4 w-4" />}
-                label={t.app.best}
-                value={bestTime[0] ?? ""}
-              />
+            <div className="mt-6 grid grid-cols-2 gap-2.5">
               <Metric
                 icon={<Clock className="h-4 w-4" />}
                 label={t.app.duration}
@@ -328,15 +317,6 @@ export function PoiDetails() {
                 label={t.app.effort}
                 value={t.difficulty[selectedPoi.difficulty]}
               />
-            </div>
-
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold">{t.app.bestTime}</h3>
-              <div className="flex flex-wrap gap-2">
-                {bestTime.map((time) => (
-                  <Badge key={time}>{time}</Badge>
-                ))}
-              </div>
             </div>
 
             <div className="mt-6">

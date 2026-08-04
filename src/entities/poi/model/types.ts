@@ -50,8 +50,6 @@ export type Poi = {
   seasons: string[];
   photoScore: number;
   mustVisit: boolean;
-  bestTime: string[];
-  bestTimeByLanguage: Record<Language, string[]>;
   difficulty: Difficulty;
   durationMinutes: number;
   importance: number;

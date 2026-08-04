@@ -24,6 +24,7 @@ export type Itinerary = {
   id: string;
   title: string;
   shareToken: string;
+  startDate: string | null;
   stops: ItineraryStopWithPoi[];
   days: ItineraryDayInfo[];
 };

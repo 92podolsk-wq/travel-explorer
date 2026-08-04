@@ -221,6 +221,7 @@ model Itinerary {
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   title      String          @default("Мой маршрут")
   shareToken String          @unique
+  startDate  DateTime?
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   stops      ItineraryStop[]

@@ -1,0 +1,1 @@
+ALTER TABLE "Itinerary" ADD COLUMN "startDate" TIMESTAMP(3);

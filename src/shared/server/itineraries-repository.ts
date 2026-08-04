@@ -35,6 +35,7 @@ function toItinerary(row: ItineraryRow): Itinerary {
     id: row.id,
     title: row.title,
     shareToken: row.shareToken,
+    startDate: row.startDate ? row.startDate.toISOString() : null,
     stops: [...row.stops]
       .sort((a, b) => (a.day !== b.day ? a.day - b.day : a.position - b.position))
       .map((stop) => ({
@@ -367,6 +368,23 @@ export async function renameItinerary(userId: string, itineraryId: string, title
   }
 
   await prisma.itinerary.update({ where: { id: itineraryId }, data: { title } });
+  return getItinerary(userId, itineraryId);
+}
+
+export async function updateItineraryStartDate(
+  userId: string,
+  itineraryId: string,
+  startDate: string | null
+): Promise<Itinerary | null> {
+  const itinerary = await loadItinerary({ id: itineraryId, userId });
+  if (!itinerary) {
+    return null;
+  }
+
+  await prisma.itinerary.update({
+    where: { id: itineraryId },
+    data: { startDate: startDate ? new Date(startDate) : null }
+  });
   return getItinerary(userId, itineraryId);
 }
 

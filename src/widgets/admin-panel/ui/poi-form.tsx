@@ -13,6 +13,7 @@ import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { translateFromRussian } from "@/shared/lib/admin-translate";
 import { missingLanguages } from "@/shared/lib/translation-completeness";
+import { useUnsavedChangesWarning } from "@/shared/lib/use-unsaved-changes-warning";
 import { LocationMapPicker } from "./location-map-picker";
 
 const t = getTranslations("ru");
@@ -199,7 +200,9 @@ type PoiFormProps = {
 };
 
 export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
+  const initialFormRef = useRef<FormState>(toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
+  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);

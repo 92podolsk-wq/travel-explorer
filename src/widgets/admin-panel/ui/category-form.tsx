@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Category, CategoryInput } from "@/entities/category/model/types";
 import { categoryColorOptions, categoryIconOptions, defaultCategoryColor } from "@/entities/category/ui/category-icon-options";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+import { useUnsavedChangesWarning } from "@/shared/lib/use-unsaved-changes-warning";
 
 type FormState = {
   nameEn: string;
@@ -65,7 +66,9 @@ type CategoryFormProps = {
 };
 
 export function CategoryForm({ category, onCancel, onSubmit }: CategoryFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(category));
+  const initialFormRef = useRef<FormState>(toFormState(category));
+  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { AdminAccount } from "@/entities/admin-account/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { useUnsavedChangesWarning } from "@/shared/lib/use-unsaved-changes-warning";
 
 type FormState = {
   name: string;
@@ -28,7 +29,9 @@ type AdminAccountFormProps = {
 };
 
 export function AdminAccountForm({ account, onCancel, onSubmit }: AdminAccountFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(account));
+  const initialFormRef = useRef<FormState>(toFormState(account));
+  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

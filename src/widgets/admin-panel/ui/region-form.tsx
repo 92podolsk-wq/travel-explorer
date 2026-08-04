@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Languages } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { PublishStatus, Region, RegionInput } from "@/entities/region/model/types";
@@ -9,6 +9,7 @@ import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
 import { translateFromRussian } from "@/shared/lib/admin-translate";
 import { missingLanguages } from "@/shared/lib/translation-completeness";
+import { useUnsavedChangesWarning } from "@/shared/lib/use-unsaved-changes-warning";
 import { LocationMapPicker } from "./location-map-picker";
 
 type FormState = {
@@ -135,7 +136,9 @@ type RegionFormProps = {
 };
 
 export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProps) {
-  const [form, setForm] = useState<FormState>(() => toFormState(region, areas[0]?.id ?? ""));
+  const initialFormRef = useRef<FormState>(toFormState(region, areas[0]?.id ?? ""));
+  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -260,6 +263,15 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           lng={form.lng}
           onChange={(lat, lng) => setForm((p) => ({ ...p, lat: lat.toFixed(6), lng: lng.toFixed(6) }))}
           fallbackCenter={{ lat: 35.6762, lng: 139.6503 }}
+          onCaptureBounds={(bounds) =>
+            setForm((p) => ({
+              ...p,
+              swLat: bounds.swLat.toFixed(6),
+              swLng: bounds.swLng.toFixed(6),
+              neLat: bounds.neLat.toFixed(6),
+              neLng: bounds.neLng.toFixed(6)
+            }))
+          }
         />
       </div>
 
@@ -293,7 +305,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
       <div>
         <label
           className={fieldLabel}
-          title="Границы области, за пределы которых нельзя увести карту при просмотре этого города (юго-западный и северо-восточный углы)."
+          title="Границы области, за пределы которых нельзя увести карту при просмотре этого города (юго-западный и северо-восточный углы). Можно не вводить вручную — используйте кнопку «Взять текущий вид карты как границы» над картой выбора центра."
         >
           Границы карты (юго-запад и северо-восток)
         </label>

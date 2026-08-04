@@ -7,15 +7,25 @@ import { defaultMapStyleUrl } from "@/shared/map/map-styles";
 import { searchPlaces, type GeocodeResult } from "@/shared/lib/admin-geocode";
 import { Input } from "@/shared/ui/input";
 
+type MapBounds = { swLat: number; swLng: number; neLat: number; neLng: number };
+
 type LocationMapPickerProps = {
   lat: string;
   lng: string;
   onChange: (lat: number, lng: number) => void;
   fallbackCenter: { lat: number; lng: number };
   fallbackZoom?: number;
+  onCaptureBounds?: (bounds: MapBounds) => void;
 };
 
-export function LocationMapPicker({ lat, lng, onChange, fallbackCenter, fallbackZoom = 13 }: LocationMapPickerProps) {
+export function LocationMapPicker({
+  lat,
+  lng,
+  onChange,
+  fallbackCenter,
+  fallbackZoom = 13,
+  onCaptureBounds
+}: LocationMapPickerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
@@ -127,6 +137,14 @@ export function LocationMapPicker({ lat, lng, onChange, fallbackCenter, fallback
     mapRef.current?.flyTo({ center: [result.lng, result.lat], zoom: 16 });
   };
 
+  const handleCaptureBounds = () => {
+    const bounds = mapRef.current?.getBounds();
+    if (!bounds || !onCaptureBounds) return;
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    onCaptureBounds({ swLat: sw.lat, swLng: sw.lng, neLat: ne.lat, neLng: ne.lng });
+  };
+
   return (
     <div>
       <div className="relative">
@@ -170,6 +188,16 @@ export function LocationMapPicker({ lat, lng, onChange, fallbackCenter, fallback
       <p className="mt-1.5 text-xs text-muted-foreground">
         Найдите место через поиск, кликните по карте или перетащите маркер, чтобы точно указать точку.
       </p>
+      {onCaptureBounds && (
+        <button
+          type="button"
+          onClick={handleCaptureBounds}
+          className="mt-2 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted"
+          title="Приблизьте или отдалите карту так, чтобы видимая область охватывала нужный город, затем нажмите — границы заполнятся автоматически."
+        >
+          Взять текущий вид карты как границы
+        </button>
+      )}
     </div>
   );
 }

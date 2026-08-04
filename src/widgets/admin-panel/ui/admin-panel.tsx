@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Ban, Eye, EyeOff, LogOut, ShieldCheck, Trash2 } from "lucide-react";
 import type { AdminAccount } from "@/entities/admin-account/model/types";
 import type { Area, AreaInput } from "@/entities/area/model/types";
@@ -94,11 +96,32 @@ function groupOfTab(tab: Tab): TabGroup {
   return "content";
 }
 
+function isValidTab(value: string | null): value is Tab {
+  return !!value && value in tabLabels;
+}
+
 const t = getTranslations("ru");
 
+function selectionFromParams(searchParams: URLSearchParams): Selection {
+  if (searchParams.get("new") === "1") return { mode: "create" };
+  const id = searchParams.get("id");
+  return id ? { mode: "edit", id } : { mode: "empty" };
+}
+
 export function AdminPanel() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab: Tab = isValidTab(searchParams.get("tab")) ? (searchParams.get("tab") as Tab) : "dashboard";
+  const urlSelection = selectionFromParams(searchParams);
+
+  function navigateToSelection(tab: Tab, selection: Selection) {
+    const params = new URLSearchParams({ tab });
+    if (selection.mode === "create") params.set("new", "1");
+    if (selection.mode === "edit") params.set("id", selection.id);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  }
+
   const [authView, setAuthView] = useState<AuthViewState>({ mode: "loading" });
-  const [activeTab, setActiveTab] = useState<Tab>("dashboard");
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -112,19 +135,26 @@ export function AdminPanel() {
   const [photos, setPhotos] = useState<AdminPhoto[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<{ name: string; email: string } | null>(null);
 
-  const [countrySelection, setCountrySelection] = useState<Selection>({ mode: "empty" });
-  const [areaSelection, setAreaSelection] = useState<Selection>({ mode: "empty" });
-  const [citySelection, setCitySelection] = useState<Selection>({ mode: "empty" });
-  const [locationSelection, setLocationSelection] = useState<Selection>({ mode: "empty" });
+  const countrySelection: Selection = activeTab === "countries" ? urlSelection : { mode: "empty" };
+  const setCountrySelection = (selection: Selection) => navigateToSelection("countries", selection);
+  const areaSelection: Selection = activeTab === "areas" ? urlSelection : { mode: "empty" };
+  const setAreaSelection = (selection: Selection) => navigateToSelection("areas", selection);
+  const citySelection: Selection = activeTab === "cities" ? urlSelection : { mode: "empty" };
+  const setCitySelection = (selection: Selection) => navigateToSelection("cities", selection);
+  const locationSelection: Selection = activeTab === "locations" ? urlSelection : { mode: "empty" };
+  const setLocationSelection = (selection: Selection) => navigateToSelection("locations", selection);
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
   const [showDraftsOnly, setShowDraftsOnly] = useState(false);
   const [locationSelectedIds, setLocationSelectedIds] = useState<Set<string>>(new Set());
   const [bulkCityTarget, setBulkCityTarget] = useState<string>("");
   const [bulkCategoryTarget, setBulkCategoryTarget] = useState<string>("");
   const [isBulkWorking, setIsBulkWorking] = useState(false);
-  const [modeSelection, setModeSelection] = useState<Selection>({ mode: "empty" });
-  const [categorySelection, setCategorySelection] = useState<Selection>({ mode: "empty" });
-  const [accountSelection, setAccountSelection] = useState<Selection>({ mode: "empty" });
+  const modeSelection: Selection = activeTab === "modes" ? urlSelection : { mode: "empty" };
+  const setModeSelection = (selection: Selection) => navigateToSelection("modes", selection);
+  const categorySelection: Selection = activeTab === "categories" ? urlSelection : { mode: "empty" };
+  const setCategorySelection = (selection: Selection) => navigateToSelection("categories", selection);
+  const accountSelection: Selection = activeTab === "accounts" ? urlSelection : { mode: "empty" };
+  const setAccountSelection = (selection: Selection) => navigateToSelection("accounts", selection);
 
   const [countriesError, setCountriesError] = useState<string | null>(null);
   const [areasError, setAreasError] = useState<string | null>(null);
@@ -903,23 +933,17 @@ export function AdminPanel() {
     if (result.type === "location") {
       setLocationCityFilter("all");
       setShowDraftsOnly(false);
-      setActiveTab("locations");
-      setLocationSelection({ mode: "edit", id: result.id });
+      navigateToSelection("locations", { mode: "edit", id: result.id });
     } else if (result.type === "city") {
-      setActiveTab("cities");
-      setCitySelection({ mode: "edit", id: result.id });
+      navigateToSelection("cities", { mode: "edit", id: result.id });
     } else if (result.type === "country") {
-      setActiveTab("countries");
-      setCountrySelection({ mode: "edit", id: result.id });
+      navigateToSelection("countries", { mode: "edit", id: result.id });
     } else if (result.type === "area") {
-      setActiveTab("areas");
-      setAreaSelection({ mode: "edit", id: result.id });
+      navigateToSelection("areas", { mode: "edit", id: result.id });
     } else if (result.type === "mode") {
-      setActiveTab("modes");
-      setModeSelection({ mode: "edit", id: result.id });
+      navigateToSelection("modes", { mode: "edit", id: result.id });
     } else if (result.type === "category") {
-      setActiveTab("categories");
-      setCategorySelection({ mode: "edit", id: result.id });
+      navigateToSelection("categories", { mode: "edit", id: result.id });
     }
   };
 
@@ -950,16 +974,14 @@ export function AdminPanel() {
 
       <div className="mb-3 flex gap-1 rounded-md border border-border bg-muted/60 p-0.5">
         {(Object.keys(tabGroups) as TabGroup[]).map((group) => (
-          <button
+          <Link
             key={group}
-            type="button"
-            onClick={() => {
-              if (groupOfTab(activeTab) !== group) {
-                setActiveTab(tabGroups[group][0]);
-              }
-            }}
+            href={
+              groupOfTab(activeTab) === group ? `/admin?${searchParams.toString()}` : `/admin?tab=${tabGroups[group][0]}`
+            }
+            scroll={false}
             className={cn(
-              "flex-1 rounded px-3 py-2 text-sm font-semibold transition",
+              "flex-1 rounded px-3 py-2 text-center text-sm font-semibold transition",
               groupOfTab(activeTab) === group
                 ? "bg-white text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
@@ -973,17 +995,17 @@ export function AdminPanel() {
                 </span>
               )}
             </span>
-          </button>
+          </Link>
         ))}
       </div>
 
       <div className="mb-6 flex min-h-[34px] flex-wrap items-center gap-1.5">
         {tabGroups[groupOfTab(activeTab)].length > 1 &&
           tabGroups[groupOfTab(activeTab)].map((tab) => (
-            <button
+            <Link
               key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
+              href={`/admin?tab=${tab}`}
+              scroll={false}
               className={cn(
                 "flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold transition",
                 activeTab === tab
@@ -1002,7 +1024,7 @@ export function AdminPanel() {
                   {pendingPhotosCount}
                 </span>
               )}
-            </button>
+            </Link>
           ))}
       </div>
 

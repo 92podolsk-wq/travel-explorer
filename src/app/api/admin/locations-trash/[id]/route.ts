@@ -1,33 +1,33 @@
 import { NextResponse } from "next/server";
-import type { PoiInput } from "@/entities/poi/model/types";
 import { isAdminAuthenticated } from "@/shared/server/admin-auth";
-import { softDeletePoi, updatePoi } from "@/shared/server/pois-repository";
+import { permanentlyDeletePoi, restorePoi } from "@/shared/server/pois-repository";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
-export async function PUT(request: Request, { params }: RouteParams) {
+// Restore a soft-deleted location back into the active list.
+export async function POST(_request: Request, { params }: RouteParams) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
-  const input = (await request.json()) as PoiInput;
-  const updated = await updatePoi(id, input);
+  const restored = await restorePoi(id);
 
-  if (!updated) {
+  if (!restored) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(updated);
+  return NextResponse.json({ success: true });
 }
 
+// Permanently erase a location from the trash — cannot be undone.
 export async function DELETE(_request: Request, { params }: RouteParams) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
-  const removed = await softDeletePoi(id);
+  const removed = await permanentlyDeletePoi(id);
 
   if (!removed) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

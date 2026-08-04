@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { Loader2, MapPin, Search } from "lucide-react";
 import { defaultMapStyleUrl } from "@/shared/map/map-styles";
-import { searchPlaces, type GeocodeResult } from "@/shared/lib/admin-geocode";
+import { searchPlaces, type GeocodeBounds, type GeocodeResult } from "@/shared/lib/admin-geocode";
 import { Input } from "@/shared/ui/input";
-
-type MapBounds = { swLat: number; swLng: number; neLat: number; neLng: number };
 
 type LocationMapPickerProps = {
   lat: string;
@@ -15,7 +13,7 @@ type LocationMapPickerProps = {
   onChange: (lat: number, lng: number) => void;
   fallbackCenter: { lat: number; lng: number };
   fallbackZoom?: number;
-  onCaptureBounds?: (bounds: MapBounds) => void;
+  onCaptureBounds?: (bounds: GeocodeBounds) => void;
 };
 
 export function LocationMapPicker({
@@ -134,7 +132,19 @@ export function LocationMapPicker({
     setQuery(result.label);
     onChangeRef.current(result.lat, result.lng);
     markerRef.current?.setLngLat([result.lng, result.lat]);
-    mapRef.current?.flyTo({ center: [result.lng, result.lat], zoom: 16 });
+
+    if (result.bounds) {
+      mapRef.current?.fitBounds(
+        [
+          [result.bounds.swLng, result.bounds.swLat],
+          [result.bounds.neLng, result.bounds.neLat]
+        ],
+        { padding: 20, duration: 800 }
+      );
+      onCaptureBounds?.(result.bounds);
+    } else {
+      mapRef.current?.flyTo({ center: [result.lng, result.lat], zoom: 16 });
+    }
   };
 
   const handleCaptureBounds = () => {

@@ -14,6 +14,7 @@ import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { PoiReport } from "@/entities/poi-report/model/types";
 import type { Region, RegionInput } from "@/entities/region/model/types";
 import type { AdminUser } from "@/entities/user/model/types";
+import type { TrashedPoi } from "@/shared/server/pois-repository";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { CityPicker } from "@/shared/ui/city-picker";
@@ -29,6 +30,7 @@ import { ExplorationModeForm } from "./exploration-mode-form";
 import { GlobalSearch, type GlobalSearchResult } from "./global-search";
 import { ImportExportPanel } from "./import-export-panel";
 import { LocationsTable } from "./locations-table";
+import { LocationsTrashTable } from "./locations-trash-table";
 import { MasterDetail } from "./master-detail";
 import { MediaLibraryTab } from "./media-library-tab";
 import { PhotoModerationTab } from "./photo-moderation-tab";
@@ -146,6 +148,8 @@ export function AdminPanel() {
   const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
   const [showDraftsOnly, setShowDraftsOnly] = useState(false);
   const [locationSelectedIds, setLocationSelectedIds] = useState<Set<string>>(new Set());
+  const [isLocationsTrashOpen, setIsLocationsTrashOpen] = useState(false);
+  const [locationsTrash, setLocationsTrash] = useState<TrashedPoi[]>([]);
   const [bulkCityTarget, setBulkCityTarget] = useState<string>("");
   const [bulkCategoryTarget, setBulkCategoryTarget] = useState<string>("");
   const [isBulkWorking, setIsBulkWorking] = useState(false);
@@ -494,7 +498,7 @@ export function AdminPanel() {
   };
 
   const handleDeleteLocation = async (poi: Poi) => {
-    if (!window.confirm(`Удалить «${poi.name}»? Это действие нельзя отменить.`)) {
+    if (!window.confirm(`Удалить «${poi.name}»? Локацию можно будет восстановить из корзины.`)) {
       return;
     }
 
@@ -585,7 +589,7 @@ export function AdminPanel() {
   };
 
   const handleBulkDeleteLocations = async () => {
-    if (!window.confirm(`Удалить выбранные локации (${locationSelectedIds.size})? Это действие нельзя отменить.`)) {
+    if (!window.confirm(`Удалить выбранные локации (${locationSelectedIds.size})? Их можно будет восстановить из корзины.`)) {
       return;
     }
 
@@ -599,6 +603,44 @@ export function AdminPanel() {
     } finally {
       setIsBulkWorking(false);
     }
+  };
+
+  const loadLocationsTrash = async () => {
+    setLocationsError(null);
+    const res = await fetch("/api/admin/locations-trash");
+    if (!res.ok) {
+      setLocationsError("Не удалось загрузить корзину.");
+      return;
+    }
+    setLocationsTrash((await res.json()) as TrashedPoi[]);
+  };
+
+  const handleOpenLocationsTrash = async () => {
+    setIsLocationsTrashOpen(true);
+    await loadLocationsTrash();
+  };
+
+  const handleRestoreLocation = async (id: string) => {
+    setLocationsError(null);
+    const res = await fetch(`/api/admin/locations-trash/${id}`, { method: "POST" });
+    if (!res.ok) {
+      setLocationsError("Не удалось восстановить локацию.");
+      return;
+    }
+    await Promise.all([loadLocationsTrash(), loadPois()]);
+  };
+
+  const handlePurgeLocation = async (id: string) => {
+    if (!window.confirm("Удалить локацию навсегда? Это действие нельзя отменить.")) {
+      return;
+    }
+    setLocationsError(null);
+    const res = await fetch(`/api/admin/locations-trash/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      setLocationsError("Не удалось удалить локацию навсегда.");
+      return;
+    }
+    await loadLocationsTrash();
   };
 
   const handleBulkChangeCity = async () => {
@@ -1223,8 +1265,25 @@ export function AdminPanel() {
               <input type="checkbox" checked={showDraftsOnly} onChange={(e) => setShowDraftsOnly(e.target.checked)} />
               Только черновики
             </label>
+            <button
+              type="button"
+              onClick={handleOpenLocationsTrash}
+              className="ml-auto flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Корзина
+            </button>
           </div>
-          {(() => {
+          {isLocationsTrashOpen ? (
+            <LocationsTrashTable
+              items={locationsTrash}
+              regions={regions}
+              onRestore={handleRestoreLocation}
+              onPurge={handlePurgeLocation}
+              onClose={() => setIsLocationsTrashOpen(false)}
+            />
+          ) : (
+            (() => {
             const visiblePois = pois
               .filter((poi) => locationCityFilter === "all" || poi.regionId === locationCityFilter)
               .filter((poi) => !showDraftsOnly || poi.status === "draft");
@@ -1368,7 +1427,8 @@ export function AdminPanel() {
                 />
               </div>
             );
-          })()}
+            })()
+          )}
         </>
       )}
 

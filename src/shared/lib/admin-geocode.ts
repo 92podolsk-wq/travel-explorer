@@ -1,7 +1,10 @@
+export type GeocodeBounds = { swLat: number; swLng: number; neLat: number; neLng: number };
+
 export type GeocodeResult = {
   label: string;
   lat: number;
   lng: number;
+  bounds?: GeocodeBounds;
 };
 
 export async function searchPlaces(query: string): Promise<GeocodeResult[]> {

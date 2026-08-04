@@ -7,6 +7,7 @@ type NominatimResult = {
   lat: string;
   lon: string;
   display_name: string;
+  boundingbox?: [string, string, string, string];
 };
 
 export async function GET(request: Request) {
@@ -36,7 +37,17 @@ export async function GET(request: Request) {
     const results = data.map((item) => ({
       label: item.display_name,
       lat: Number(item.lat),
-      lng: Number(item.lon)
+      lng: Number(item.lon),
+      ...(item.boundingbox
+        ? {
+            bounds: {
+              swLat: Number(item.boundingbox[0]),
+              neLat: Number(item.boundingbox[1]),
+              swLng: Number(item.boundingbox[2]),
+              neLng: Number(item.boundingbox[3])
+            }
+          }
+        : {})
     }));
 
     return NextResponse.json({ results });

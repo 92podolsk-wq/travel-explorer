@@ -1,0 +1,1 @@
+ALTER TABLE "Poi" ADD COLUMN "deletedAt" TIMESTAMP(3);

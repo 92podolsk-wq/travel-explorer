@@ -76,6 +76,7 @@ export function toPoi(row: PoiRow): Poi {
 
 export async function readPois(): Promise<Poi[]> {
   const rows = await prisma.poi.findMany({
+    where: { deletedAt: null },
     include: { photos: adminFormPhotosInclude, _count: favoritesCountInclude }
   });
   return rows.map(toPoi);
@@ -83,10 +84,21 @@ export async function readPois(): Promise<Poi[]> {
 
 export async function readPublishedPois(): Promise<Poi[]> {
   const rows = await prisma.poi.findMany({
-    where: { status: "published" },
+    where: { status: "published", deletedAt: null },
     include: { photos: publicPhotosInclude, _count: favoritesCountInclude }
   });
   return rows.map(toPoi);
+}
+
+export type TrashedPoi = { id: string; name: string; regionId: string; deletedAt: string };
+
+export async function readDeletedPois(): Promise<TrashedPoi[]> {
+  const rows = await prisma.poi.findMany({
+    where: { deletedAt: { not: null } },
+    select: { id: true, name: true, regionId: true, deletedAt: true },
+    orderBy: { deletedAt: "desc" }
+  });
+  return rows.map((row) => ({ id: row.id, name: row.name, regionId: row.regionId, deletedAt: row.deletedAt!.toISOString() }));
 }
 
 async function writePoi(id: string, input: PoiInput) {
@@ -177,7 +189,25 @@ export async function updatePoi(id: string, input: PoiInput): Promise<Poi | null
   return toPoi(row);
 }
 
-export async function deletePoi(id: string): Promise<boolean> {
+export async function softDeletePoi(id: string): Promise<boolean> {
+  try {
+    await prisma.poi.update({ where: { id }, data: { deletedAt: new Date() } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function restorePoi(id: string): Promise<boolean> {
+  try {
+    await prisma.poi.update({ where: { id }, data: { deletedAt: null } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function permanentlyDeletePoi(id: string): Promise<boolean> {
   try {
     await prisma.poi.delete({ where: { id } });
     return true;

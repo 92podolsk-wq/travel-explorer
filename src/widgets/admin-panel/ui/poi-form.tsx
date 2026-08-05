@@ -200,9 +200,9 @@ type PoiFormProps = {
 };
 
 export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defaultRegionId, onCancel, onSubmit }: PoiFormProps) {
-  const initialFormRef = useRef<FormState>(toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
-  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
-  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  const [initialForm] = useState<FormState>(() => toFormState(poi, defaultRegionId ?? regions[0]?.id ?? ""));
+  const [form, setForm] = useState<FormState>(initialForm);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialForm));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);

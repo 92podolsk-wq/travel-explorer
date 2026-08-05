@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Languages } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { PublishStatus, Region, RegionInput } from "@/entities/region/model/types";
@@ -136,9 +136,9 @@ type RegionFormProps = {
 };
 
 export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProps) {
-  const initialFormRef = useRef<FormState>(toFormState(region, areas[0]?.id ?? ""));
-  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
-  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  const [initialForm] = useState<FormState>(() => toFormState(region, areas[0]?.id ?? ""));
+  const [form, setForm] = useState<FormState>(initialForm);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialForm));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);

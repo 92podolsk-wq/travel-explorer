@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { Area, AreaInput } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { Button } from "@/shared/ui/button";
@@ -58,9 +58,9 @@ type AreaFormProps = {
 };
 
 export function AreaForm({ area, countries, onCancel, onSubmit }: AreaFormProps) {
-  const initialFormRef = useRef<FormState>(toFormState(area, countries[0]?.id ?? ""));
-  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
-  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  const [initialForm] = useState<FormState>(() => toFormState(area, countries[0]?.id ?? ""));
+  const [form, setForm] = useState<FormState>(initialForm);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialForm));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

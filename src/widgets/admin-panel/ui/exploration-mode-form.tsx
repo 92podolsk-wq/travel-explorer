@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { poiTags } from "@/entities/poi/model/constants";
 import type { PoiTag } from "@/entities/poi/model/types";
 import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
@@ -95,9 +95,9 @@ type ExplorationModeFormProps = {
 };
 
 export function ExplorationModeForm({ mode, onCancel, onSubmit }: ExplorationModeFormProps) {
-  const initialFormRef = useRef<FormState>(toFormState(mode));
-  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
-  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  const [initialForm] = useState<FormState>(() => toFormState(mode));
+  const [form, setForm] = useState<FormState>(initialForm);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialForm));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

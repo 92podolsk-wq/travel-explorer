@@ -28,7 +28,9 @@ export function LocationMapPicker({
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeResult[]>([]);

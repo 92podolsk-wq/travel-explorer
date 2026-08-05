@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { Country, CountryInput } from "@/entities/country/model/types";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -50,9 +50,9 @@ type CountryFormProps = {
 };
 
 export function CountryForm({ country, onCancel, onSubmit }: CountryFormProps) {
-  const initialFormRef = useRef<FormState>(toFormState(country));
-  const [form, setForm] = useState<FormState>(() => initialFormRef.current);
-  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialFormRef.current));
+  const [initialForm] = useState<FormState>(() => toFormState(country));
+  const [form, setForm] = useState<FormState>(initialForm);
+  useUnsavedChangesWarning(JSON.stringify(form) !== JSON.stringify(initialForm));
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

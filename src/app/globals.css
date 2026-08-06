@@ -15,6 +15,34 @@
   --ring: 168 54% 37%;
 }
 
+:root[data-theme="dark"] {
+  --background: 210 10% 8%;
+  --foreground: 45 15% 93%;
+  --card: 210 9% 12%;
+  --card-foreground: 45 15% 93%;
+  --border: 205 8% 22%;
+  --muted: 210 9% 16%;
+  --muted-foreground: 45 10% 69%;
+  --primary: 172 46% 46%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 172 46% 52%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --background: 210 10% 8%;
+    --foreground: 45 15% 93%;
+    --card: 210 9% 12%;
+    --card-foreground: 45 15% 93%;
+    --border: 205 8% 22%;
+    --muted: 210 9% 16%;
+    --muted-foreground: 45 10% 69%;
+    --primary: 172 46% 46%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 172 46% 52%;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

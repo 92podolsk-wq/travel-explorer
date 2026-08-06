@@ -47,7 +47,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             className="fixed inset-0 z-30 cursor-default"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full z-40 mt-2 w-40 rounded-lg border border-border bg-white p-1.5 shadow-panel">
+          <div className="absolute right-0 top-full z-40 mt-2 w-40 rounded-lg border border-border bg-card p-1.5 shadow-panel">
             {languageOptions.map((option) => (
               <button
                 key={option.language}

@@ -18,6 +18,7 @@ import {
   setPushDisabledByUser
 } from "@/shared/lib/push-token-storage";
 import { clearDownloadedMaps, getDownloadedRegionIds } from "@/shared/lib/offline-maps-storage";
+import { PackingChecklistCard } from "./packing-checklist-card";
 
 type PermissionState = "granted" | "denied" | "prompt" | "unknown";
 
@@ -143,7 +144,7 @@ export function ProfileTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
+      <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           {isEnabled ? <Bell className="h-4 w-4 text-primary" /> : <BellOff className="h-4 w-4 text-muted-foreground" />}
           {t.pushNotificationsTitle}
@@ -169,7 +170,7 @@ export function ProfileTab() {
         )}
       </section>
 
-      <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
+      <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
           <MapIcon className="h-4 w-4 text-primary" />
           {appT.offlineMapsManageTitle}
@@ -197,6 +198,8 @@ export function ProfileTab() {
           )}
         </div>
       </section>
+
+      <PackingChecklistCard />
 
       <Button type="button" variant="outline" onClick={() => void handleLogout()} className="self-start">
         <LogOut className="h-4 w-4" />

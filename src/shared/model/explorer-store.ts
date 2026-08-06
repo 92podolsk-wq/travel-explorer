@@ -16,6 +16,7 @@ import type { Itinerary, ItinerarySummary } from "@/entities/itinerary/model/typ
 import type { CustomMarker } from "@/entities/custom-marker/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { Language } from "@/shared/i18n/types";
+import type { Theme } from "@/shared/lib/theme";
 import { apiFetch } from "@/shared/lib/api-fetch";
 
 const DEFAULT_CUSTOM_MARKER_LIMIT = 200;
@@ -47,6 +48,7 @@ type ExplorerState = {
   hideFavoritesOnMap: boolean;
   hideVisitedOnMap: boolean;
   language: Language;
+  theme: Theme;
   zoom: number;
   isDetailsOpen: boolean;
   isSwipeOpen: boolean;
@@ -86,6 +88,7 @@ type ExplorerState = {
   selectAllCategories: () => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
+  setTheme: (theme: Theme) => void;
   toggleFavorite: (poiId: string) => void;
   toggleVisited: (poiId: string) => void;
   markPoiViewed: (poiId: string) => void;
@@ -145,6 +148,7 @@ export const useExplorerStore = create<ExplorerState>()(
   hideFavoritesOnMap: false,
   hideVisitedOnMap: false,
   language: "en",
+  theme: "system",
   zoom: 11,
   isDetailsOpen: false,
   isSwipeOpen: false,
@@ -214,6 +218,7 @@ export const useExplorerStore = create<ExplorerState>()(
   selectAllCategories: () => set((state) => ({ selectedCategories: state.categories.map((category) => category.id) })),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
+  setTheme: (theme) => set({ theme }),
   toggleFavorite: (poiId) => {
     set((state) => ({
       favorites: state.favorites.includes(poiId)
@@ -325,6 +330,7 @@ export const useExplorerStore = create<ExplorerState>()(
       name: "travel-explorer-settings",
       partialize: (state) => ({
         language: state.language,
+        theme: state.theme,
         activeRegionIds: state.activeRegionIds,
         activeItineraryId: state.activeItineraryId,
         hasSeenWelcome: state.hasSeenWelcome,

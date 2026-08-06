@@ -11,6 +11,8 @@ import { NavigationTransitionOverlay } from "@/shared/ui/navigation-transition-o
 import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
 import { AuthDebugOverlay } from "@/shared/ui/auth-debug-overlay";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
+import { ThemeApplier } from "@/shared/ui/theme-applier";
+import { ThemeBootstrapScript } from "@/shared/ui/theme-bootstrap-script";
 
 const siteTitle = "Wayora — Explore Japan";
 const siteDescription =
@@ -58,9 +60,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeBootstrapScript />
+      </head>
       <body>
         {children}
+        <ThemeApplier />
         <ServiceWorkerRegister />
         <CookieConsentBanner />
         <PushNotificationRegister />

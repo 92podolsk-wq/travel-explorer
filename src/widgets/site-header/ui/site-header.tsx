@@ -9,6 +9,7 @@ import type { Country } from "@/entities/country/model/types";
 import type { Region } from "@/entities/region/model/types";
 import { AuthMenu } from "@/features/auth/ui/auth-menu";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
+import { ThemeSwitcher } from "@/features/theme-switcher/ui/theme-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
@@ -141,7 +142,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
 
   return (
     <header
-      className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-white px-3 sm:gap-3 sm:px-5"
+      className="relative z-30 flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border bg-card px-3 sm:gap-3 sm:px-5"
       style={isNative ? { height: "calc(4rem + env(safe-area-inset-top))", paddingTop: "env(safe-area-inset-top)" } : undefined}
     >
       <button
@@ -207,7 +208,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
             />
             <div
               className={cn(
-                "fixed inset-x-3 top-[4.5rem] z-40 flex max-h-[70dvh] touch-pan-y flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-white p-4 shadow-panel",
+                "fixed inset-x-3 top-[4.5rem] z-40 flex max-h-[70dvh] touch-pan-y flex-col gap-4 overflow-y-auto overscroll-contain rounded-lg border border-border bg-card p-4 shadow-panel",
                 "lg:absolute lg:inset-x-auto lg:left-1/2 lg:top-full lg:mt-2 lg:max-h-none lg:w-max lg:-translate-x-1/2 lg:overflow-visible lg:p-0"
               )}
             >
@@ -268,6 +269,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
       </div>
 
       <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+        {!isNative && <ThemeSwitcher />}
         {!isNative && <LanguageSwitcher />}
         <AuthMenu autoOpenOnRequest={autoOpenAuthOnRequest} />
       </div>

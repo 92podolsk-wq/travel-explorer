@@ -25,6 +25,10 @@ type TranslationDictionary = {
     minutesShort: string;
     hoursShort: string;
     language: string;
+    theme: string;
+    themeLight: string;
+    themeDark: string;
+    themeSystem: string;
     region: string;
     country: string;
     area: string;
@@ -64,6 +68,12 @@ type TranslationDictionary = {
     offlineMapsManageDeleted: string;
     offlineFirstLaunchTitle: string;
     offlineFirstLaunchHint: string;
+    checklistCardTitle: string;
+    checklistSetDate: string;
+    checklistDateSet: string;
+    checklistPackingTitle: string;
+    checklistShoppingTitle: string;
+    checklistAddPlaceholder: string;
     retryButton: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
@@ -290,6 +300,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "m",
       hoursShort: "h",
       language: "Language",
+      theme: "Theme",
+      themeLight: "Light",
+      themeDark: "Dark",
+      themeSystem: "System",
       region: "Region",
       country: "Country",
       area: "Area",
@@ -329,6 +343,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapsManageDeleted: "Downloaded maps deleted",
       offlineFirstLaunchTitle: "No internet connection",
       offlineFirstLaunchHint: "Connect to the internet at least once to load the map.",
+      checklistCardTitle: "Packing checklist",
+      checklistSetDate: "Set trip date",
+      checklistDateSet: "Trip on {date}",
+      checklistPackingTitle: "To pack",
+      checklistShoppingTitle: "To buy",
+      checklistAddPlaceholder: "Add an item",
       retryButton: "Try again",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
@@ -627,6 +647,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "мин",
       hoursShort: "ч",
       language: "Язык",
+      theme: "Тема",
+      themeLight: "Светлая",
+      themeDark: "Тёмная",
+      themeSystem: "Как в системе",
       region: "Регион",
       country: "Страна",
       area: "Регион",
@@ -666,6 +690,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapsManageDeleted: "Скачанные карты удалены",
       offlineFirstLaunchTitle: "Нет подключения к интернету",
       offlineFirstLaunchHint: "Подключитесь к интернету хотя бы раз, чтобы загрузить карту.",
+      checklistCardTitle: "Чек-лист сборов",
+      checklistSetDate: "Указать дату поездки",
+      checklistDateSet: "Поездка {date}",
+      checklistPackingTitle: "Взять с собой",
+      checklistShoppingTitle: "Купить",
+      checklistAddPlaceholder: "Добавить пункт",
       retryButton: "Повторить",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",
@@ -964,6 +994,10 @@ export const translations: Record<Language, TranslationDictionary> = {
       minutesShort: "分",
       hoursShort: "時間",
       language: "言語",
+      theme: "テーマ",
+      themeLight: "ライト",
+      themeDark: "ダーク",
+      themeSystem: "システム",
       region: "地域",
       country: "国",
       area: "地方",
@@ -1003,6 +1037,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       offlineMapsManageDeleted: "保存済みの地図を削除しました",
       offlineFirstLaunchTitle: "インターネット接続がありません",
       offlineFirstLaunchHint: "地図を読み込むには、一度インターネットに接続してください。",
+      checklistCardTitle: "持ち物チェックリスト",
+      checklistSetDate: "旅行日を設定",
+      checklistDateSet: "旅行日: {date}",
+      checklistPackingTitle: "持ち物",
+      checklistShoppingTitle: "買うもの",
+      checklistAddPlaceholder: "項目を追加",
       retryButton: "再試行",
       noSeasonPhotoHint: "この季節の写真がありません — デフォルトを表示",
       tomorrow: "明日",

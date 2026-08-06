@@ -38,7 +38,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
 
   return (
     <main className="min-h-dvh bg-muted">
-      <header className="flex h-16 items-center justify-between gap-2.5 border-b border-border bg-white px-5 print:hidden">
+      <header className="flex h-16 items-center justify-between gap-2.5 border-b border-border bg-card px-5 print:hidden">
         <div className="flex items-center gap-2.5">
           <Image
             src="/logo-icon.png"
@@ -72,7 +72,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-white/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-white"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-card"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               {t.trip.openInGoogleMaps}
@@ -81,7 +81,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-white/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-white"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card/[0.72] px-3 text-sm font-medium text-foreground shadow-sm transition hover:bg-card"
           >
             <Download className="h-3.5 w-3.5" />
             {t.auth.downloadPdf}
@@ -104,7 +104,7 @@ export function TripView({ itinerary, autoPrint }: TripViewProps) {
                     const name = stopPointName(stop.point, language, t.app.markerStopFallbackName);
                     const description = stopPointDescription(stop.point);
                     return (
-                      <div key={stop.id} className="flex gap-3 rounded-lg border border-border bg-white p-3 shadow-sm">
+                      <div key={stop.id} className="flex gap-3 rounded-lg border border-border bg-card p-3 shadow-sm">
                         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                           {index + 1}
                         </span>

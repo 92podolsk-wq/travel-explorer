@@ -43,7 +43,7 @@ export function AddMarkerPanel({ language, markerCount, markerLimit, onSave, onC
   }
 
   return (
-    <div className="absolute bottom-24 left-1/2 z-30 w-[min(360px,calc(100vw-2.5rem))] -translate-x-1/2 rounded-lg border border-white/70 bg-white/[0.96] p-4 shadow-panel backdrop-blur-xl">
+    <div className="absolute bottom-24 left-1/2 z-30 w-[min(360px,calc(100vw-2.5rem))] -translate-x-1/2 rounded-lg border border-border/70 bg-card/[0.96] p-4 shadow-panel backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-foreground">{t.app.newMarkerTitle}</p>
         <button

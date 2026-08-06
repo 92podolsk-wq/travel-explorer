@@ -177,7 +177,7 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
               className="fixed inset-0 z-30 cursor-default"
               onClick={() => setIsUserMenuOpen(false)}
             />
-            <div className="absolute right-0 top-full z-40 mt-2 w-48 rounded-lg border border-border bg-white p-1.5 shadow-panel">
+            <div className="absolute right-0 top-full z-40 mt-2 w-48 rounded-lg border border-border bg-card p-1.5 shadow-panel">
               {isNativeLocalShell() ? (
                 <button
                   type="button"
@@ -237,7 +237,7 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
               setReturnToAccountOnSuccess(false);
             }}
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-panel">
             <h2 className="text-base font-semibold text-foreground">
               {formMode === "login" ? t.loginTitle : t.registerTitle}
             </h2>

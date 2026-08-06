@@ -8,7 +8,7 @@ const variantClassName: Record<ButtonVariant, string> = {
   default: "bg-primary text-primary-foreground shadow-soft hover:bg-primary/90",
   secondary: "bg-muted text-foreground hover:bg-muted/80",
   ghost: "bg-transparent text-foreground hover:bg-muted",
-  outline: "border border-border bg-white/[0.72] text-foreground shadow-sm hover:bg-white"
+  outline: "border border-border bg-card/[0.72] text-foreground shadow-sm hover:bg-card"
 };
 
 const sizeClassName: Record<ButtonSize, string> = {

@@ -76,7 +76,7 @@ export function UploadPhotoModal({ poiId, language, onClose }: UploadPhotoModalP
   return (
     <>
       <button type="button" aria-label="Close" className="fixed inset-0 z-40 bg-black/20" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-[24rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+      <div className="fixed left-1/2 top-1/2 z-50 w-[24rem] max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-panel">
         {isDone ? (
           <>
             <p className="text-sm text-foreground">{t.success}</p>

@@ -123,7 +123,7 @@ function SwipeCard({
         initial={{ scale: 0.92, opacity: 0, y: -90 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 26 }}
-        className="absolute inset-0 flex cursor-grab flex-col rounded-sm bg-white p-2.5 pb-24 active:cursor-grabbing"
+        className="absolute inset-0 flex cursor-grab flex-col rounded-sm bg-card p-2.5 pb-24 active:cursor-grabbing"
       >
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2px] bg-muted">
           {poi.photos[0] ? (
@@ -253,7 +253,7 @@ export function SwipeDiscoveryModal({
             type="button"
             onClick={onClose}
             aria-label={t.app.swipeClose}
-            className="rounded-full bg-white/90 p-1.5 text-foreground shadow-sm transition hover:bg-white"
+            className="rounded-full bg-card/90 p-1.5 text-foreground shadow-sm transition hover:bg-card"
           >
             <XIcon className="h-4 w-4" />
           </button>
@@ -265,7 +265,7 @@ export function SwipeDiscoveryModal({
             {affinityCategories.map((label) => (
               <span
                 key={label}
-                className="rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold text-primary shadow-sm"
+                className="rounded-full bg-card/90 px-2.5 py-0.5 text-xs font-semibold text-primary shadow-sm"
               >
                 {label}
               </span>
@@ -275,7 +275,7 @@ export function SwipeDiscoveryModal({
 
         <div className="relative h-[60dvh] w-full max-h-[34rem]">
           {!current ? (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-sm bg-white p-6 text-center shadow-panel">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-sm bg-card p-6 text-center shadow-panel">
               <p className="text-sm text-muted-foreground">{t.app.swipeEmpty}</p>
               {neighboringRegions.length > 0 && (
                 <div className="flex w-full flex-col gap-2">
@@ -309,7 +309,7 @@ export function SwipeDiscoveryModal({
                         filter: blur > 0 ? `blur(${blur}px)` : undefined,
                         opacity
                       }}
-                      className="absolute inset-0 rounded-sm bg-white p-2.5 pb-24 shadow-[0_20px_40px_-14px_rgba(0,0,0,0.35)]"
+                      className="absolute inset-0 rounded-sm bg-card p-2.5 pb-24 shadow-[0_20px_40px_-14px_rgba(0,0,0,0.35)]"
                     >
                       <div className="h-full w-full overflow-hidden rounded-[2px] bg-muted">
                         {poi.photos[0] && (
@@ -342,7 +342,7 @@ export function SwipeDiscoveryModal({
               onClick={handleSkip}
               aria-label={t.app.swipeSkip}
               title={t.app.swipeSkip}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-red-500 shadow-panel transition hover:scale-105"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-card text-red-500 shadow-panel transition hover:scale-105"
             >
               <XIcon className="h-6 w-6" />
             </button>
@@ -351,7 +351,7 @@ export function SwipeDiscoveryModal({
               onClick={handleLike}
               aria-label={t.app.swipeLike}
               title={t.app.swipeLike}
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-primary shadow-panel transition hover:scale-105"
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-card text-primary shadow-panel transition hover:scale-105"
             >
               <Heart className="h-6 w-6" />
             </button>

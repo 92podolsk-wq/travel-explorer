@@ -154,7 +154,7 @@ export function PoiDetails() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 18 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute inset-0 z-20 flex flex-col overflow-hidden rounded-t-2xl border border-white/70 bg-white/[0.96] shadow-panel backdrop-blur-xl lg:rounded-lg lg:bg-white/[0.84]"
+            className="absolute inset-0 z-20 flex flex-col overflow-hidden rounded-t-2xl border border-border bg-card/[0.96] shadow-panel backdrop-blur-xl lg:rounded-lg lg:bg-card/[0.84]"
           >
           <button
             type="button"
@@ -214,12 +214,12 @@ export function PoiDetails() {
             )}
             <div className="absolute left-4 top-4 flex gap-2">
               {selectedPoi.mustVisit && (
-                <Badge className="gap-1 border-white/70 bg-white/[0.88] text-foreground">
+                <Badge className="gap-1 border-white/70 bg-white/[0.88] text-neutral-900">
                   <Sparkles className="h-3 w-3" />
                   {t.app.mustVisit}
                 </Badge>
               )}
-              <Badge className="gap-1 border-white/70 bg-white/[0.88] text-foreground">
+              <Badge className="gap-1 border-white/70 bg-white/[0.88] text-neutral-900">
                 <Camera className="h-3 w-3" />
                 {t.app.photo} {selectedPoi.photos.length}
               </Badge>
@@ -341,7 +341,7 @@ export function PoiDetails() {
 
           {hasMultiplePlaces && (
             <div
-              className="flex shrink-0 items-center justify-between gap-2 border-t border-white/70 px-5 py-3"
+              className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-5 py-3"
               style={{ paddingBottom: currentUser ? undefined : "max(0.75rem, env(safe-area-inset-bottom))" }}
             >
               <button
@@ -364,7 +364,7 @@ export function PoiDetails() {
           )}
 
           <div
-            className="flex shrink-0 items-center gap-4 border-t border-white/70 px-5 py-3"
+            className="flex shrink-0 items-center gap-4 border-t border-border px-5 py-3"
             style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
             <button
@@ -419,7 +419,7 @@ type MetricProps = {
 
 function Metric({ icon, label, value }: MetricProps) {
   return (
-    <div className="rounded-md border border-white/70 bg-white/[0.58] p-3 shadow-sm">
+    <div className="rounded-md border border-border bg-card/[0.58] p-3 shadow-sm">
       <div className="mb-2 text-primary">{icon}</div>
       <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
         {label}

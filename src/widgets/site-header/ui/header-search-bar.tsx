@@ -18,7 +18,7 @@ export function HeaderSearchBar() {
   }
 
   return (
-    <div className="relative shrink-0 border-b border-border bg-white px-3 py-2">
+    <div className="relative shrink-0 border-b border-border bg-card px-3 py-2">
       <Search className="pointer-events-none absolute left-6 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         aria-label={t.app.searchAria}

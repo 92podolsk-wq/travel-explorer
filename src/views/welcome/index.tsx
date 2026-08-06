@@ -88,11 +88,11 @@ export function WelcomePage() {
     <main className="flex h-dvh w-full flex-col overflow-hidden bg-muted">
       <SiteHeader />
       <div className="flex-1 overflow-y-auto">
-        <section className="relative overflow-hidden border-b border-border bg-white">
+        <section className="relative overflow-hidden border-b border-border bg-card">
           {heroPhoto && (
             <CoverImage photo={heroPhoto} alt={t.heroTitle} className="absolute inset-0 h-full w-full" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/90 to-white/70 sm:bg-gradient-to-r sm:from-white sm:via-white/85 sm:to-white/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background/70 sm:bg-gradient-to-r sm:from-background sm:via-background/85 sm:to-background/40" />
           <div className="relative mx-auto flex max-w-6xl flex-col gap-6 px-6 py-14 sm:py-20">
             <h1 className="max-w-xl text-3xl font-bold leading-tight text-foreground sm:text-5xl">{t.heroTitle}</h1>
             <p className="max-w-md text-sm text-muted-foreground sm:text-base">{t.heroSubtitle}</p>
@@ -110,7 +110,7 @@ export function WelcomePage() {
                 {t.heroHowItWorksCta}
               </Button>
             </div>
-            <div className="mt-2 flex max-w-2xl flex-wrap gap-1 rounded-lg border border-border bg-white/85 backdrop-blur">
+            <div className="mt-2 flex max-w-2xl flex-wrap gap-1 rounded-lg border border-border bg-card/85 backdrop-blur">
               <StatItem icon={<MapPin className="h-4.5 w-4.5" />} value={pois.length} label={t.statsPlaces} />
               <StatItem icon={<Compass className="h-4.5 w-4.5" />} value={regions.length} label={t.statsRegions} />
               <StatItem icon={<Sparkles className="h-4.5 w-4.5" />} value={explorationModes.length} label={t.statsModes} />
@@ -128,7 +128,7 @@ export function WelcomePage() {
                   key={region.id}
                   type="button"
                   onClick={() => enterRegion(region.id)}
-                  className="group flex flex-col overflow-hidden rounded-lg border border-border bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <CoverImage
                     photo={regionPhoto(region.id)}
@@ -158,7 +158,7 @@ export function WelcomePage() {
                     key={mode.id}
                     type="button"
                     onClick={enterMode}
-                    className="flex flex-col items-start gap-2 rounded-lg border border-border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                   >
                     <ModeIcon className="h-6 w-6 text-primary" />
                     <p className="text-sm font-semibold text-foreground">{mode.nameByLanguage[language]}</p>
@@ -190,7 +190,7 @@ export function WelcomePage() {
         )}
 
         <section className="mx-auto max-w-6xl px-6 py-12">
-          <div className="flex flex-col items-start gap-4 rounded-lg border border-border bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col items-start gap-4 rounded-lg border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Wand2 className="h-5 w-5" />
@@ -227,7 +227,7 @@ export function WelcomePage() {
           </div>
         </section>
 
-        <footer className="border-t border-border bg-white px-6 py-6 text-center text-xs text-muted-foreground">
+        <footer className="border-t border-border bg-card px-6 py-6 text-center text-xs text-muted-foreground">
           Wayora — Explore Japan
         </footer>
       </div>

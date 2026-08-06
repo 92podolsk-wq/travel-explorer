@@ -149,7 +149,7 @@ function PoiRow({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex w-full items-center gap-3 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
+    <div className="flex w-full items-center gap-3 rounded-md border border-border bg-card/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
       <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <PoiThumbnail poi={poi} className="h-12 w-12" />
         <div className="min-w-0">
@@ -215,7 +215,7 @@ function ItineraryTimelineRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded-md border border-border bg-white/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60"
+      className="flex items-center gap-2 rounded-md border border-border bg-card/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60"
     >
       <button
         type="button"
@@ -253,7 +253,7 @@ function ItineraryTimelineRow({
                   setIsEditingDuration(false);
                 }
               }}
-              className="h-6 rounded border border-primary/30 bg-white px-1 text-xs outline-none focus:ring-2 focus:ring-ring/25"
+              className="h-6 rounded border border-primary/30 bg-card px-1 text-xs outline-none focus:ring-2 focus:ring-ring/25"
             />
           ) : (
             <button
@@ -290,7 +290,7 @@ function ItineraryTimelineRow({
         <select
           value={stop.day}
           onChange={(e) => onMoveToDay(Number(e.target.value))}
-          className="h-7 rounded border border-border bg-white px-1 text-xs outline-none"
+          className="h-7 rounded border border-border bg-card px-1 text-xs outline-none"
         >
           {Array.from({ length: maxDay + 1 }, (_, i) => i + 1).map((d) => (
             <option key={d} value={d}>
@@ -406,7 +406,7 @@ function ItineraryDayCard({
     <div
       ref={setDroppableRef}
       className={cn(
-        "rounded-lg border border-border bg-white/[0.78] p-4 shadow-sm transition",
+        "rounded-lg border border-border bg-card/[0.78] p-4 shadow-sm transition",
         isOver && "ring-2 ring-primary/50"
       )}
     >
@@ -432,7 +432,7 @@ function ItineraryDayCard({
                 }
               }}
               placeholder={t.renameDayPlaceholder}
-              className="w-full rounded border border-primary/30 bg-white px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+              className="w-full rounded border border-primary/30 bg-card px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
             />
           ) : (
             <button
@@ -502,7 +502,7 @@ function ItineraryDayCard({
               onChange={(e) => {
                 onUpdateDayConfig({ lunchEnabled: e.target.value === "on" });
               }}
-              className="h-6 rounded border border-border bg-white px-1 text-xs outline-none"
+              className="h-6 rounded border border-border bg-card px-1 text-xs outline-none"
             >
               <option value="on">{dict.app.on}</option>
               <option value="off">{dict.app.off}</option>
@@ -516,7 +516,7 @@ function ItineraryDayCard({
                   onChange={(e) =>
                     onUpdateDayConfig({ lunchStartMinutes: timeInputValueToMinutes(e.target.value) })
                   }
-                  className="h-6 rounded border border-border bg-white px-1 text-xs outline-none"
+                  className="h-6 rounded border border-border bg-card px-1 text-xs outline-none"
                 />
                 <span className="text-muted-foreground">{t.lunchDuration}</span>
                 <input
@@ -526,7 +526,7 @@ function ItineraryDayCard({
                   step={15}
                   value={lunchDurationMinutes ?? LUNCH_DURATION_MINUTES}
                   onChange={(e) => onUpdateDayConfig({ lunchDurationMinutes: Number(e.target.value) })}
-                  className="h-6 w-14 rounded border border-border bg-white px-1 text-xs outline-none"
+                  className="h-6 w-14 rounded border border-border bg-card px-1 text-xs outline-none"
                 />
               </>
             )}
@@ -554,7 +554,7 @@ function ItineraryDayCard({
                       if (e.key === "Enter") commitStart();
                       if (e.key === "Escape") setIsEditingStart(false);
                     }}
-                    className="w-fit rounded border border-primary/30 bg-white px-1.5 py-0.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+                    className="w-fit rounded border border-primary/30 bg-card px-1.5 py-0.5 text-xs font-medium text-foreground outline-none focus:ring-2 focus:ring-ring/25"
                   />
                 ) : (
                   <button
@@ -1229,7 +1229,7 @@ export function AccountPage({
           </div>
 
           {isAvatarPickerOpen && !(activeTab === "profile" && currentUser) && (
-            <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
+            <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
               <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
               <div className="grid grid-cols-6 gap-3">
                 {avatarIds.map((avatarId) => {
@@ -1259,7 +1259,7 @@ export function AccountPage({
           )}
 
           {activeTab !== "profile" && (
-            <div className="flex gap-1.5 rounded-lg border border-border bg-white/[0.62] p-1">
+            <div className="flex gap-1.5 rounded-lg border border-border bg-card/[0.62] p-1">
               {(
                 [
                   { id: "route", label: t.tabRoute },
@@ -1315,7 +1315,7 @@ export function AccountPage({
             </div>
             {favoritePois.length > 0 && (
               <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-4 rounded-lg border border-border bg-white/[0.78] p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4 rounded-lg border border-border bg-card/[0.78] p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-wrap items-center gap-6">
                     <div className="flex items-center gap-3">
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -1367,7 +1367,7 @@ export function AccountPage({
                           type="button"
                           onClick={handleShareItinerary}
                           title={isLinkCopied ? t.linkCopied : t.shareItinerary}
-                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-white text-muted-foreground transition hover:text-primary"
+                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition hover:text-primary"
                         >
                           <Share2 className="h-4 w-4" />
                         </button>
@@ -1380,7 +1380,7 @@ export function AccountPage({
                 </div>
 
                 {favoritesRegionProgress.length > 0 && (
-                  <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-white/[0.78] p-4">
+                  <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-card/[0.78] p-4">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
                         <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -1433,7 +1433,7 @@ export function AccountPage({
                   const isCollapsed = collapsedFavoriteRegionIds.has(regionId);
                   const hasAddable = regionPois.some((poi) => !itineraryPoiIds.has(poi.id));
                   return (
-                    <div key={regionId} className="flex flex-col gap-2 rounded-lg border border-border bg-white/[0.62] p-3">
+                    <div key={regionId} className="flex flex-col gap-2 rounded-lg border border-border bg-card/[0.62] p-3">
                       <div className="flex items-center justify-between gap-2">
                         <button
                           type="button"
@@ -1534,7 +1534,7 @@ export function AccountPage({
                         setIsEditingTitle(false);
                       }
                     }}
-                    className="rounded border border-primary/30 bg-white px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+                    className="rounded border border-primary/30 bg-card px-1.5 py-0.5 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-ring/25"
                   />
                 ) : (
                   <button
@@ -1606,7 +1606,7 @@ export function AccountPage({
                       handleSwitchItinerary(e.target.value);
                     }
                   }}
-                  className="h-7 rounded border border-border bg-white px-1.5 text-xs outline-none"
+                  className="h-7 rounded border border-border bg-card px-1.5 text-xs outline-none"
                 >
                   {itineraries.map((i) => (
                     <option key={i.id} value={i.id}>
@@ -1631,12 +1631,12 @@ export function AccountPage({
             )}
 
             {isGeneratorOpen && (
-              <div className="flex flex-col gap-2.5 rounded-md border border-border bg-white/[0.78] p-3">
+              <div className="flex flex-col gap-2.5 rounded-md border border-border bg-card/[0.78] p-3">
                 <div className="grid grid-cols-2 gap-2.5">
                   <select
                     value={generatorRegionId}
                     onChange={(e) => setGeneratorRegionId(e.target.value)}
-                    className="h-9 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                    className="h-9 rounded-md border border-border bg-card px-2 text-sm outline-none"
                   >
                     {regions.map((region) => (
                       <option key={region.id} value={region.id}>
@@ -1647,7 +1647,7 @@ export function AccountPage({
                   <select
                     value={generatorSource}
                     onChange={(e) => setGeneratorSource(e.target.value as "favorites" | "recommended")}
-                    className="h-9 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                    className="h-9 rounded-md border border-border bg-card px-2 text-sm outline-none"
                   >
                     <option value="favorites">{t.generateItinerarySourceFavorites}</option>
                     <option value="recommended">{t.generateItinerarySourceRecommended}</option>
@@ -1663,7 +1663,7 @@ export function AccountPage({
                       value={generatorDays}
                       onChange={(e) => setGeneratorDays(e.target.value)}
                       onBlur={() => setGeneratorDays(String(clampDayCount(generatorDays)))}
-                      className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                      className="h-9 w-16 rounded-md border border-border bg-card px-2 text-sm outline-none"
                     />
                   </label>
                   <label className="flex items-center justify-between gap-1.5 text-xs text-muted-foreground">
@@ -1675,7 +1675,7 @@ export function AccountPage({
                       value={generatorHoursPerDay}
                       onChange={(e) => setGeneratorHoursPerDay(e.target.value)}
                       onBlur={() => setGeneratorHoursPerDay(String(clampDayCount(generatorHoursPerDay)))}
-                      className="h-9 w-16 rounded-md border border-border bg-white px-2 text-sm outline-none"
+                      className="h-9 w-16 rounded-md border border-border bg-card px-2 text-sm outline-none"
                     />
                   </label>
                 </div>
@@ -1738,7 +1738,7 @@ export function AccountPage({
                 </div>
                 <DragOverlay>
                   {activeDragStop ? (
-                    <div className="flex items-center gap-3 rounded-md border border-primary/40 bg-white p-2.5 shadow-panel">
+                    <div className="flex items-center gap-3 rounded-md border border-primary/40 bg-card p-2.5 shadow-panel">
                       <StopPointThumbnail point={activeDragStop.point} className="h-10 w-10" />
                       <p className="max-w-[10rem] truncate text-sm font-semibold text-foreground">
                         {stopPointName(activeDragStop.point, language, dict.app.markerStopFallbackName)}
@@ -1828,7 +1828,7 @@ export function AccountPage({
             className="fixed inset-0 z-40 bg-black/20"
             onClick={() => setPendingClear(null)}
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-panel">
             <p className="text-sm text-foreground">{pendingClearMessage}</p>
             <div className="mt-5 flex justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setPendingClear(null)}>
@@ -1850,7 +1850,7 @@ export function AccountPage({
             className="fixed inset-0 z-40 bg-black/20"
             onClick={() => setPendingRemoveDay(null)}
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-panel">
             <p className="text-sm text-foreground">{t.removeDayConfirm}</p>
             <div className="mt-5 flex justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setPendingRemoveDay(null)}>
@@ -1879,7 +1879,7 @@ export function AccountPage({
             className="fixed inset-0 z-40 bg-black/20"
             onClick={() => setPendingDeleteItinerary(false)}
           />
-          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-white p-6 shadow-panel">
+          <div className="fixed left-1/2 top-1/2 z-50 w-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-card p-6 shadow-panel">
             <p className="text-sm text-foreground">{t.deleteItineraryConfirm}</p>
             <div className="mt-5 flex justify-end gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setPendingDeleteItinerary(false)}>

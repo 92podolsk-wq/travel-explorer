@@ -227,7 +227,7 @@ export function ExplorerSidebar() {
       dragElastic={0.06}
       onDragEnd={handleSheetDragEnd}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-10 flex h-[85dvh] flex-col overflow-hidden rounded-t-2xl border-t border-white/70 bg-white/[0.92] shadow-panel backdrop-blur-xl",
+        "fixed inset-x-0 bottom-0 z-10 flex h-[85dvh] flex-col overflow-hidden rounded-t-2xl border-t border-border/70 bg-card/[0.92] shadow-panel backdrop-blur-xl",
         "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border"
       )}
     >
@@ -241,7 +241,7 @@ export function ExplorerSidebar() {
         <span className="h-1 w-9 rounded-full bg-border" />
       </button>
 
-      <div className="relative shrink-0 overflow-hidden border-b border-white/70 p-5">
+      <div className="relative shrink-0 overflow-hidden border-b border-border/70 p-5">
         {headerPhoto && (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -251,7 +251,7 @@ export function ExplorerSidebar() {
               aria-hidden="true"
               className="absolute inset-0 h-full w-full object-cover opacity-[0.12]"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/75 to-white/95" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background/95" />
           </>
         )}
         <SeigaihaWatermark className="-top-8 -right-8" />
@@ -283,7 +283,7 @@ export function ExplorerSidebar() {
         <div className="mb-3 h-[3px] w-11 rounded-full bg-[#a3312c]" />
 
         <div className="mb-3 flex flex-wrap items-center gap-1">
-          <div className="inline-flex items-center gap-1 rounded-md border border-border bg-white/70 px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+          <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
             <span className="inline-flex items-center gap-0.5" title={t.app.sunrise}>
               <Sunrise className="h-3 w-3 text-amber-500" />
               {sunTimes.sunrise ?? "—"}
@@ -326,7 +326,7 @@ export function ExplorerSidebar() {
               "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border transition disabled:opacity-60",
               sortByDistance
                 ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-border bg-white text-muted-foreground hover:text-foreground"
+                : "border-border bg-card text-muted-foreground hover:text-foreground"
             )}
           >
             <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
@@ -335,7 +335,7 @@ export function ExplorerSidebar() {
         {locationError && <p className="mt-1.5 text-[11px] text-red-600">{locationError}</p>}
       </div>
 
-      <div className="hidden shrink-0 border-b border-white/70 sm:block">
+      <div className="hidden shrink-0 border-b border-border/70 sm:block">
         <button
           type="button"
           onClick={() => setIsCategoryFilterOpen((value) => !value)}
@@ -367,7 +367,7 @@ export function ExplorerSidebar() {
                   size="sm"
                   onClick={() => toggleCategory(category.id)}
                   aria-pressed={isSelected}
-                  className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-white/[0.58]")}
+                  className={cn("h-9 max-w-full rounded-md px-3", isSelected ? "shadow-soft" : "bg-card/[0.58]")}
                 >
                   <CategoryIcon className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{category.nameByLanguage[language] ?? category.name}</span>
@@ -378,7 +378,7 @@ export function ExplorerSidebar() {
         )}
       </div>
 
-      <div className="shrink-0 border-b border-white/70 p-4 pt-3">
+      <div className="shrink-0 border-b border-border/70 p-4 pt-3">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
           {t.app.seasonFilter}
         </p>
@@ -398,7 +398,7 @@ export function ExplorerSidebar() {
                   "flex flex-1 flex-col items-center gap-1 rounded-md border py-1.5 transition",
                   isActive
                     ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border bg-white/[0.58] text-muted-foreground hover:text-foreground"
+                    : "border-border bg-card/[0.58] text-muted-foreground hover:text-foreground"
                 )}
               >
                 <SeasonIcon className="h-4 w-4" />
@@ -500,10 +500,10 @@ export function ExplorerSidebar() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
                 className={cn(
-                  "w-full rounded-lg border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white",
+                  "w-full rounded-lg border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card",
                   isSelected
-                    ? "border-primary/[0.35] bg-white shadow-soft"
-                    : "border-white/70 bg-white/[0.62]"
+                    ? "border-primary/[0.35] bg-card shadow-soft"
+                    : "border-border/70 bg-card/[0.62]"
                 )}
               >
                 <div className="flex gap-3">

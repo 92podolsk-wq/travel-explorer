@@ -99,7 +99,7 @@ function MobileAppTabBarInner() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 flex items-stretch border-t border-border bg-white"
+      className="fixed inset-x-0 bottom-0 z-50 flex items-stretch border-t border-border bg-card"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {items.map((item) => {

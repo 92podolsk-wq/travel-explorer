@@ -30,7 +30,7 @@ export function CookieConsentBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2.5 border-t border-border bg-white/95 px-4 py-3 shadow-panel backdrop-blur-xl sm:flex-row sm:justify-center">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2.5 border-t border-border bg-card/95 px-4 py-3 shadow-panel backdrop-blur-xl sm:flex-row sm:justify-center">
       <p className="text-xs text-muted-foreground sm:text-sm">{t.app.cookieConsentText}</p>
       <Button type="button" size="sm" onClick={handleAccept} className="shrink-0">
         {t.app.cookieConsentAccept}

@@ -54,7 +54,7 @@ export function CityPicker({
         type="button"
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
-        className="flex h-9 w-full items-center gap-1.5 rounded-md border border-border bg-white px-2.5 text-sm shadow-sm outline-none"
+        className="flex h-9 w-full items-center gap-1.5 rounded-md border border-border bg-card px-2.5 text-sm shadow-sm outline-none"
       >
         <span className="flex-1 truncate text-left">{current}</span>
         <ChevronDown
@@ -66,7 +66,7 @@ export function CityPicker({
       {isOpen && (
         <>
           <button type="button" aria-label="Close" className="fixed inset-0 z-30 cursor-default" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 top-full z-40 mt-2 w-72 rounded-lg border border-border bg-white p-2.5 shadow-panel">
+          <div className="absolute left-0 top-full z-40 mt-2 w-72 rounded-lg border border-border bg-card p-2.5 shadow-panel">
             {(allowAll || frequentOptions.length > 0) && (
               <div className="mb-2">
                 <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Часто используемые</p>
@@ -109,7 +109,7 @@ export function CityPicker({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder}
                 autoFocus
-                className="h-8 w-full rounded-md border border-border bg-white pl-7 pr-2 text-sm outline-none focus:border-primary/30"
+                className="h-8 w-full rounded-md border border-border bg-card pl-7 pr-2 text-sm outline-none focus:border-primary/30"
               />
             </div>
             {normalizedQuery.length > 0 && (

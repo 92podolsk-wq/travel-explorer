@@ -932,7 +932,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         info.className = "min-w-0";
 
         const name = document.createElement("p");
-        name.className = "max-w-[11rem] truncate text-sm font-semibold text-foreground";
+        name.className = "max-w-[11rem] truncate text-sm font-semibold text-neutral-900";
         name.textContent = poi.nameByLanguage[useExplorerStore.getState().language] ?? poi.name;
         info.appendChild(name);
 
@@ -998,7 +998,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         popupNode.className = "flex flex-col gap-2 p-1";
         if (label) {
           const labelEl = document.createElement("p");
-          labelEl.className = "text-sm font-medium text-foreground";
+          labelEl.className = "text-sm font-medium text-neutral-900";
           labelEl.textContent = label;
           popupNode.appendChild(labelEl);
         }
@@ -1322,7 +1322,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-white/70 bg-white/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl md:flex">
+      <div className="absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-white/70 bg-white/[0.9] px-4 py-2 text-sm font-semibold text-neutral-900 shadow-soft backdrop-blur-xl lg:flex">
         <span className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
             <MapPin className="h-4 w-4" />
@@ -1369,7 +1369,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           disabled={isLocatingUser}
           aria-label={t.app.locateMeHint}
           title={t.app.locateMeHint}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60 disabled:opacity-60"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-900 shadow-panel transition hover:bg-muted/60 disabled:opacity-60"
         >
           <LocateFixed className={cn("h-4 w-4", isLocatingUser && "animate-pulse")} />
         </button>
@@ -1382,7 +1382,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
             title={t.app.offlineMapDownload}
             className={cn(
               "flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-medium shadow-panel transition disabled:opacity-70",
-              offlineDownloadState === "done" ? "bg-primary/10 text-primary" : "bg-white text-foreground hover:bg-muted/60"
+              offlineDownloadState === "done" ? "bg-primary/10 text-primary" : "bg-white text-neutral-900 hover:bg-muted/60"
             )}
           >
             {offlineDownloadState === "downloading" ? (
@@ -1409,7 +1409,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           title={t.app.addMarkerHint}
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-full shadow-panel transition",
-            isAddingMarker ? "bg-primary/10 text-primary" : "bg-white text-foreground hover:bg-muted/60"
+            isAddingMarker ? "bg-primary/10 text-primary" : "bg-white text-neutral-900 hover:bg-muted/60"
           )}
         >
           <MapPinPlus className="h-4 w-4" />
@@ -1419,7 +1419,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           onClick={() => mapRef.current?.zoomIn()}
           aria-label="Zoom in"
           title="Zoom in"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-900 shadow-panel transition hover:bg-muted/60"
         >
           <Plus className="h-4 w-4" />
         </button>
@@ -1428,7 +1428,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
           onClick={() => mapRef.current?.zoomOut()}
           aria-label="Zoom out"
           title="Zoom out"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-foreground shadow-panel transition hover:bg-muted/60"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-neutral-900 shadow-panel transition hover:bg-muted/60"
         >
           <Minus className="h-4 w-4" />
         </button>
@@ -1450,7 +1450,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       </button>
 
       {isAddingMarker && !pendingMarkerCoords && (
-        <div className="absolute left-1/2 top-6 z-30 -translate-x-1/2 rounded-full border border-white/70 bg-white/[0.92] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl">
+        <div className="absolute left-1/2 top-6 z-30 -translate-x-1/2 rounded-full border border-white/70 bg-white/[0.92] px-4 py-2 text-sm font-semibold text-neutral-900 shadow-soft backdrop-blur-xl">
           {t.app.addMarkerModeHint}
         </div>
       )}

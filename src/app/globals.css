@@ -43,6 +43,20 @@
   }
 }
 
+.profile-hero-gradient {
+  background: linear-gradient(135deg, #2f9184, #1a5049);
+}
+
+:root[data-theme="dark"] .profile-hero-gradient {
+  background: linear-gradient(135deg, #1c4842, #0c1e1c);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .profile-hero-gradient {
+    background: linear-gradient(135deg, #1c4842, #0c1e1c);
+  }
+}
+
 * {
   box-sizing: border-box;
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   DndContext,
   DragOverlay,
@@ -1197,27 +1198,29 @@ export function AccountPage({
       >
         <div className="mx-auto flex max-w-2xl flex-col gap-8">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="flex flex-col items-center gap-1.5">
-                <ProfileAvatar avatarId={currentUser?.avatarId} className="h-14 w-14" />
-                <button
-                  type="button"
-                  onClick={() => setIsAvatarPickerOpen((value) => !value)}
-                  className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
-                >
-                  {t.changeAvatar}
-                </button>
+            {!(activeTab === "profile" && currentUser) && (
+              <div className="flex items-start gap-3">
+                <div className="flex flex-col items-center gap-1.5">
+                  <ProfileAvatar avatarId={currentUser?.avatarId} className="h-14 w-14" />
+                  <button
+                    type="button"
+                    onClick={() => setIsAvatarPickerOpen((value) => !value)}
+                    className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
+                  >
+                    {t.changeAvatar}
+                  </button>
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold text-foreground">{currentUser?.name || currentUser?.email}</h1>
+                  {currentUser && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t.memberSince} {new Date(currentUser.createdAt).toLocaleDateString(language)}
+                    </p>
+                  )}
+                </div>
               </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">{currentUser?.name || currentUser?.email}</h1>
-                {currentUser && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t.memberSince} {new Date(currentUser.createdAt).toLocaleDateString(language)}
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-1">
+            )}
+            <div className="ml-auto flex flex-col items-end gap-1">
               <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                 {dict.app.language}
               </span>
@@ -1225,7 +1228,7 @@ export function AccountPage({
             </div>
           </div>
 
-          {isAvatarPickerOpen && (
+          {isAvatarPickerOpen && !(activeTab === "profile" && currentUser) && (
             <section className="flex flex-col gap-3 rounded-md border border-border bg-white/[0.78] p-4">
               <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
               <div className="grid grid-cols-6 gap-3">
@@ -1462,41 +1465,47 @@ export function AccountPage({
                       </div>
                       {!isCollapsed && (
                         <div className="flex flex-col gap-2">
-                          {regionPois.map((poi) => {
+                          {regionPois.map((poi, index) => {
                             const isInItinerary = itineraryPoiIds.has(poi.id);
                             return (
-                              <PoiRow
+                              <motion.div
                                 key={poi.id}
-                                poi={poi}
-                                regionName={regionName(poi.regionId)}
-                                onSelect={() => goToPoi(poi.id)}
-                                action={
-                                  <div className="flex shrink-0 items-center gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        isInItinerary ? handleRemovePoiFromItinerary(poi.id) : handleAddToItinerary(poi.id)
-                                      }
-                                      className={cn(
-                                        "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
-                                        isInItinerary
-                                          ? "border-primary/40 bg-primary/10 text-primary"
-                                          : "border-border text-muted-foreground hover:text-foreground"
-                                      )}
-                                    >
-                                      {isInItinerary ? t.inItinerary : t.addToItinerary}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleFavorite(poi.id)}
-                                      title={t.removeFromFavorites}
-                                      className="rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                }
-                              />
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
+                              >
+                                <PoiRow
+                                  poi={poi}
+                                  regionName={regionName(poi.regionId)}
+                                  onSelect={() => goToPoi(poi.id)}
+                                  action={
+                                    <div className="flex shrink-0 items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          isInItinerary ? handleRemovePoiFromItinerary(poi.id) : handleAddToItinerary(poi.id)
+                                        }
+                                        className={cn(
+                                          "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
+                                          isInItinerary
+                                            ? "border-primary/40 bg-primary/10 text-primary"
+                                            : "border-border text-muted-foreground hover:text-foreground"
+                                        )}
+                                      >
+                                        {isInItinerary ? t.inItinerary : t.addToItinerary}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleFavorite(poi.id)}
+                                        title={t.removeFromFavorites}
+                                        className="rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  }
+                                />
+                              </motion.div>
                             );
                           })}
                         </div>
@@ -1761,8 +1770,15 @@ export function AccountPage({
               <p className="text-sm text-muted-foreground">{t.noVisitedPlaces}</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {visitedPois.map((poi) => (
-                  <PoiRow key={poi.id} poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
+                {visitedPois.map((poi, index) => (
+                  <motion.div
+                    key={poi.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
+                  >
+                    <PoiRow poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
+                  </motion.div>
                 ))}
               </div>
             )}
@@ -1788,8 +1804,15 @@ export function AccountPage({
               <p className="text-sm text-muted-foreground">{t.noViewedPlaces}</p>
             ) : (
               <div className="flex flex-col gap-2">
-                {viewedPois.map((poi) => (
-                  <PoiRow key={poi.id} poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
+                {viewedPois.map((poi, index) => (
+                  <motion.div
+                    key={poi.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
+                  >
+                    <PoiRow poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
+                  </motion.div>
                 ))}
               </div>
             )}

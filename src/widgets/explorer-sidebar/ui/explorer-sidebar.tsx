@@ -487,15 +487,18 @@ export function ExplorerSidebar() {
         )}
 
         <div className="space-y-3">
-          {visiblePois.map((poi) => {
+          {visiblePois.map((poi, index) => {
             const isSelected = poi.id === selectedPoiId;
             const isFavorite = favorites.includes(poi.id);
 
             return (
-              <button
+              <motion.button
                 key={poi.id}
                 type="button"
                 onClick={() => selectPoi(poi.id)}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
                 className={cn(
                   "w-full rounded-lg border p-2.5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-white",
                   isSelected
@@ -550,7 +553,7 @@ export function ExplorerSidebar() {
                     </div>
                   </div>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>

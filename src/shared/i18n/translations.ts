@@ -142,6 +142,9 @@ type TranslationDictionary = {
     memberSince: string;
     chooseAvatar: string;
     changeAvatar: string;
+    travelerBadge: string;
+    statsSaved: string;
+    statsRoutes: string;
     clearViewed: string;
     clearViewedConfirm: string;
     clearSaved: string;
@@ -491,6 +494,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       memberSince: "Member since",
       chooseAvatar: "Choose an avatar",
       changeAvatar: "Change avatar",
+      travelerBadge: "Traveler",
+      statsSaved: "Saved",
+      statsRoutes: "Routes",
       clearViewed: "Clear viewed",
       clearViewedConfirm: "Clear all viewed places? This can't be undone.",
       clearSaved: "Clear saved",
@@ -838,6 +844,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       memberSince: "Дата регистрации",
       chooseAvatar: "Выберите аватар",
       changeAvatar: "Сменить аватар",
+      travelerBadge: "Путешественник",
+      statsSaved: "Избранное",
+      statsRoutes: "Маршруты",
       clearViewed: "Очистить",
       clearViewedConfirm: "Очистить все просмотренные места? Это действие нельзя отменить.",
       clearSaved: "Очистить",
@@ -1184,6 +1193,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       memberSince: "登録日",
       chooseAvatar: "アバターを選択",
       changeAvatar: "アバターを変更",
+      travelerBadge: "旅行者",
+      statsSaved: "お気に入り",
+      statsRoutes: "ルート",
       clearViewed: "履歴を消去",
       clearViewedConfirm: "閲覧履歴をすべて消去しますか?この操作は元に戻せません。",
       clearSaved: "消去",

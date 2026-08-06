@@ -1441,7 +1441,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
         title={t.app.swipeDiscoveryHint}
         className={cn(
           "absolute left-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-soft transition hover:bg-primary/90",
-          "bottom-[252px] lg:bottom-5 lg:left-[402px]",
+          "bottom-[252px] lg:bottom-5 lg:left-[458px]",
           isNative && "bottom-[calc(252px+56px+env(safe-area-inset-bottom))]",
           isMobileSheetExpanded && "hidden lg:flex"
         )}

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/shared/ui/service-worker-register";
@@ -12,6 +13,13 @@ import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 import { ThemeApplier } from "@/shared/ui/theme-applier";
 import { ThemeBootstrapScript } from "@/shared/ui/theme-bootstrap-script";
+import { LanguageApplier } from "@/shared/ui/language-applier";
+
+const manrope = Manrope({
+  subsets: ["cyrillic", "latin"],
+  variable: "--font-manrope",
+  display: "swap"
+});
 
 const siteTitle = "Wayora — Explore Japan";
 const siteDescription =
@@ -59,13 +67,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={manrope.variable} suppressHydrationWarning>
       <head>
         <ThemeBootstrapScript />
       </head>
       <body>
         {children}
         <ThemeApplier />
+        <LanguageApplier />
         <ServiceWorkerRegister />
         <CookieConsentBanner />
         <PushNotificationRegister />

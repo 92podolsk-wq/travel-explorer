@@ -154,7 +154,9 @@ export function ExplorerSidebar() {
   const likedPois = pois.filter((poi) => favorites.includes(poi.id));
   const affinityProfile = buildAffinityProfile(likedPois);
   const hasAffinitySignal = hasEnoughSignal(affinityProfile);
-  const unswipedRegionPois = regionPois.filter((poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id));
+  const unswipedRegionPois = regionPois.filter(
+    (poi) => !favorites.includes(poi.id) && !viewedPoiIds.includes(poi.id) && selectedCategories.includes(poi.category)
+  );
   const swipeCandidates = hasAffinitySignal
     ? [...unswipedRegionPois].sort((a, b) => computeAffinityScore(b, affinityProfile) - computeAffinityScore(a, affinityProfile))
     : shuffle(unswipedRegionPois);

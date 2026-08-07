@@ -165,7 +165,7 @@ export function PoiDetails() {
             <X className="h-4 w-4" />
           </button>
 
-          <div className="relative m-3 h-64 shrink-0 overflow-hidden rounded-lg">
+          <div className="relative h-64 shrink-0 overflow-hidden">
             {activePhoto ? (
               <Image
                 key={activePhoto.id}
@@ -240,7 +240,7 @@ export function PoiDetails() {
             </div>
           </div>
 
-          <div className="shrink-0 px-5">
+          <div className="shrink-0 px-5 pt-3">
             <div className="flex gap-1.5">
               {seasons.map((season) => {
                 const SeasonIcon = seasonIcons[season];

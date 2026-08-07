@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -113,8 +114,9 @@ function PoiThumbnail({ poi, className }: { poi: Poi; className?: string }) {
   const thumbnail = poi.photos[0]?.url;
 
   return thumbnail ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={thumbnail} alt={poi.name} className={cn("shrink-0 rounded object-cover", className)} />
+    <div className={cn("relative shrink-0 overflow-hidden rounded", className)}>
+      <Image src={thumbnail} alt={poi.name} fill sizes="48px" className="object-cover" />
+    </div>
   ) : (
     <div className={cn("flex shrink-0 items-center justify-center rounded bg-muted text-muted-foreground", className)}>
       <MapPin className="h-5 w-5" />

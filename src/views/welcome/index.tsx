@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import { Compass, Infinity as InfinityIcon, MapPin, Sparkles, Wand2 } from "lucide-react";
 import type { Poi } from "@/entities/poi/model/types";
 import { getModeIcon } from "@/features/exploration-mode/ui/mode-icon";
@@ -26,8 +27,9 @@ function StatItem({ icon, value, label }: { icon: React.ReactNode; value: React.
 
 function CoverImage({ photo, alt, className }: { photo: Poi["photos"][number] | null; alt: string; className?: string }) {
   return photo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={photo.url} alt={photo.alt || alt} className={cn("object-cover", className)} />
+    <div className={cn("relative overflow-hidden", className)}>
+      <Image src={photo.url} alt={photo.alt || alt} fill sizes="(max-width: 640px) 100vw, 400px" className="object-cover" />
+    </div>
   ) : (
     <div className={cn("flex items-center justify-center bg-muted text-muted-foreground", className)}>
       <MapPin className="h-6 w-6" />

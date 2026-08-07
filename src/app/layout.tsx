@@ -9,7 +9,6 @@ import { NativeAppClass } from "@/shared/ui/native-app-class";
 import { OfflineToast } from "@/shared/ui/offline-toast";
 import { NavigationTransitionOverlay } from "@/shared/ui/navigation-transition-overlay";
 import { DeepLinkHandler } from "@/shared/ui/deep-link-handler";
-import { AuthDebugOverlay } from "@/shared/ui/auth-debug-overlay";
 import { MobileAppTabBar } from "@/widgets/mobile-app-tab-bar/ui/mobile-app-tab-bar";
 import { ThemeApplier } from "@/shared/ui/theme-applier";
 import { ThemeBootstrapScript } from "@/shared/ui/theme-bootstrap-script";
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
     description: siteDescription,
     url: "/",
     siteName: "Wayora",
-    images: [{ url: "/logo.png", width: 1254, height: 1254, alt: "Wayora" }],
+    images: [{ url: "/og-image.jpg", width: 512, height: 512, alt: "Wayora" }],
     locale: "en_US",
     type: "website"
   },
@@ -45,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/logo.png"]
+    images: ["/og-image.jpg"]
   }
 };
 
@@ -75,7 +74,6 @@ export default function RootLayout({
         <OfflineToast />
         <NavigationTransitionOverlay />
         <DeepLinkHandler />
-        <AuthDebugOverlay />
         <MobileAppTabBar />
       </body>
     </html>

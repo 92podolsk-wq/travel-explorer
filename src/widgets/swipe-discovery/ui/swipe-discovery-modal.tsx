@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { animate, motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
 import { Heart, X as XIcon } from "lucide-react";
 import type { Poi } from "@/entities/poi/model/types";
@@ -127,8 +128,14 @@ function SwipeCard({
       >
         <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2px] bg-muted">
           {poi.photos[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={poi.photos[0].url} alt="" className="h-full w-full select-none object-cover" draggable={false} />
+            <Image
+              src={poi.photos[0].url}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, 420px"
+              className="select-none object-cover"
+              draggable={false}
+            />
           ) : (
             <div className="h-full w-full bg-muted" />
           )}
@@ -311,10 +318,9 @@ export function SwipeDiscoveryModal({
                       }}
                       className="absolute inset-0 rounded-sm bg-card p-2.5 pb-24 shadow-[0_20px_40px_-14px_rgba(0,0,0,0.35)]"
                     >
-                      <div className="h-full w-full overflow-hidden rounded-[2px] bg-muted">
+                      <div className="relative h-full w-full overflow-hidden rounded-[2px] bg-muted">
                         {poi.photos[0] && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={poi.photos[0].url} alt="" className="h-full w-full object-cover" />
+                          <Image src={poi.photos[0].url} alt="" fill sizes="(max-width: 640px) 100vw, 420px" className="object-cover" />
                         )}
                       </div>
                     </div>

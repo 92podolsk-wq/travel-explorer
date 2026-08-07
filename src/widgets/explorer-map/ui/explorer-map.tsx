@@ -664,6 +664,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const [isMapReady, setIsMapReady] = useState(false);
 
   const pois = useExplorerStore((state) => state.pois);
+  const isSidebarCollapsed = useExplorerStore((state) => state.isSidebarCollapsed);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const selectedCategories = useExplorerStore((state) => state.selectedCategories);
@@ -1322,7 +1323,13 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
-      <div className="absolute left-[402px] top-6 hidden items-center gap-3 rounded-full border border-border bg-card/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl lg:flex">
+      <div
+        className={cn(
+          "absolute top-6 hidden items-center gap-3 rounded-full border border-border bg-card/[0.9] px-4 py-2 text-sm font-semibold text-foreground shadow-soft backdrop-blur-xl transition-[left] duration-300 ease-out lg:flex",
+          isSidebarCollapsed ? "lg:left-[72px]" : "lg:left-[402px]"
+        )}
+      >
+
         <span className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white">
             <MapPin className="h-4 w-4" />
@@ -1359,7 +1366,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       </div>
       <div
         className={cn(
-          "absolute right-4 top-6 z-20 flex-col items-end gap-2 lg:bottom-5 lg:left-[402px] lg:right-auto lg:top-auto lg:flex lg:items-stretch",
+          "absolute right-4 top-6 z-20 flex-col items-end gap-2 transition-[left] duration-300 ease-out lg:bottom-5 lg:right-auto lg:top-auto lg:flex lg:items-stretch",
+          isSidebarCollapsed ? "lg:left-5" : "lg:left-[402px]",
           isMobileSheetExpanded ? "hidden" : "flex"
         )}
       >

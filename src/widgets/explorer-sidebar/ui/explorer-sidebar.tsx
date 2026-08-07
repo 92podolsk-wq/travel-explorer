@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, PanelLeftClose, PanelLeftOpen, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, animate as animateValue, motion, useDragControls, useMotionValue } from "framer-motion";
 import Image from "next/image";
 import { seasons } from "@/entities/poi/model/constants";
@@ -69,18 +69,24 @@ export function ExplorerSidebar() {
   const setIsSwipeOpen = useExplorerStore((state) => state.setIsSwipeOpen);
   const isMobileSheetExpanded = useExplorerStore((state) => state.isMobileSheetExpanded);
   const setIsMobileSheetExpanded = useExplorerStore((state) => state.setIsMobileSheetExpanded);
+  const isSidebarCollapsed = useExplorerStore((state) => state.isSidebarCollapsed);
+  const toggleSidebarCollapsed = useExplorerStore((state) => state.toggleSidebarCollapsed);
   const t = getTranslations(language);
   const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const collapsedSheetHeight = 236;
   const [collapsedOffset, setCollapsedOffset] = useState(0);
   const sheetY = useMotionValue(0);
+  const sheetX = useMotionValue(0);
   const sheetDragControls = useDragControls();
 
   useEffect(() => {
     function measure() {
-      if (window.innerWidth >= 1024) {
+      const desktop = window.innerWidth >= 1024;
+      setIsDesktop(desktop);
+      if (desktop) {
         setCollapsedOffset(0);
         return;
       }
@@ -100,6 +106,16 @@ export function ExplorerSidebar() {
     });
     return () => controls.stop();
   }, [isMobileSheetExpanded, collapsedOffset, sheetY]);
+
+  useEffect(() => {
+    const target = isDesktop && isSidebarCollapsed ? -440 : 0;
+    const controls = animateValue(sheetX, target, {
+      type: "spring",
+      damping: 32,
+      stiffness: 320
+    });
+    return () => controls.stop();
+  }, [isDesktop, isSidebarCollapsed, sheetX]);
 
   function handleSheetDragEnd(_: unknown, info: { offset: { y: number }; velocity: { y: number } }) {
     const current = sheetY.get();
@@ -219,7 +235,7 @@ export function ExplorerSidebar() {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      style={{ y: sheetY }}
+      style={{ x: sheetX, y: sheetY }}
       drag="y"
       dragListener={false}
       dragControls={sheetDragControls}
@@ -228,7 +244,8 @@ export function ExplorerSidebar() {
       onDragEnd={handleSheetDragEnd}
       className={cn(
         "fixed inset-x-0 bottom-0 z-10 flex h-[85dvh] flex-col overflow-hidden rounded-t-2xl border-t border-border/70 bg-card/[0.92] shadow-panel backdrop-blur-xl",
-        "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border"
+        "lg:absolute lg:inset-x-auto lg:bottom-auto lg:left-5 lg:top-5 lg:h-[calc(100%-2.5rem)] lg:w-[min(370px,calc(100vw-2.5rem))] lg:rounded-lg lg:border",
+        isSidebarCollapsed && "lg:pointer-events-none"
       )}
     >
       <button
@@ -559,6 +576,32 @@ export function ExplorerSidebar() {
         </div>
       </div>
     </motion.aside>
+    {!isSidebarCollapsed && (
+      <button
+        type="button"
+        onClick={toggleSidebarCollapsed}
+        aria-label={t.app.collapseSidebar}
+        title={t.app.collapseSidebar}
+        className="absolute left-[390px] top-6 z-20 hidden h-7 w-7 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-soft transition hover:text-foreground lg:flex"
+      >
+        <PanelLeftClose className="h-3.5 w-3.5" />
+      </button>
+    )}
+    {isSidebarCollapsed && (
+      <motion.button
+        type="button"
+        onClick={toggleSidebarCollapsed}
+        aria-label={t.app.expandSidebar}
+        title={t.app.expandSidebar}
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.85 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="absolute left-5 top-5 z-10 hidden h-10 w-10 items-center justify-center rounded-lg border border-border bg-card/[0.92] text-muted-foreground shadow-panel backdrop-blur-xl transition hover:text-foreground lg:flex"
+      >
+        <PanelLeftOpen className="h-4 w-4" />
+      </motion.button>
+    )}
     {isSwipeOpen && (
       <SwipeDiscoveryModal
         key={activeRegionIds.join(",")}

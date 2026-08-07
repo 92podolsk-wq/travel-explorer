@@ -35,6 +35,8 @@ type TranslationDictionary = {
     city: string;
     hideDetails: string;
     showDetails: string;
+    collapseSidebar: string;
+    expandSidebar: string;
     sunrise: string;
     sunset: string;
     exportKml: string;
@@ -313,6 +315,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       city: "City",
       hideDetails: "Hide details",
       showDetails: "Show details",
+      collapseSidebar: "Collapse panel",
+      expandSidebar: "Expand panel",
       sunrise: "Sunrise",
       sunset: "Sunset",
       exportKml: "KML",
@@ -663,6 +667,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       city: "Город",
       hideDetails: "Скрыть панель",
       showDetails: "Показать панель",
+      collapseSidebar: "Свернуть панель",
+      expandSidebar: "Развернуть панель",
       sunrise: "Восход",
       sunset: "Закат",
       exportKml: "KML",
@@ -1013,6 +1019,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       city: "都市",
       hideDetails: "パネルを閉じる",
       showDetails: "パネルを開く",
+      collapseSidebar: "パネルを折りたたむ",
+      expandSidebar: "パネルを広げる",
       sunrise: "日の出",
       sunset: "日の入り",
       exportKml: "KML",

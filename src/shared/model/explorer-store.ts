@@ -53,6 +53,7 @@ type ExplorerState = {
   isDetailsOpen: boolean;
   isSwipeOpen: boolean;
   isMobileSheetExpanded: boolean;
+  isSidebarCollapsed: boolean;
   selectedSeasons: Season[];
   userLocation: Coordinates | null;
   isLocatingUser: boolean;
@@ -102,6 +103,7 @@ type ExplorerState = {
   setDetailsOpen: (open: boolean) => void;
   setIsSwipeOpen: (open: boolean) => void;
   setIsMobileSheetExpanded: (expanded: boolean) => void;
+  toggleSidebarCollapsed: () => void;
   setPois: (pois: Poi[]) => void;
   setRegions: (regions: Region[]) => void;
   setCountries: (countries: Country[]) => void;
@@ -153,6 +155,7 @@ export const useExplorerStore = create<ExplorerState>()(
   isDetailsOpen: false,
   isSwipeOpen: false,
   isMobileSheetExpanded: false,
+  isSidebarCollapsed: false,
   selectedSeasons: [],
   userLocation: null,
   isLocatingUser: false,
@@ -322,6 +325,7 @@ export const useExplorerStore = create<ExplorerState>()(
     set((state) => ({ customMarkers: state.customMarkers.filter((marker) => marker.id !== id) })),
   setCustomMarkerLimit: (limit) => set({ customMarkerLimit: limit }),
   setIsAddingMarker: (value) => set({ isAddingMarker: value }),
+  toggleSidebarCollapsed: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
   setHasSeenWelcome: (value) => set({ hasSeenWelcome: value }),
   setHasHydrated: (value) => set({ hasHydrated: value }),
   setHasAutoDetectedLanguage: (value) => set({ hasAutoDetectedLanguage: value })
@@ -333,6 +337,7 @@ export const useExplorerStore = create<ExplorerState>()(
         theme: state.theme,
         activeRegionIds: state.activeRegionIds,
         activeItineraryId: state.activeItineraryId,
+        isSidebarCollapsed: state.isSidebarCollapsed,
         hasSeenWelcome: state.hasSeenWelcome,
         hasAutoDetectedLanguage: state.hasAutoDetectedLanguage
       }),

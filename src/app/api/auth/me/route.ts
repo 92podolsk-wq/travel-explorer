@@ -25,6 +25,7 @@ export async function GET(request: Request) {
         username: user.username,
         name: user.name,
         avatarId: user.avatarId,
+        hideFromSearch: user.hideFromSearch,
         createdAt: user.createdAt.toISOString()
       },
       ...poiState

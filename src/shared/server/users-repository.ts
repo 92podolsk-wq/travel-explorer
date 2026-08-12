@@ -10,6 +10,7 @@ function toUser(row: UserRow): User {
     username: row.username,
     name: row.name,
     avatarId: row.avatarId,
+    hideFromSearch: row.hideFromSearch,
     createdAt: row.createdAt.toISOString()
   };
 }
@@ -60,7 +61,7 @@ export async function updateUserAvatar(userId: string, avatarId: string): Promis
 // a raw Prisma error.
 export async function updateUserProfile(
   userId: string,
-  data: { name: string | null; username: string }
+  data: { name: string | null; username: string; hideFromSearch?: boolean }
 ): Promise<User | null> {
   const row = await prisma.user.update({ where: { id: userId }, data }).catch(() => null);
   return row ? toUser(row) : null;

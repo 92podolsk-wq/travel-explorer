@@ -15,7 +15,11 @@ export async function POST(request: Request) {
     return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }), request);
   }
 
-  const { name, username } = (await request.json()) as { name?: string; username?: string };
+  const { name, username, hideFromSearch } = (await request.json()) as {
+    name?: string;
+    username?: string;
+    hideFromSearch?: boolean;
+  };
 
   const normalizedUsername = username?.trim().toLowerCase() ?? "";
   if (!USERNAME_PATTERN.test(normalizedUsername)) {
@@ -35,7 +39,11 @@ export async function POST(request: Request) {
     }
   }
 
-  const updated = await updateUserProfile(user.id, { name: name?.trim() || null, username: normalizedUsername });
+  const updated = await updateUserProfile(user.id, {
+    name: name?.trim() || null,
+    username: normalizedUsername,
+    hideFromSearch: typeof hideFromSearch === "boolean" ? hideFromSearch : undefined
+  });
   if (!updated) {
     return withCors(NextResponse.json({ error: "Этот логин уже занят." }, { status: 409 }), request);
   }

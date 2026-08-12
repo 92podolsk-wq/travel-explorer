@@ -139,6 +139,7 @@ model User {
   avatarId     String?
   isBlocked    Boolean  @default(false)
   canAccessHiddenCategories Boolean @default(false)
+  hideFromSearch Boolean @default(false)
   createdAt    DateTime @default(now())
   sessions     Session[]
   favorites    Favorite[]
@@ -149,6 +150,21 @@ model User {
   customMarkers CustomMarker[]
   uploadedPhotos Photo[]
   pushTokens   PushToken[]
+  sentFriendRequests     Friendship[] @relation("FriendshipRequester")
+  receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+}
+
+model Friendship {
+  id          String   @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  requester   User     @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee   User     @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
 }
 
 model PushToken {

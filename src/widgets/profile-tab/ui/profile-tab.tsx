@@ -24,6 +24,7 @@ import {
 } from "@/shared/lib/push-token-storage";
 import { clearDownloadedMaps, getDownloadedRegionIds } from "@/shared/lib/offline-maps-storage";
 import { PackingChecklistCard } from "./packing-checklist-card";
+import { FriendsCard } from "./friends-card";
 
 type PermissionState = "granted" | "denied" | "prompt" | "unknown";
 
@@ -53,6 +54,7 @@ export function ProfileTab() {
   const [usernameDraft, setUsernameDraft] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [hideFromSearchDraft, setHideFromSearchDraft] = useState(false);
 
   async function handleSelectAvatar(avatarId: AvatarId) {
     const res = await apiFetch("/api/me/avatar", {
@@ -70,6 +72,7 @@ export function ProfileTab() {
   function handleStartEditProfile() {
     setNameDraft(currentUser?.name ?? "");
     setUsernameDraft(currentUser?.username ?? "");
+    setHideFromSearchDraft(currentUser?.hideFromSearch ?? false);
     setProfileError(null);
     setIsEditingProfile(true);
   }
@@ -81,7 +84,7 @@ export function ProfileTab() {
       const res = await apiFetch("/api/me/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameDraft, username: usernameDraft })
+        body: JSON.stringify({ name: nameDraft, username: usernameDraft, hideFromSearch: hideFromSearchDraft })
       });
       const data = (await res.json()) as { user?: User; error?: string };
       if (!res.ok) {
@@ -239,6 +242,15 @@ export function ProfileTab() {
                   />
                   <span className="text-[10px] text-white/60">{t.usernameHint}</span>
                 </label>
+                <label className="flex items-center gap-2 text-[11px] font-medium text-white/80">
+                  <input
+                    type="checkbox"
+                    checked={hideFromSearchDraft}
+                    onChange={(e) => setHideFromSearchDraft(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-white/30 bg-white/10"
+                  />
+                  {t.hideFromSearch}
+                </label>
                 {profileError && <p className="text-[11px] font-medium text-red-200">{profileError}</p>}
                 <div className="flex justify-end gap-2 pt-1">
                   <button
@@ -334,6 +346,8 @@ export function ProfileTab() {
           </div>
         </section>
       )}
+
+      <FriendsCard />
 
       <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">

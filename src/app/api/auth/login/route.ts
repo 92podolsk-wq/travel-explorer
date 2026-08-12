@@ -33,6 +33,7 @@ export async function POST(request: Request) {
         username: existing.username,
         name: existing.name,
         avatarId: existing.avatarId,
+        hideFromSearch: existing.hideFromSearch,
         createdAt: existing.createdAt.toISOString()
       },
       token

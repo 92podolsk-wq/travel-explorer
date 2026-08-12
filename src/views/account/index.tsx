@@ -1309,7 +1309,8 @@ export function AccountPage({
                 [
                   { id: "route", label: t.tabRoute },
                   { id: "saved", label: t.tabSaved },
-                  { id: "history", label: t.tabHistory }
+                  { id: "history", label: t.tabHistory },
+                  { id: "profile", label: t.tabProfile }
                 ] as const
               ).map((tab) => (
                 <button

@@ -35,6 +35,7 @@ import {
   Share2,
   Sparkles,
   Trash2,
+  UserPlus,
   Wand2,
   X
 } from "lucide-react";
@@ -63,7 +64,7 @@ import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
 import { avatarIds } from "@/entities/user/model/avatars";
-import type { User } from "@/entities/user/model/types";
+import type { FriendUser, User } from "@/entities/user/model/types";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
@@ -967,6 +968,48 @@ export function AccountPage({
     }
   }
 
+  const [isFriendShareOpen, setIsFriendShareOpen] = useState(false);
+  const [shareFriends, setShareFriends] = useState<FriendUser[]>([]);
+  const [itineraryShareTargetIds, setItineraryShareTargetIds] = useState<Set<string>>(new Set());
+  const [pendingItineraryShareId, setPendingItineraryShareId] = useState<string | null>(null);
+
+  function openItineraryFriendShare() {
+    if (!itinerary) return;
+    setIsFriendShareOpen((value) => !value);
+    if (shareFriends.length === 0) {
+      apiFetch("/api/me/friends")
+        .then((res) => res.json())
+        .then((body: { friends: { user: FriendUser }[] }) => setShareFriends(body.friends.map((entry) => entry.user)));
+    }
+    apiFetch(`/api/me/itineraries/${itinerary.id}/shares`)
+      .then((res) => res.json())
+      .then((body: { users: FriendUser[] }) => setItineraryShareTargetIds(new Set(body.users.map((user) => user.id))));
+  }
+
+  async function toggleItineraryShare(friendId: string, isShared: boolean) {
+    if (!itinerary) return;
+    setPendingItineraryShareId(friendId);
+    try {
+      if (isShared) {
+        await apiFetch(`/api/me/itineraries/${itinerary.id}/shares/${friendId}`, { method: "DELETE" });
+        setItineraryShareTargetIds((prev) => {
+          const next = new Set(prev);
+          next.delete(friendId);
+          return next;
+        });
+      } else {
+        await apiFetch(`/api/me/itineraries/${itinerary.id}/shares`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ friendUserId: friendId })
+        });
+        setItineraryShareTargetIds((prev) => new Set(prev).add(friendId));
+      }
+    } finally {
+      setPendingItineraryShareId(null);
+    }
+  }
+
   async function handleShareItinerary() {
     if (!itinerary) return;
     const url = `${window.location.origin}/trip/${itinerary.shareToken}`;
@@ -1586,6 +1629,14 @@ export function AccountPage({
                     </button>
                     <button
                       type="button"
+                      onClick={openItineraryFriendShare}
+                      className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      <UserPlus className="h-3 w-3" />
+                      {t.shareItineraryWithFriend}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setPendingClear("itinerary")}
                       className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                     >
@@ -1595,6 +1646,41 @@ export function AccountPage({
                 )}
               </div>
             </div>
+
+            {isFriendShareOpen && itinerary && (
+              <div className="flex flex-col gap-1.5 rounded-md bg-muted/40 p-2.5">
+                {shareFriends.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">{t.friendsEmpty}</p>
+                ) : (
+                  shareFriends.map((friend) => {
+                    const isShared = itineraryShareTargetIds.has(friend.id);
+                    return (
+                      <div key={friend.id} className="flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <ProfileAvatar avatarId={friend.avatarId} className="h-6 w-6 shrink-0" />
+                          <span className="truncate text-xs font-medium text-foreground">
+                            {friend.name || `@${friend.username}`}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => void toggleItineraryShare(friend.id, isShared)}
+                          disabled={pendingItineraryShareId === friend.id}
+                          className={cn(
+                            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60",
+                            isShared
+                              ? "border border-border text-muted-foreground hover:text-foreground"
+                              : "border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                          )}
+                        >
+                          {isShared ? t.friendsRemove : t.friendsAdd}
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
 
             {itineraries.length > 0 && (
               <div className="flex items-center gap-2">

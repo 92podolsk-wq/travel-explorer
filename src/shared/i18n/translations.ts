@@ -153,6 +153,12 @@ type TranslationDictionary = {
     friendsLoading: string;
     friendsEmpty: string;
     friendsRemove: string;
+    shareChecklist: string;
+    sharedChecklistsTitle: string;
+    shareItineraryWithFriend: string;
+    shareItineraryTitle: string;
+    sharedItinerariesTitle: string;
+    sharedWithMe: string;
     loginTitle: string;
     registerTitle: string;
     submit: string;
@@ -530,6 +536,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       friendsLoading: "Loading…",
       friendsEmpty: "No friends yet",
       friendsRemove: "Remove",
+      shareChecklist: "Share",
+      sharedChecklistsTitle: "Checklists shared with you",
+      shareItineraryWithFriend: "Share",
+      shareItineraryTitle: "Share this route",
+      sharedItinerariesTitle: "Routes shared with you",
+      sharedWithMe: "Shared with me",
       loginTitle: "Sign in",
       registerTitle: "Create an account",
       submit: "Continue",
@@ -905,6 +917,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       friendsLoading: "Загрузка…",
       friendsEmpty: "Пока нет друзей",
       friendsRemove: "Удалить",
+      shareChecklist: "Поделиться",
+      sharedChecklistsTitle: "Чек-листы, которыми с вами поделились",
+      shareItineraryWithFriend: "Поделиться",
+      shareItineraryTitle: "Поделиться маршрутом",
+      sharedItinerariesTitle: "Маршруты, которыми с вами поделились",
+      sharedWithMe: "Доступно мне",
       loginTitle: "Вход",
       registerTitle: "Создать аккаунт",
       submit: "Продолжить",
@@ -1279,6 +1297,12 @@ export const translations: Record<Language, TranslationDictionary> = {
       friendsLoading: "読み込み中…",
       friendsEmpty: "まだフレンドがいません",
       friendsRemove: "削除",
+      shareChecklist: "共有",
+      sharedChecklistsTitle: "共有されたチェックリスト",
+      shareItineraryWithFriend: "共有",
+      shareItineraryTitle: "ルートを共有",
+      sharedItinerariesTitle: "共有されたルート",
+      sharedWithMe: "共有されたもの",
       loginTitle: "サインイン",
       registerTitle: "アカウント作成",
       submit: "続ける",

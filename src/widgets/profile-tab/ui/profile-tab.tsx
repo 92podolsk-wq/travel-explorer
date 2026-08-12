@@ -25,6 +25,8 @@ import {
 import { clearDownloadedMaps, getDownloadedRegionIds } from "@/shared/lib/offline-maps-storage";
 import { PackingChecklistCard } from "./packing-checklist-card";
 import { FriendsCard } from "./friends-card";
+import { SharedChecklistsCard } from "./shared-checklists-card";
+import { SharedItinerariesCard } from "./shared-itineraries-card";
 
 type PermissionState = "granted" | "denied" | "prompt" | "unknown";
 
@@ -348,6 +350,10 @@ export function ProfileTab() {
       )}
 
       <FriendsCard />
+
+      <SharedChecklistsCard />
+
+      <SharedItinerariesCard />
 
       <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
         <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">

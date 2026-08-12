@@ -441,6 +441,15 @@ export async function updateDay(
   return getItinerary(userId, itineraryId);
 }
 
+export async function getItineraryById(itineraryId: string): Promise<Itinerary | null> {
+  const row = await prisma.itinerary.findUnique({ where: { id: itineraryId }, include: itineraryInclude });
+  return row ? toItinerary(row) : null;
+}
+
+export async function getItinerarySummaryById(itineraryId: string): Promise<ItinerarySummary | null> {
+  return prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { id: true, title: true } });
+}
+
 export async function getItineraryByShareToken(token: string): Promise<Itinerary | null> {
   const row = await loadItinerary({ shareToken: token });
   if (!row) return null;

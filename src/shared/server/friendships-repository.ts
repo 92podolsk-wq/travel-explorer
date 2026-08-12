@@ -81,6 +81,20 @@ export async function listIncomingRequests(userId: string): Promise<FriendEntry[
   return rows.map((row) => ({ id: row.id, createdAt: row.createdAt.toISOString(), user: toFriendUser(row.requester) }));
 }
 
+export async function areFriends(userIdA: string, userIdB: string): Promise<boolean> {
+  const row = await prisma.friendship.findFirst({
+    where: {
+      status: "accepted",
+      OR: [
+        { requesterId: userIdA, addresseeId: userIdB },
+        { requesterId: userIdB, addresseeId: userIdA }
+      ]
+    },
+    select: { id: true }
+  });
+  return row !== null;
+}
+
 export async function listOutgoingRequests(userId: string): Promise<FriendEntry[]> {
   const rows = await prisma.friendship.findMany({
     where: { status: "pending", requesterId: userId },

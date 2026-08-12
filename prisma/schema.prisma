@@ -152,6 +152,11 @@ model User {
   pushTokens   PushToken[]
   sentFriendRequests     Friendship[] @relation("FriendshipRequester")
   receivedFriendRequests Friendship[] @relation("FriendshipAddressee")
+  packingChecklist       PackingChecklist?
+  ownedChecklistShares   ChecklistShare[] @relation("ChecklistShareOwner")
+  receivedChecklistShares ChecklistShare[] @relation("ChecklistShareRecipient")
+  ownedItineraryShares   ItineraryShare[] @relation("ItineraryShareOwner")
+  receivedItineraryShares ItineraryShare[] @relation("ItineraryShareRecipient")
 }
 
 model Friendship {
@@ -165,6 +170,42 @@ model Friendship {
 
   @@unique([requesterId, addresseeId])
   @@index([addresseeId])
+}
+
+model PackingChecklist {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  tripDate      DateTime?
+  packingItems  Json     @default("[]")
+  shoppingItems Json     @default("[]")
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChecklistShare {
+  id            String   @id @default(cuid())
+  ownerId       String
+  sharedWithId  String
+  createdAt     DateTime @default(now())
+  owner         User     @relation("ChecklistShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith    User     @relation("ChecklistShareRecipient", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, sharedWithId])
+  @@index([sharedWithId])
+}
+
+model ItineraryShare {
+  id            String   @id @default(cuid())
+  itineraryId   String
+  ownerId       String
+  sharedWithId  String
+  createdAt     DateTime @default(now())
+  itinerary     Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
+  owner         User      @relation("ItineraryShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  sharedWith    User      @relation("ItineraryShareRecipient", fields: [sharedWithId], references: [id], onDelete: Cascade)
+
+  @@unique([itineraryId, sharedWithId])
+  @@index([sharedWithId])
 }
 
 model PushToken {
@@ -244,6 +285,7 @@ model Itinerary {
   updatedAt  DateTime        @updatedAt
   stops      ItineraryStop[]
   days       ItineraryDay[]
+  shares     ItineraryShare[]
 
   @@index([userId])
 }

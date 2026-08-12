@@ -25,7 +25,9 @@ describe("createDeviceToken / revokeSessionToken", () => {
   let userId: string;
 
   beforeAll(async () => {
-    const user = await prisma.user.create({ data: { email: "user-auth-test@example.com", passwordHash: "test-hash" } });
+    const user = await prisma.user.create({
+      data: { email: "user-auth-test@example.com", username: "user_auth_test", passwordHash: "test-hash" }
+    });
     userId = user.id;
   });
 

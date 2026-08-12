@@ -130,6 +130,11 @@ type TranslationDictionary = {
     email: string;
     password: string;
     name: string;
+    username: string;
+    usernameHint: string;
+    editProfile: string;
+    save: string;
+    profileUpdated: string;
     loginTitle: string;
     registerTitle: string;
     submit: string;
@@ -484,6 +489,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       email: "Email",
       password: "Password",
       name: "Name",
+      username: "Username",
+      usernameHint: "3-20 characters: letters, numbers, underscore",
+      editProfile: "Edit profile",
+      save: "Save",
+      profileUpdated: "Profile updated",
       loginTitle: "Sign in",
       registerTitle: "Create an account",
       submit: "Continue",
@@ -836,6 +846,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       email: "Email",
       password: "Пароль",
       name: "Имя",
+      username: "Логин",
+      usernameHint: "3-20 символов: латинские буквы, цифры или подчёркивание",
+      editProfile: "Редактировать профиль",
+      save: "Сохранить",
+      profileUpdated: "Профиль обновлён",
       loginTitle: "Вход",
       registerTitle: "Создать аккаунт",
       submit: "Продолжить",
@@ -1187,6 +1202,11 @@ export const translations: Record<Language, TranslationDictionary> = {
       email: "メールアドレス",
       password: "パスワード",
       name: "名前",
+      username: "ユーザー名",
+      usernameHint: "3〜20文字:半角英数字とアンダースコア",
+      editProfile: "プロフィールを編集",
+      save: "保存",
+      profileUpdated: "プロフィールを更新しました",
       loginTitle: "サインイン",
       registerTitle: "アカウント作成",
       submit: "続ける",

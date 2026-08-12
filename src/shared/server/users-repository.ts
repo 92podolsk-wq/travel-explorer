@@ -7,6 +7,7 @@ function toUser(row: UserRow): User {
   return {
     id: row.id,
     email: row.email,
+    username: row.username,
     name: row.name,
     avatarId: row.avatarId,
     createdAt: row.createdAt.toISOString()
@@ -17,6 +18,7 @@ function toAdminUser(row: UserRow): AdminUser {
   return {
     id: row.id,
     email: row.email,
+    username: row.username,
     name: row.name,
     avatarId: row.avatarId,
     isBlocked: row.isBlocked,
@@ -29,19 +31,39 @@ export async function findUserByEmail(email: string) {
   return prisma.user.findUnique({ where: { email } });
 }
 
+export async function findUserByUsername(username: string) {
+  return prisma.user.findUnique({ where: { username } });
+}
+
 export async function findUserById(id: string): Promise<User | null> {
   const row = await prisma.user.findUnique({ where: { id } });
   return row ? toUser(row) : null;
 }
 
-export async function createUser(email: string, passwordHash: string, name: string | null): Promise<User> {
-  const row = await prisma.user.create({ data: { email, passwordHash, name } });
+export async function createUser(
+  email: string,
+  username: string,
+  passwordHash: string,
+  name: string | null
+): Promise<User> {
+  const row = await prisma.user.create({ data: { email, username, passwordHash, name } });
   return toUser(row);
 }
 
 export async function updateUserAvatar(userId: string, avatarId: string): Promise<User> {
   const row = await prisma.user.update({ where: { id: userId }, data: { avatarId } });
   return toUser(row);
+}
+
+// Returns null if the username is already taken by another user (unique
+// constraint violation), so the route can surface a friendly 409 instead of
+// a raw Prisma error.
+export async function updateUserProfile(
+  userId: string,
+  data: { name: string | null; username: string }
+): Promise<User | null> {
+  const row = await prisma.user.update({ where: { id: userId }, data }).catch(() => null);
+  return row ? toUser(row) : null;
 }
 
 export async function listUsers(): Promise<AdminUser[]> {

@@ -30,6 +30,7 @@ export async function POST(request: Request) {
       user: {
         id: existing.id,
         email: existing.email,
+        username: existing.username,
         name: existing.name,
         avatarId: existing.avatarId,
         createdAt: existing.createdAt.toISOString()

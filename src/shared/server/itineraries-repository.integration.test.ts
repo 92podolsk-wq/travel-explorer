@@ -81,9 +81,11 @@ beforeAll(async () => {
   await makePoi("itin-poi-3", 34.6945, 135.503);
   poiIds = ["itin-poi-1", "itin-poi-2", "itin-poi-3"];
 
-  const user = await prisma.user.create({ data: { email: userEmail, passwordHash: "test-hash" } });
+  const user = await prisma.user.create({ data: { email: userEmail, username: "itineraries_test", passwordHash: "test-hash" } });
   userId = user.id;
-  const otherUser = await prisma.user.create({ data: { email: otherUserEmail, passwordHash: "test-hash" } });
+  const otherUser = await prisma.user.create({
+    data: { email: otherUserEmail, username: "itineraries_test_other", passwordHash: "test-hash" }
+  });
   otherUserId = otherUser.id;
 
   const otherMarker = await prisma.customMarker.create({ data: { userId: otherUserId, lat: 34.6937, lng: 135.5023, color: "#000000" } });

@@ -17,6 +17,9 @@ function nextEmail() {
   emailCounter += 1;
   return `${emailPrefix}${emailCounter}@example.com`;
 }
+function nextUsername() {
+  return `usersrepotest_${emailCounter}`;
+}
 
 afterEach(async () => {
   await prisma.user.deleteMany({ where: { email: { startsWith: emailPrefix } } });
@@ -29,7 +32,7 @@ afterAll(async () => {
 describe("createUser / findUserByEmail / findUserById", () => {
   it("creates a user and finds it back by email and id", async () => {
     const email = nextEmail();
-    const created = await createUser(email, "hash", "Alice");
+    const created = await createUser(email, nextUsername(), "hash", "Alice");
     expect(created.email).toBe(email);
     expect(created.name).toBe("Alice");
 
@@ -48,7 +51,7 @@ describe("createUser / findUserByEmail / findUserById", () => {
 
 describe("updateUserAvatar", () => {
   it("sets the avatarId field", async () => {
-    const user = await createUser(nextEmail(), "hash", null);
+    const user = await createUser(nextEmail(), nextUsername(), "hash", null);
     const updated = await updateUserAvatar(user.id, "avatar-3");
     expect(updated.avatarId).toBe("avatar-3");
   });
@@ -56,8 +59,8 @@ describe("updateUserAvatar", () => {
 
 describe("listUsers", () => {
   it("includes newly created test users", async () => {
-    const a = await createUser(nextEmail(), "hash", null);
-    const b = await createUser(nextEmail(), "hash", null);
+    const a = await createUser(nextEmail(), nextUsername(), "hash", null);
+    const b = await createUser(nextEmail(), nextUsername(), "hash", null);
     const ids = (await listUsers()).map((u) => u.id);
     expect(ids).toEqual(expect.arrayContaining([a.id, b.id]));
   });
@@ -65,7 +68,7 @@ describe("listUsers", () => {
 
 describe("setUserBlocked", () => {
   it("blocks a user and revokes all of their sessions", async () => {
-    const user = await createUser(nextEmail(), "hash", null);
+    const user = await createUser(nextEmail(), nextUsername(), "hash", null);
     await prisma.session.create({
       data: { tokenHash: `session-${user.id}`, userId: user.id, expiresAt: new Date(Date.now() + 1_000_000) }
     });
@@ -78,7 +81,7 @@ describe("setUserBlocked", () => {
   });
 
   it("unblocks a user without needing any sessions to exist", async () => {
-    const user = await createUser(nextEmail(), "hash", null);
+    const user = await createUser(nextEmail(), nextUsername(), "hash", null);
     await setUserBlocked(user.id, true);
     const updated = await setUserBlocked(user.id, false);
     expect(updated?.isBlocked).toBe(false);
@@ -91,7 +94,7 @@ describe("setUserBlocked", () => {
 
 describe("setUserHiddenCategoryAccess", () => {
   it("toggles canAccessHiddenCategories on and off", async () => {
-    const user = await createUser(nextEmail(), "hash", null);
+    const user = await createUser(nextEmail(), nextUsername(), "hash", null);
     expect((await setUserHiddenCategoryAccess(user.id, true))?.canAccessHiddenCategories).toBe(true);
     expect((await setUserHiddenCategoryAccess(user.id, false))?.canAccessHiddenCategories).toBe(false);
   });
@@ -103,7 +106,7 @@ describe("setUserHiddenCategoryAccess", () => {
 
 describe("deleteUser", () => {
   it("deletes an existing user and reports success", async () => {
-    const user = await createUser(nextEmail(), "hash", null);
+    const user = await createUser(nextEmail(), nextUsername(), "hash", null);
     expect(await deleteUser(user.id)).toBe(true);
     expect(await findUserById(user.id)).toBeNull();
   });

@@ -1,6 +1,7 @@
 export type User = {
   id: string;
   email: string;
+  username: string;
   name: string | null;
   avatarId: string | null;
   createdAt: string;
@@ -9,6 +10,7 @@ export type User = {
 export type AdminUser = {
   id: string;
   email: string;
+  username: string;
   name: string | null;
   avatarId: string | null;
   isBlocked: boolean;

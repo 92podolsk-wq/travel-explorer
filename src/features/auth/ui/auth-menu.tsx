@@ -44,6 +44,7 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // True when this form was opened via requestAuthFormOpen() (the embedded
@@ -65,6 +66,7 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
     setEmail("");
     setPassword("");
     setName("");
+    setUsername("");
     setError(null);
   }
 
@@ -75,7 +77,7 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
 
     try {
       const endpoint = formMode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const body = formMode === "login" ? { email, password } : { email, password, name };
+      const body = formMode === "login" ? { email, password } : { email, password, username, name };
 
       const res = await apiFetch(endpoint, {
         method: "POST",
@@ -242,6 +244,17 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
               {formMode === "login" ? t.loginTitle : t.registerTitle}
             </h2>
             <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+              {formMode === "register" && (
+                <Input
+                  required
+                  pattern="[a-zA-Z0-9_]{3,20}"
+                  title={t.usernameHint}
+                  placeholder={t.username}
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  autoComplete="username"
+                />
+              )}
               {formMode === "register" && (
                 <Input
                   placeholder={t.name}

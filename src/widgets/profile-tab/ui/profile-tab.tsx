@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, BellOff, Check, Heart, LogOut, Map as MapIcon, Pencil, Route as RouteIcon, Trash2 } from "lucide-react";
+import { Bell, BellOff, Check, Heart, LogOut, Map as MapIcon, Pencil, Route as RouteIcon, Trash2, X } from "lucide-react";
 import type { AvatarId } from "@/entities/user/model/avatars";
 import { avatarIds } from "@/entities/user/model/avatars";
 import type { User } from "@/entities/user/model/types";
@@ -48,6 +48,11 @@ export function ProfileTab() {
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [mapsDeleted, setMapsDeleted] = useState(false);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   async function handleSelectAvatar(avatarId: AvatarId) {
     const res = await apiFetch("/api/me/avatar", {
@@ -59,6 +64,34 @@ export function ProfileTab() {
       const data = (await res.json()) as { user: User };
       hydrateAuth(data.user);
       setIsAvatarPickerOpen(false);
+    }
+  }
+
+  function handleStartEditProfile() {
+    setNameDraft(currentUser?.name ?? "");
+    setUsernameDraft(currentUser?.username ?? "");
+    setProfileError(null);
+    setIsEditingProfile(true);
+  }
+
+  async function handleSaveProfile() {
+    setProfileError(null);
+    setIsSavingProfile(true);
+    try {
+      const res = await apiFetch("/api/me/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameDraft, username: usernameDraft })
+      });
+      const data = (await res.json()) as { user?: User; error?: string };
+      if (!res.ok) {
+        setProfileError(data.error ?? "Что-то пошло не так.");
+        return;
+      }
+      if (data.user) hydrateAuth(data.user);
+      setIsEditingProfile(false);
+    } finally {
+      setIsSavingProfile(false);
     }
   }
 
@@ -185,13 +218,67 @@ export function ProfileTab() {
                 <Pencil className="h-2.5 w-2.5" />
               </span>
             </button>
-            <div className="mt-2 flex items-center gap-2">
-              <h2 className="text-base font-bold">{currentUser.name || currentUser.email}</h2>
-              <span className="rounded-full bg-white/[0.18] px-2.5 py-0.5 text-[11px] font-semibold">
-                {t.travelerBadge}
-              </span>
-            </div>
-            <p className="mt-0.5 text-xs text-white/80">{currentUser.email}</p>
+            {isEditingProfile ? (
+              <div className="mt-2 flex w-full max-w-xs flex-col gap-2 rounded-md bg-white/[0.12] p-3 text-left">
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-medium text-white/80">{t.name}</span>
+                  <input
+                    value={nameDraft}
+                    onChange={(e) => setNameDraft(e.target.value)}
+                    className="rounded border border-white/30 bg-white/10 px-2 py-1 text-sm text-white placeholder:text-white/50 outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-1">
+                  <span className="text-[11px] font-medium text-white/80">{t.username}</span>
+                  <input
+                    value={usernameDraft}
+                    onChange={(e) => setUsernameDraft(e.target.value.toLowerCase())}
+                    pattern="[a-z0-9_]{3,20}"
+                    title={t.usernameHint}
+                    className="rounded border border-white/30 bg-white/10 px-2 py-1 text-sm text-white placeholder:text-white/50 outline-none"
+                  />
+                  <span className="text-[10px] text-white/60">{t.usernameHint}</span>
+                </label>
+                {profileError && <p className="text-[11px] font-medium text-red-200">{profileError}</p>}
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingProfile(false)}
+                    className="flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/10"
+                  >
+                    <X className="h-3 w-3" />
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveProfile()}
+                    disabled={isSavingProfile}
+                    className="flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-primary hover:bg-white/90 disabled:opacity-60"
+                  >
+                    <Check className="h-3 w-3" />
+                    {t.save}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mt-2 flex items-center gap-2">
+                  <h2 className="text-base font-bold">{currentUser.name || currentUser.email}</h2>
+                  <span className="rounded-full bg-white/[0.18] px-2.5 py-0.5 text-[11px] font-semibold">
+                    {t.travelerBadge}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-white/80">@{currentUser.username}</p>
+                <button
+                  type="button"
+                  onClick={handleStartEditProfile}
+                  className="mt-1 flex items-center gap-1 text-[11px] font-medium text-white/80 underline-offset-2 hover:text-white hover:underline"
+                >
+                  <Pencil className="h-2.5 w-2.5" />
+                  {t.editProfile}
+                </button>
+              </>
+            )}
           </div>
         </section>
       )}

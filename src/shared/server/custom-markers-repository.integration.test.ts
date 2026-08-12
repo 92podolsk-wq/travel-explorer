@@ -8,9 +8,11 @@ let userId: string;
 let otherUserId: string;
 
 beforeAll(async () => {
-  const user = await prisma.user.create({ data: { email: userEmail, passwordHash: "test-hash" } });
+  const user = await prisma.user.create({ data: { email: userEmail, username: "custom_marker_test", passwordHash: "test-hash" } });
   userId = user.id;
-  const otherUser = await prisma.user.create({ data: { email: "custom-marker-test-other@example.com", passwordHash: "test-hash" } });
+  const otherUser = await prisma.user.create({
+    data: { email: "custom-marker-test-other@example.com", username: "custom_marker_test_other", passwordHash: "test-hash" }
+  });
   otherUserId = otherUser.id;
 });
 

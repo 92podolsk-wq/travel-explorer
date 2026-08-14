@@ -110,6 +110,7 @@ export function PackingChecklistCard() {
     } else {
       setState(readChecklistState());
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
 
   function applyPatch(patch: Partial<PackingChecklistState>) {

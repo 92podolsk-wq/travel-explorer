@@ -20,6 +20,7 @@ export function SharedChecklistsCard() {
     apiFetch("/api/me/checklists/shared-with-me")
       .then((res) => res.json())
       .then((body: { checklists: SharedChecklist[] }) => setShared(body.checklists));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
 
   if (!currentUser || !shared || shared.length === 0) return null;

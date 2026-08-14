@@ -272,7 +272,27 @@ export function PoiDetails() {
           </div>
 
           <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-5 pb-5 pt-2">
-            <div className="mb-5 flex gap-2">
+            <div className="mb-4 flex items-center gap-2.5 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <DifficultyIcon className="h-4 w-4 text-primary" />
+                {t.difficulty[selectedPoi.difficulty]}
+              </span>
+              <span className="h-3 w-px bg-border" />
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-primary" />
+                {selectedPoi.durationMinutes}
+                {t.app.minutesShort}
+              </span>
+              <span className="h-3 w-px bg-border" />
+              <span className="inline-flex items-center gap-1.5">
+                <Camera className="h-4 w-4 text-primary" />
+                {selectedPoi.photos.length} {t.app.photo}
+              </span>
+            </div>
+
+            <p className="text-[15px] leading-7 text-muted-foreground">{description}</p>
+
+            <div className="mb-1 mt-5 flex gap-2">
               <Button
                 type="button"
                 variant={isFavorite ? "default" : "outline"}
@@ -280,7 +300,7 @@ export function PoiDetails() {
                   void hapticMedium();
                   toggleFavorite(selectedPoi.id);
                 }}
-                className="h-11 flex-1"
+                className="h-11 flex-1 rounded-full"
               >
                 <motion.span
                   key={String(isFavorite)}
@@ -297,26 +317,11 @@ export function PoiDetails() {
                 type="button"
                 variant={isVisited ? "default" : "outline"}
                 onClick={() => toggleVisited(selectedPoi.id)}
-                className="h-11 flex-1"
+                className="h-11 flex-1 rounded-full"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 {t.app.visited}
               </Button>
-            </div>
-
-            <p className="text-[15px] leading-7 text-muted-foreground">{description}</p>
-
-            <div className="mt-6 grid grid-cols-2 gap-2.5">
-              <Metric
-                icon={<Clock className="h-4 w-4" />}
-                label={t.app.duration}
-                value={`${selectedPoi.durationMinutes}${t.app.minutesShort}`}
-              />
-              <Metric
-                icon={<DifficultyIcon className="h-4 w-4" />}
-                label={t.app.effort}
-                value={t.difficulty[selectedPoi.difficulty]}
-              />
             </div>
 
             <div className="mt-6">
@@ -407,24 +412,6 @@ export function PoiDetails() {
       {isUploadPhotoOpen && (
         <UploadPhotoModal poiId={selectedPoi.id} language={language} onClose={() => setIsUploadPhotoOpen(false)} />
       )}
-    </div>
-  );
-}
-
-type MetricProps = {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-};
-
-function Metric({ icon, label, value }: MetricProps) {
-  return (
-    <div className="rounded-md border border-border bg-card/[0.58] p-3 shadow-sm">
-      <div className="mb-2 text-primary">{icon}</div>
-      <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-sm font-semibold">{value}</p>
     </div>
   );
 }

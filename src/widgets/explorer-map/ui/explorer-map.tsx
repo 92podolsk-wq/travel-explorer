@@ -29,7 +29,7 @@ import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { downloadRegionForOffline } from "@/shared/lib/offline-map-download";
 import { areRegionsDownloaded, markRegionsDownloaded } from "@/shared/lib/offline-maps-storage";
 import { presetMapStyleUrl, resolveMapStyle } from "@/shared/map/map-styles";
-import { registerCategoryMarkerIcons } from "@/shared/map/poi-marker-icons";
+import { registerCategoryMarkerIcons, registerVisitedBadgeIcon, visitedBadgeIconId } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { AddMarkerPanel } from "./add-marker-panel";
@@ -38,6 +38,7 @@ const poiSourceId = "travel-explorer-pois";
 const poiHitLayerId = "poi-hit-area";
 const poiCircleLayerId = "poi-circles";
 const poiIconLayerId = "poi-icons";
+const poiVisitedBadgeLayerId = "poi-visited-badge";
 const poiLabelLayerId = "poi-labels";
 const poiClusterCircleLayerId = "poi-cluster-circles";
 const poiClusterCountLayerId = "poi-cluster-counts";
@@ -63,6 +64,7 @@ type PoiFeatureProperties = {
   mustVisit: boolean;
   viewed: boolean;
   favorite: boolean;
+  visited: boolean;
   category: PoiMainCategory;
 };
 
@@ -118,7 +120,8 @@ function createPoiCollection(
   pois: Poi[],
   selectedPoiId: string,
   viewedPoiIds: string[],
-  favoritePoiIds: string[]
+  favoritePoiIds: string[],
+  visitedPoiIds: string[]
 ): PoiFeatureCollection {
   return {
     type: "FeatureCollection",
@@ -137,6 +140,7 @@ function createPoiCollection(
           mustVisit: poi.mustVisit,
           viewed: viewedPoiIds.includes(poi.id),
           favorite: favoritePoiIds.includes(poi.id),
+          visited: visitedPoiIds.includes(poi.id),
           category: poi.category
         }
       })
@@ -169,7 +173,7 @@ async function addPoiLayers(map: MapLibreMap) {
 
   const categories = useExplorerStore.getState().categories;
   const categoryColorMatchExpression = buildCategoryColorMatchExpression(categories);
-  await registerCategoryMarkerIcons(map, categories);
+  await Promise.all([registerCategoryMarkerIcons(map, categories), registerVisitedBadgeIcon(map)]);
 
   map.addSource(regionVoronoiSourceId, {
     type: "geojson",
@@ -370,6 +374,22 @@ async function addPoiLayers(map: MapLibreMap) {
         0.6,
         1
       ]
+    }
+  });
+
+  map.addLayer({
+    id: poiVisitedBadgeLayerId,
+    type: "symbol",
+    source: poiSourceId,
+    filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "visited"], true]],
+    layout: {
+      "icon-image": visitedBadgeIconId,
+      "icon-size": 0.42,
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true
+    },
+    paint: {
+      "icon-translate": [9, 9]
     }
   });
 
@@ -695,6 +715,7 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const currentUser = useExplorerStore((state) => state.currentUser);
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
+  const selectedPulseMarkerRef = useRef<MapLibreMarker | null>(null);
   const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const isNative = useIsNativeApp();
   const [offlineDownloadState, setOfflineDownloadState] = useState<"idle" | "downloading" | "done" | "error">("idle");
@@ -872,8 +893,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   );
 
   const poiCollection = useMemo(
-    () => createPoiCollection(visiblePois, selectedPoiId, viewedPoiIds, favorites),
-    [selectedPoiId, visiblePois, viewedPoiIds, favorites]
+    () => createPoiCollection(visiblePois, selectedPoiId, viewedPoiIds, favorites, visitedPoiIds),
+    [selectedPoiId, visiblePois, viewedPoiIds, favorites, visitedPoiIds]
   );
 
   useEffect(() => {
@@ -1222,7 +1243,10 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       }
 
       const el = document.createElement("div");
-      el.className = "h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-[0_0_0_5px_rgba(59,130,246,0.28)]";
+      el.className = "relative flex h-10 w-10 items-center justify-center";
+      el.innerHTML =
+        '<span class="absolute h-4 w-4 rounded-full bg-blue-500 opacity-75 animate-ping"></span>' +
+        '<span class="relative h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-[0_0_0_5px_rgba(59,130,246,0.28)]"></span>';
 
       userMarkerRef.current = new maplibre.Marker({ element: el }).setLngLat([userLocation.lng, userLocation.lat]).addTo(map);
     })();
@@ -1231,6 +1255,42 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       isCancelled = true;
     };
   }, [isMapReady, userLocation]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !isMapReady) return;
+
+    let isCancelled = false;
+
+    (async () => {
+      const maplibre = await import("maplibre-gl");
+      if (isCancelled) return;
+
+      const selectedPoi = selectedPoiId ? pois.find((poi) => poi.id === selectedPoiId) : undefined;
+
+      if (!selectedPoi) {
+        selectedPulseMarkerRef.current?.remove();
+        selectedPulseMarkerRef.current = null;
+        return;
+      }
+
+      if (selectedPulseMarkerRef.current) {
+        selectedPulseMarkerRef.current.setLngLat([selectedPoi.coordinates.lng, selectedPoi.coordinates.lat]);
+        return;
+      }
+
+      const el = document.createElement("div");
+      el.className = "pointer-events-none h-11 w-11 rounded-full bg-[#287f72]/40 animate-ping";
+
+      selectedPulseMarkerRef.current = new maplibre.Marker({ element: el })
+        .setLngLat([selectedPoi.coordinates.lng, selectedPoi.coordinates.lat])
+        .addTo(map);
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isMapReady, selectedPoiId, pois]);
 
   useEffect(() => {
     const map = mapRef.current;

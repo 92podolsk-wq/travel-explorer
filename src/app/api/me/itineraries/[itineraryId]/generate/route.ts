@@ -61,7 +61,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     candidates = favoritesInRegion.length > 0 ? favoritesInRegion : regionPois;
   }
 
-  const plan = planItineraryDays(candidates, days, hoursPerDay * 60, language);
+  const plan = await planItineraryDays(candidates, days, hoursPerDay * 60, language);
   const title = `${region.name} · ${days} дн.`;
 
   const result = await generateItinerary(user.id, itineraryId, plan, title);

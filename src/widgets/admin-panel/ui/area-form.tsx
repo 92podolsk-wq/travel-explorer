@@ -12,20 +12,18 @@ type FormState = {
   name: string;
   nameEn: string;
   nameRu: string;
-  nameJa: string;
 };
 
 function toFormState(area: Area | undefined, defaultCountryId: string): FormState {
   if (!area) {
-    return { countryId: defaultCountryId, name: "", nameEn: "", nameRu: "", nameJa: "" };
+    return { countryId: defaultCountryId, name: "", nameEn: "", nameRu: "" };
   }
 
   return {
     countryId: area.countryId,
     name: area.name,
     nameEn: area.nameByLanguage.en,
-    nameRu: area.nameByLanguage.ru,
-    nameJa: area.nameByLanguage.ja
+    nameRu: area.nameByLanguage.ru
   };
 }
 
@@ -40,8 +38,7 @@ function toAreaInput(form: FormState): AreaInput | { error: string } {
     name,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: form.nameRu.trim() || name,
-      ja: form.nameJa.trim() || name
+      ru: form.nameRu.trim() || name
     }
   };
 }
@@ -118,10 +115,9 @@ export function AreaForm({ area, countries, onCancel, onSubmit }: AreaFormProps)
         >
           Названия по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Kansai" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Кансай" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 関西" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Kansai" />
         </div>
       </div>
 

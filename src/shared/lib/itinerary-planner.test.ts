@@ -77,7 +77,7 @@ describe("planItineraryDays", () => {
       category: "urban",
       importance: 9,
       name: "Dotonbori",
-      nameByLanguage: { ru: "Дотонбори", en: "Dotonbori", ja: "道頓堀" }
+      nameByLanguage: { ru: "Дотонбори", en: "Dotonbori" }
     });
     const sibling = makePoi({ coordinates: { lat: 34.694, lng: 135.5026 }, category: "nature", importance: 1 });
     const plan = await planItineraryDays([anchor, sibling], 1, 480, "en", noMatrix);

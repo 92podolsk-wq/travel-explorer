@@ -5,7 +5,6 @@ export const japanCountry: Country = {
   name: "Japan",
   nameByLanguage: {
     en: "Japan",
-    ru: "Япония",
-    ja: "日本"
+    ru: "Япония"
   }
 };

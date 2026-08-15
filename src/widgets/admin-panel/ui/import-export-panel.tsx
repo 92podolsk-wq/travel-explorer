@@ -25,14 +25,12 @@ function csvRowToPoiInput(row: Record<string, string>): PoiInput {
     name,
     nameByLanguage: {
       en: row.nameEn?.trim() || name,
-      ru: row.nameRu?.trim() || name,
-      ja: row.nameJa?.trim() || name
+      ru: row.nameRu?.trim() || name
     },
     description: row.description?.trim() ?? "",
     descriptionByLanguage: {
       en: row.description?.trim() ?? "",
-      ru: row.description?.trim() ?? "",
-      ja: row.description?.trim() ?? ""
+      ru: row.description?.trim() ?? ""
     },
     coordinates: { lat: Number(row.lat), lng: Number(row.lng) },
     rating: Number(row.rating) || 4.5,
@@ -57,7 +55,6 @@ const csvColumns = [
   "name",
   "nameEn",
   "nameRu",
-  "nameJa",
   "description",
   "lat",
   "lng",
@@ -82,7 +79,6 @@ function poiToCsvRow(poi: Poi): string[] {
     poi.name,
     poi.nameByLanguage.en,
     poi.nameByLanguage.ru,
-    poi.nameByLanguage.ja,
     poi.description,
     String(poi.coordinates.lat),
     String(poi.coordinates.lng),
@@ -108,7 +104,6 @@ const csvTemplate = toCsv(csvColumns, [
     "Example Place",
     "Example Place",
     "Пример места",
-    "例の場所",
     "A short description, with commas if needed.",
     "35.01",
     "135.76",

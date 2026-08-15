@@ -149,7 +149,7 @@ export const useExplorerStore = create<ExplorerState>()(
   hideViewedOnMap: false,
   hideFavoritesOnMap: false,
   hideVisitedOnMap: false,
-  language: "en",
+  language: "ru",
   theme: "system",
   zoom: 11,
   isDetailsOpen: false,

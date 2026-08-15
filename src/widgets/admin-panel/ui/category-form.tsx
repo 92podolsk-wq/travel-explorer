@@ -11,7 +11,6 @@ import { useUnsavedChangesWarning } from "@/shared/lib/use-unsaved-changes-warni
 type FormState = {
   nameEn: string;
   nameRu: string;
-  nameJa: string;
   icon: string;
   color: string;
   isHidden: boolean;
@@ -22,7 +21,6 @@ function toFormState(category: Category | undefined): FormState {
     return {
       nameEn: "",
       nameRu: "",
-      nameJa: "",
       icon: categoryIconOptions[0].key,
       color: defaultCategoryColor,
       isHidden: false
@@ -32,7 +30,6 @@ function toFormState(category: Category | undefined): FormState {
   return {
     nameEn: category.nameByLanguage.en,
     nameRu: category.nameByLanguage.ru,
-    nameJa: category.nameByLanguage.ja,
     icon: category.icon,
     color: category.color,
     isHidden: category.isHidden
@@ -48,8 +45,7 @@ function toCategoryInput(form: FormState): CategoryInput | { error: string } {
     name,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: name,
-      ja: form.nameJa.trim() || name
+      ru: name
     },
     icon: form.icon,
     color: form.color,
@@ -96,10 +92,9 @@ export function CategoryForm({ category, onCancel, onSubmit }: CategoryFormProps
         <label className={fieldLabel} title="Названия категории на разных языках сайта — показывается в фильтре и на бейдже места.">
           Названия по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN" />
         </div>
       </div>
 

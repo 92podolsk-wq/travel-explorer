@@ -46,8 +46,7 @@ export function toPoi(row: PoiRow): Poi {
     description: row.description,
     descriptionByLanguage: (row.descriptionByLanguage as Record<Language, string> | null) ?? {
       en: row.description,
-      ru: row.description,
-      ja: row.description
+      ru: row.description
     },
     rating: row.rating,
     favoritesCount: row._count.favoritedBy,

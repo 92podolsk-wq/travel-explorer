@@ -17,11 +17,9 @@ type FormState = {
   name: string;
   nameEn: string;
   nameRu: string;
-  nameJa: string;
   description: string;
   descriptionEn: string;
   descriptionRu: string;
-  descriptionJa: string;
   tags: PoiTag[];
   icon: string;
 };
@@ -32,11 +30,9 @@ function toFormState(mode: ExplorationMode | undefined): FormState {
       name: "",
       nameEn: "",
       nameRu: "",
-      nameJa: "",
       description: "",
       descriptionEn: "",
       descriptionRu: "",
-      descriptionJa: "",
       tags: [],
       icon: modeIconOptions[0].key
     };
@@ -46,11 +42,9 @@ function toFormState(mode: ExplorationMode | undefined): FormState {
     name: mode.name,
     nameEn: mode.nameByLanguage.en,
     nameRu: mode.nameByLanguage.ru,
-    nameJa: mode.nameByLanguage.ja,
     description: mode.description,
     descriptionEn: mode.descriptionByLanguage.en,
     descriptionRu: mode.descriptionByLanguage.ru,
-    descriptionJa: mode.descriptionByLanguage.ja,
     tags: mode.tags,
     icon: mode.icon
   };
@@ -67,14 +61,12 @@ function toModeInput(form: FormState): ExplorationModeInput | { error: string } 
     name,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: form.nameRu.trim() || name,
-      ja: form.nameJa.trim() || name
+      ru: form.nameRu.trim() || name
     },
     description,
     descriptionByLanguage: {
       en: form.descriptionEn.trim() || description,
-      ru: form.descriptionRu.trim() || description,
-      ja: form.descriptionJa.trim() || description
+      ru: form.descriptionRu.trim() || description
     },
     tags: form.tags,
     icon: form.icon
@@ -141,10 +133,9 @@ export function ExplorationModeForm({ mode, onCancel, onSubmit }: ExplorationMod
         <label className={fieldLabel} title="Название режима на разных языках сайта — показывается на кнопке-фильтре в боковой панели.">
           Названия по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Photographer" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Фотограф" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 写真家" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Photographer" />
         </div>
       </div>
 
@@ -163,21 +154,16 @@ export function ExplorationModeForm({ mode, onCancel, onSubmit }: ExplorationMod
         <label className={fieldLabel} title="Описание режима на разных языках — показывается всплывающей подсказкой при наведении на кнопку-фильтр.">
           Описания по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            value={form.descriptionEn}
-            onChange={(e) => setForm((p) => ({ ...p, descriptionEn: e.target.value }))}
-            placeholder="EN"
-          />
+        <div className="grid grid-cols-2 gap-3">
           <Input
             value={form.descriptionRu}
             onChange={(e) => setForm((p) => ({ ...p, descriptionRu: e.target.value }))}
             placeholder="RU"
           />
           <Input
-            value={form.descriptionJa}
-            onChange={(e) => setForm((p) => ({ ...p, descriptionJa: e.target.value }))}
-            placeholder="JA"
+            value={form.descriptionEn}
+            onChange={(e) => setForm((p) => ({ ...p, descriptionEn: e.target.value }))}
+            placeholder="EN"
           />
         </div>
       </div>

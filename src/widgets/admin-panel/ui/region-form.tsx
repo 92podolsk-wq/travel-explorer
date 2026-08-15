@@ -25,7 +25,6 @@ type FormState = {
   timezoneOffsetHours: string;
   nameEn: string;
   nameRu: string;
-  nameJa: string;
   sealCharacter: string;
   status: PublishStatus;
 };
@@ -45,7 +44,6 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
       timezoneOffsetHours: "9",
       nameEn: "",
       nameRu: "",
-      nameJa: "",
       sealCharacter: "",
       status: "draft"
     };
@@ -64,7 +62,6 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
     timezoneOffsetHours: String(region.timezoneOffsetHours),
     nameEn: region.nameByLanguage.en,
     nameRu: region.nameByLanguage.ru,
-    nameJa: region.nameByLanguage.ja,
     sealCharacter: region.sealCharacter,
     status: region.status
   };
@@ -116,8 +113,7 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
     timezoneOffsetHours,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: form.nameRu.trim() || name,
-      ja: form.nameJa.trim() || name
+      ru: form.nameRu.trim() || name
     },
     sealCharacter: form.sealCharacter.trim() || name.charAt(0),
     status: form.status
@@ -144,7 +140,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
   const [isTranslating, setIsTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
 
-  const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
+  const missingName = missingLanguages([{ en: form.nameEn }]);
 
   const handleAutoTranslate = async () => {
     if (!form.nameRu.trim()) {
@@ -158,8 +154,7 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
       const translations = await translateFromRussian([{ key: "name", text: form.nameRu.trim() }]);
       setForm((p) => ({
         ...p,
-        nameEn: translations.name?.en ?? p.nameEn,
-        nameJa: translations.name?.ja ?? p.nameJa
+        nameEn: translations.name?.en ?? p.nameEn
       }));
     } catch (err) {
       setTranslateError(err instanceof Error ? err.message : "Не удалось перевести текст.");
@@ -241,10 +236,9 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
             {isTranslating ? "Перевод…" : "Перевести с русского"}
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Tokyo" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Токио" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 東京" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Tokyo" />
         </div>
         {translateError && <p className="mt-1 text-xs font-medium text-red-600">{translateError}</p>}
         {missingName.length > 0 && (

@@ -30,10 +30,8 @@ type FormState = {
   name: string;
   nameEn: string;
   nameRu: string;
-  nameJa: string;
   descriptionEn: string;
   descriptionRu: string;
-  descriptionJa: string;
   lat: string;
   lng: string;
   rating: string;
@@ -56,10 +54,8 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       name: "",
       nameEn: "",
       nameRu: "",
-      nameJa: "",
       descriptionEn: "",
       descriptionRu: "",
-      descriptionJa: "",
       lat: "",
       lng: "",
       rating: "4.5",
@@ -81,10 +77,8 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     name: poi.name,
     nameEn: poi.nameByLanguage.en,
     nameRu: poi.nameByLanguage.ru,
-    nameJa: poi.nameByLanguage.ja,
     descriptionEn: poi.descriptionByLanguage.en,
     descriptionRu: poi.descriptionByLanguage.ru,
-    descriptionJa: poi.descriptionByLanguage.ja,
     lat: String(poi.coordinates.lat),
     lng: String(poi.coordinates.lng),
     rating: String(poi.rating),
@@ -154,14 +148,12 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     name,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: form.nameRu.trim() || name,
-      ja: form.nameJa.trim() || name
+      ru: form.nameRu.trim() || name
     },
     description: descriptionRu,
     descriptionByLanguage: {
       en: form.descriptionEn.trim() || descriptionRu,
-      ru: descriptionRu,
-      ja: form.descriptionJa.trim() || descriptionRu
+      ru: descriptionRu
     },
     coordinates: { lat, lng },
     rating,
@@ -212,8 +204,8 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
   const photoFileInputs = useRef<Array<HTMLInputElement | null>>([]);
   const lastCheckedPhotoUrls = useRef<Array<string | null>>([]);
 
-  const missingName = missingLanguages([{ en: form.nameEn, ja: form.nameJa }]);
-  const missingDescription = missingLanguages([{ en: form.descriptionEn, ja: form.descriptionJa }]);
+  const missingName = missingLanguages([{ en: form.nameEn }]);
+  const missingDescription = missingLanguages([{ en: form.descriptionEn }]);
 
   const handleAutoTranslate = async () => {
     const items = [
@@ -232,12 +224,8 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
       const translations = await translateFromRussian(items);
       setForm((p) => ({
         ...p,
-        ...(translations.name
-          ? { nameEn: translations.name.en ?? p.nameEn, nameJa: translations.name.ja ?? p.nameJa }
-          : {}),
-        ...(translations.description
-          ? { descriptionEn: translations.description.en ?? p.descriptionEn, descriptionJa: translations.description.ja ?? p.descriptionJa }
-          : {})
+        ...(translations.name ? { nameEn: translations.name.en ?? p.nameEn } : {}),
+        ...(translations.description ? { descriptionEn: translations.description.en ?? p.descriptionEn } : {})
       }));
     } catch (err) {
       setTranslateError(err instanceof Error ? err.message : "Не удалось перевести текст.");
@@ -369,7 +357,7 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          Заполните название и описание на русском, затем нажмите «Перевести», чтобы автоматически подставить EN и JA.
+          Заполните название и описание на русском, затем нажмите «Перевести», чтобы автоматически подставить EN.
         </p>
         <Button type="button" variant="outline" onClick={handleAutoTranslate} disabled={isTranslating} className="shrink-0 gap-1.5">
           <Languages className="h-3.5 w-3.5" />
@@ -385,10 +373,9 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
         >
           Названия по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Nanzen-ji" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Нандзэн-дзи" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 南禅寺" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Nanzen-ji" />
         </div>
         {missingName.length > 0 && (
           <p className="mt-1 text-xs font-medium text-amber-600">
@@ -404,14 +391,7 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
         >
           Описания по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <textarea
-            className={textareaClass}
-            rows={3}
-            value={form.descriptionEn}
-            onChange={(e) => setForm((p) => ({ ...p, descriptionEn: e.target.value }))}
-            placeholder="EN — short description"
-          />
+        <div className="grid grid-cols-2 gap-3">
           <textarea
             className={textareaClass}
             rows={3}
@@ -422,9 +402,9 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
           <textarea
             className={textareaClass}
             rows={3}
-            value={form.descriptionJa}
-            onChange={(e) => setForm((p) => ({ ...p, descriptionJa: e.target.value }))}
-            placeholder="JA — 短い説明"
+            value={form.descriptionEn}
+            onChange={(e) => setForm((p) => ({ ...p, descriptionEn: e.target.value }))}
+            placeholder="EN — short description"
           />
         </div>
         {missingDescription.length > 0 && (

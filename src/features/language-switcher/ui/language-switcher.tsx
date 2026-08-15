@@ -9,9 +9,8 @@ import { FlagIcon } from "@/shared/ui/flag-icon";
 import { cn } from "@/shared/lib/cn";
 
 const languageOptions: Array<{ language: Language; label: string }> = [
-  { language: "en", label: "English" },
   { language: "ru", label: "Русский" },
-  { language: "ja", label: "日本語" }
+  { language: "en", label: "English" }
 ];
 
 export function LanguageSwitcher({ className }: { className?: string }) {

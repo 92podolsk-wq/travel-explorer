@@ -10,7 +10,7 @@ const regionId = "cat-test-region";
 function makeCategoryInput(overrides: Partial<CategoryInput> = {}): CategoryInput {
   return {
     name: "Temples",
-    nameByLanguage: { ru: "Храмы", en: "Temples", ja: "寺院" },
+    nameByLanguage: { ru: "Храмы", en: "Temples" },
     icon: "torii-gate",
     color: "#a8567a",
     isHidden: false,

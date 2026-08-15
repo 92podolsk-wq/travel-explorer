@@ -8,7 +8,7 @@ import { getCurrentUser } from "@/shared/server/user-auth";
 import { getUserPoiState } from "@/shared/server/user-pois-repository";
 import { corsPreflight, withCors } from "@/shared/server/cors";
 
-const supportedLanguages: Language[] = ["en", "ru", "ja"];
+const supportedLanguages: Language[] = ["ru", "en"];
 
 const MAX_DAYS = 14;
 const MAX_HOURS_PER_DAY = 14;

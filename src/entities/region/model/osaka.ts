@@ -16,8 +16,7 @@ export const osakaRegion: Region = {
   timezoneOffsetHours: 9,
   nameByLanguage: {
     en: "Osaka",
-    ru: "Осака",
-    ja: "大阪"
+    ru: "Осака"
   },
   sealCharacter: "阪",
   status: "published"

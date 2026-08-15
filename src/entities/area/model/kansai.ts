@@ -6,7 +6,6 @@ export const kansaiArea: Area = {
   name: "Kansai",
   nameByLanguage: {
     en: "Kansai",
-    ru: "Кансай",
-    ja: "関西"
+    ru: "Кансай"
   }
 };

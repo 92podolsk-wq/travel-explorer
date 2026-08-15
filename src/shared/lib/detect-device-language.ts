@@ -1,10 +1,10 @@
 import type { Language } from "@/shared/i18n/types";
 
-const supportedLanguages: Language[] = ["en", "ru", "ja"];
+const supportedLanguages: Language[] = ["ru", "en"];
 
 export function detectDeviceLanguage(): Language {
   if (typeof navigator === "undefined") {
-    return "en";
+    return "ru";
   }
 
   const candidates = navigator.languages && navigator.languages.length > 0 ? navigator.languages : [navigator.language];
@@ -16,5 +16,5 @@ export function detectDeviceLanguage(): Language {
     }
   }
 
-  return "en";
+  return "ru";
 }

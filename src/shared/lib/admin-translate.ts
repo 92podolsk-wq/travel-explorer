@@ -1,8 +1,8 @@
-export type TargetLanguage = "en" | "ja";
+export type TargetLanguage = "en";
 
 export async function translateFromRussian(
   items: { key: string; text: string }[],
-  targets: TargetLanguage[] = ["en", "ja"]
+  targets: TargetLanguage[] = ["en"]
 ): Promise<Record<string, Partial<Record<TargetLanguage, string>>>> {
   const res = await fetch("/api/admin/translate", {
     method: "POST",

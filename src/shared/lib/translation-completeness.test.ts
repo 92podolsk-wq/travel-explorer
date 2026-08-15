@@ -15,14 +15,10 @@ describe("looksTranslated", () => {
     expect(looksTranslated("en", "Osaka Castle")).toBe(true);
   });
 
-  it("requires Japanese script for the ja language", () => {
-    expect(looksTranslated("ja", "Osaka Castle")).toBe(false);
-    expect(looksTranslated("ja", "大阪城")).toBe(true);
-  });
 });
 
 describe("localizedPoiDescription", () => {
-  const base = { ru: "Осакский замок", en: "", ja: "" };
+  const base = { ru: "Осакский замок", en: "" };
 
   it("always trusts the Russian field", () => {
     expect(localizedPoiDescription(base, "fallback", "ru")).toBe("Осакский замок");
@@ -46,14 +42,10 @@ describe("localizedPoiDescription", () => {
 
 describe("missingLanguages", () => {
   it("reports no missing languages when every field is translated", () => {
-    expect(missingLanguages([{ en: "Osaka Castle", ja: "大阪城" }])).toEqual([]);
+    expect(missingLanguages([{ en: "Osaka Castle" }])).toEqual([]);
   });
 
   it("reports en when any field's English still contains Cyrillic", () => {
-    expect(missingLanguages([{ en: "Osaka Castle", ja: "大阪城" }, { en: "Замок", ja: "城" }])).toEqual(["en"]);
-  });
-
-  it("reports both languages when both are missing across the field set", () => {
-    expect(missingLanguages([{ en: "Замок", ja: "" }])).toEqual(["en", "ja"]);
+    expect(missingLanguages([{ en: "Osaka Castle" }, { en: "Замок" }])).toEqual(["en"]);
   });
 });

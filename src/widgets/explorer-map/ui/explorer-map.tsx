@@ -529,8 +529,7 @@ function getFitBoundsPadding(): { top: number; bottom: number; left: number; rig
 
 const languageToBasemapNameField: Record<Language, string> = {
   en: "name:en",
-  ru: "name:ru",
-  ja: "name:ja"
+  ru: "name:ru"
 };
 
 function applyBasemapLanguage(map: MapLibreMap, language: Language) {

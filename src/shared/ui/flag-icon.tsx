@@ -22,12 +22,6 @@ const flagMarkup: Record<Language, React.ReactNode> = {
       <rect width="20" height="4.67" y="4.67" fill="#0039a6" />
       <rect width="20" height="4.67" y="9.34" fill="#d52b1e" />
     </>
-  ),
-  ja: (
-    <>
-      <rect width="20" height="14" fill="#ffffff" />
-      <circle cx="10" cy="7" r="4" fill="#bc002d" />
-    </>
   )
 };
 

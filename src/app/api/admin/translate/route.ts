@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { isAdminAuthenticated } from "@/shared/server/admin-auth";
 
 const MYMEMORY_URL = "https://api.mymemory.translated.net/get";
-const TARGET_LANGUAGES = ["en", "ja"] as const;
+const TARGET_LANGUAGES = ["en"] as const;
 type TargetLanguage = (typeof TARGET_LANGUAGES)[number];
 
 async function translateOne(text: string, target: TargetLanguage): Promise<string> {

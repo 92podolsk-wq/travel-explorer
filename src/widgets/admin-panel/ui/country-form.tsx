@@ -10,19 +10,17 @@ type FormState = {
   name: string;
   nameEn: string;
   nameRu: string;
-  nameJa: string;
 };
 
 function toFormState(country?: Country): FormState {
   if (!country) {
-    return { name: "", nameEn: "", nameRu: "", nameJa: "" };
+    return { name: "", nameEn: "", nameRu: "" };
   }
 
   return {
     name: country.name,
     nameEn: country.nameByLanguage.en,
-    nameRu: country.nameByLanguage.ru,
-    nameJa: country.nameByLanguage.ja
+    nameRu: country.nameByLanguage.ru
   };
 }
 
@@ -35,8 +33,7 @@ function toCountryInput(form: FormState): CountryInput | { error: string } {
     name,
     nameByLanguage: {
       en: form.nameEn.trim() || name,
-      ru: form.nameRu.trim() || name,
-      ja: form.nameJa.trim() || name
+      ru: form.nameRu.trim() || name
     }
   };
 }
@@ -93,10 +90,9 @@ export function CountryForm({ country, onCancel, onSubmit }: CountryFormProps) {
         >
           Названия по языкам
         </label>
-        <div className="grid grid-cols-3 gap-3">
-          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Japan" />
+        <div className="grid grid-cols-2 gap-3">
           <Input value={form.nameRu} onChange={(e) => setForm((p) => ({ ...p, nameRu: e.target.value }))} placeholder="RU — Япония" />
-          <Input value={form.nameJa} onChange={(e) => setForm((p) => ({ ...p, nameJa: e.target.value }))} placeholder="JA — 日本" />
+          <Input value={form.nameEn} onChange={(e) => setForm((p) => ({ ...p, nameEn: e.target.value }))} placeholder="EN — Japan" />
         </div>
       </div>
 

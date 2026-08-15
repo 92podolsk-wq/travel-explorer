@@ -20,10 +20,10 @@ function makePoiInput(overrides: Partial<PoiInput> = {}): PoiInput {
   return {
     regionId,
     name: "Test Shrine",
-    nameByLanguage: { ru: "Тестовый храм", en: "Test Shrine", ja: "テスト神社" },
+    nameByLanguage: { ru: "Тестовый храм", en: "Test Shrine" },
     coordinates: { lat: 34.6937, lng: 135.5023 },
     description: "A shrine used only in tests.",
-    descriptionByLanguage: { ru: "", en: "A shrine used only in tests.", ja: "" },
+    descriptionByLanguage: { ru: "", en: "A shrine used only in tests." },
     rating: 0,
     photos: [],
     category: "urban",

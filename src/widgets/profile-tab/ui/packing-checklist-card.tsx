@@ -167,7 +167,7 @@ export function PackingChecklistCard() {
 
   if (!state) return null;
 
-  const dateLocale = language === "ru" ? "ru-RU" : language === "ja" ? "ja-JP" : "en-US";
+  const dateLocale = language === "ru" ? "ru-RU" : "en-US";
   const dateLabel = state.tripDate
     ? appT.checklistDateSet.replace(
         "{date}",

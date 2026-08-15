@@ -14,7 +14,7 @@ function makeRegion(overrides: Partial<Region> = {}, index = 0): Region {
       [135.6, 34.8]
     ],
     timezoneOffsetHours: 9,
-    nameByLanguage: { ru: `Регион ${index}`, en: `Region ${index}`, ja: `リージョン${index}` },
+    nameByLanguage: { ru: `Регион ${index}`, en: `Region ${index}` },
     sealCharacter: "京",
     status: "published",
     ...overrides
@@ -41,9 +41,9 @@ describe("buildRegionVoronoi", () => {
 
   it("labels each feature with the localized region name and a cycled color", () => {
     const regions = [makeRegion({}, 0), makeRegion({}, 1)];
-    const collection = buildRegionVoronoi(regions, "ja");
+    const collection = buildRegionVoronoi(regions, "ru");
 
-    expect(collection.features.map((f) => f.properties.name)).toEqual(["リージョン0", "リージョン1"]);
+    expect(collection.features.map((f) => f.properties.name)).toEqual(["Регион 0", "Регион 1"]);
     expect(collection.features[0].properties.color).toBe(regionVoronoiColors[0]);
     expect(collection.features[1].properties.color).toBe(regionVoronoiColors[1]);
   });

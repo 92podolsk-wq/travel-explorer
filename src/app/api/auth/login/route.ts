@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   }
 
   const existing = await findUserByEmail(email.toLowerCase());
-  if (!existing || !(await verifyPassword(password, existing.passwordHash))) {
+  if (!existing || !existing.passwordHash || !(await verifyPassword(password, existing.passwordHash))) {
     return withCors(NextResponse.json({ error: "Неверный email или пароль." }, { status: 401 }), request);
   }
 

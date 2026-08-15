@@ -134,7 +134,8 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   username     String   @unique
-  passwordHash String
+  passwordHash String?
+  yandexId     String?  @unique
   name         String?
   avatarId     String?
   isBlocked    Boolean  @default(false)

@@ -36,6 +36,25 @@ export async function findUserByUsername(username: string) {
   return prisma.user.findUnique({ where: { username } });
 }
 
+export async function findUserByYandexId(yandexId: string) {
+  return prisma.user.findUnique({ where: { yandexId } });
+}
+
+export async function createUserFromYandex(
+  email: string,
+  username: string,
+  yandexId: string,
+  name: string | null
+): Promise<User> {
+  const row = await prisma.user.create({ data: { email, username, yandexId, name } });
+  return toUser(row);
+}
+
+export async function linkYandexId(userId: string, yandexId: string): Promise<User> {
+  const row = await prisma.user.update({ where: { id: userId }, data: { yandexId } });
+  return toUser(row);
+}
+
 export async function findUserById(id: string): Promise<User | null> {
   const row = await prisma.user.findUnique({ where: { id } });
   return row ? toUser(row) : null;

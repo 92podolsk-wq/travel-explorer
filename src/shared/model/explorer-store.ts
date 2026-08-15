@@ -111,7 +111,6 @@ type ExplorerState = {
   setExplorationModes: (explorationModes: ExplorationMode[]) => void;
   setCategories: (categories: Category[]) => void;
   setSiteSettings: (siteSettings: SiteSettings) => void;
-  toggleSeason: (season: Season) => void;
   setUserLocation: (location: Coordinates | null) => void;
   setIsLocatingUser: (value: boolean) => void;
   setLocationError: (error: string | null) => void;
@@ -290,12 +289,6 @@ export const useExplorerStore = create<ExplorerState>()(
         activeRegionIds: validIds.length > 0 ? validIds : regions[0] ? [regions[0].id] : state.activeRegionIds
       };
     }),
-  toggleSeason: (season) =>
-    set((state) => ({
-      selectedSeasons: state.selectedSeasons.includes(season)
-        ? state.selectedSeasons.filter((s) => s !== season)
-        : [...state.selectedSeasons, season]
-    })),
   setCountries: (countries) => set({ countries }),
   setAreas: (areas) => set({ areas }),
   setExplorationModes: (explorationModes) => set({ explorationModes }),

@@ -4,11 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, PanelLeftClose, PanelLeftOpen, Search, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, animate as animateValue, motion, useDragControls, useMotionValue } from "framer-motion";
 import Image from "next/image";
-import { seasons } from "@/entities/poi/model/constants";
 import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
-import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { findRegionById } from "@/entities/region/model/regions";
-import { SeasonWeatherStrip } from "./season-weather-strip";
 import { buildAffinityProfile, computeAffinityScore, hasEnoughSignal, topAffinityCategories } from "@/features/recommendations/model/affinity";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
@@ -50,8 +47,6 @@ export function ExplorerSidebar() {
   const zoom = useExplorerStore((state) => state.zoom);
   const setSearchQuery = useExplorerStore((state) => state.setSearchQuery);
   const selectPoi = useExplorerStore((state) => state.selectPoiFromMap);
-  const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
-  const toggleSeason = useExplorerStore((state) => state.toggleSeason);
   const userLocation = useExplorerStore((state) => state.userLocation);
   const isLocatingUser = useExplorerStore((state) => state.isLocatingUser);
   const locationError = useExplorerStore((state) => state.locationError);
@@ -70,7 +65,6 @@ export function ExplorerSidebar() {
   const isSidebarCollapsed = useExplorerStore((state) => state.isSidebarCollapsed);
   const toggleSidebarCollapsed = useExplorerStore((state) => state.toggleSidebarCollapsed);
   const t = getTranslations(language);
-  const [isGreetingVisible, setIsGreetingVisible] = useState(false);
   const [isCategoryFilterOpen, setIsCategoryFilterOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -266,33 +260,15 @@ export function ExplorerSidebar() {
               src={headerPhoto.url}
               alt=""
               aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-cover opacity-[0.12]"
+              className="absolute inset-0 h-full w-full object-cover opacity-40"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background/95" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background/90" />
           </>
         )}
-        <div
-          className="relative mb-3 flex w-fit items-center gap-2.5"
-          onMouseEnter={() => setIsGreetingVisible(true)}
-          onMouseLeave={() => setIsGreetingVisible(false)}
-        >
+        <div className="relative mb-3 flex w-fit items-center gap-2.5">
           <h1 className="cursor-default text-3xl font-semibold tracking-normal">
             {headingText}
           </h1>
-          <AnimatePresence>
-            {isGreetingVisible && (
-              <motion.div
-                initial={{ opacity: 0, y: -6, scale: 0.85 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -6, scale: 0.85 }}
-                transition={{ type: "spring", stiffness: 420, damping: 22 }}
-                className="absolute left-0 top-full z-30 mt-2 whitespace-nowrap rounded-full bg-[#a3312c] px-3.5 py-1.5 text-sm font-semibold text-white shadow-panel"
-              >
-                {t.app.kyotoGreeting}
-                <span className="absolute -top-1 left-6 h-2.5 w-2.5 rotate-45 bg-[#a3312c]" />
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
         <div className="mb-3 h-[3px] w-11 rounded-full bg-[#a3312c]" />
@@ -391,42 +367,6 @@ export function ExplorerSidebar() {
             })}
           </div>
         )}
-      </div>
-
-      <div className="shrink-0 border-b border-border/70 p-4 pt-3">
-        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          {t.app.seasonFilter}
-        </p>
-        <div className="flex gap-2">
-          {seasons.map((season) => {
-            const SeasonIcon = seasonIcons[season];
-            const isActive = selectedSeasons.includes(season);
-
-            return (
-              <button
-                key={season}
-                type="button"
-                onClick={() => toggleSeason(season)}
-                aria-pressed={isActive}
-                title={t.season[season]}
-                className={cn(
-                  "flex flex-1 flex-col items-center gap-1 rounded-md border py-1.5 transition",
-                  isActive
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border bg-card/[0.58] text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <SeasonIcon className="h-4 w-4" />
-                <span className="text-[11px] font-medium">{t.season[season]}</span>
-              </button>
-            );
-          })}
-        </div>
-        <SeasonWeatherStrip
-          regionId={activeRegion.id}
-          selectedSeasons={selectedSeasons}
-          language={language}
-        />
       </div>
 
       <div

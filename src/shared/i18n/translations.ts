@@ -50,8 +50,6 @@ type TranslationDictionary = {
     showFavoritesHint: string;
     hideVisitedHint: string;
     showVisitedHint: string;
-    kyotoGreeting: string;
-    seasonFilter: string;
     categoryFilter: string;
     noResultsTitle: string;
     noResultsHint: string;
@@ -362,8 +360,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Show saved places on the map",
       hideVisitedHint: "Hide visited places from the map",
       showVisitedHint: "Show visited places on the map",
-      kyotoGreeting: "Konnichiwa!",
-      seasonFilter: "Season",
       categoryFilter: "Category",
       noResultsTitle: "No places found",
       noResultsHint: "Try a different search or reset your filters.",
@@ -746,8 +742,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Показать сохранённые места на карте",
       hideVisitedHint: "Скрыть посещённые места с карты",
       showVisitedHint: "Показать посещённые места на карте",
-      kyotoGreeting: "Коничива!",
-      seasonFilter: "Сезон",
       categoryFilter: "Категория",
       noResultsTitle: "Ничего не найдено",
       noResultsHint: "Попробуйте другой запрос или сбросьте фильтры.",

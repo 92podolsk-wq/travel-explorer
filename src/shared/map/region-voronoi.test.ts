@@ -15,7 +15,6 @@ function makeRegion(overrides: Partial<Region> = {}, index = 0): Region {
     ],
     timezoneOffsetHours: 9,
     nameByLanguage: { ru: `Регион ${index}`, en: `Region ${index}` },
-    sealCharacter: "京",
     status: "published",
     ...overrides
   };

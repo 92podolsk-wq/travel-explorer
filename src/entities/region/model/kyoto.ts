@@ -18,6 +18,5 @@ export const kyotoRegion: Region = {
     en: "Kyoto",
     ru: "Киото"
   },
-  sealCharacter: "京",
   status: "published"
 };

@@ -18,6 +18,5 @@ export const osakaRegion: Region = {
     en: "Osaka",
     ru: "Осака"
   },
-  sealCharacter: "阪",
   status: "published"
 };

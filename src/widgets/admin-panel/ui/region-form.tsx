@@ -25,7 +25,6 @@ type FormState = {
   timezoneOffsetHours: string;
   nameEn: string;
   nameRu: string;
-  sealCharacter: string;
   status: PublishStatus;
 };
 
@@ -44,7 +43,6 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
       timezoneOffsetHours: "9",
       nameEn: "",
       nameRu: "",
-      sealCharacter: "",
       status: "draft"
     };
   }
@@ -62,7 +60,6 @@ function toFormState(region: Region | undefined, defaultAreaId: string): FormSta
     timezoneOffsetHours: String(region.timezoneOffsetHours),
     nameEn: region.nameByLanguage.en,
     nameRu: region.nameByLanguage.ru,
-    sealCharacter: region.sealCharacter,
     status: region.status
   };
 }
@@ -115,7 +112,6 @@ function toRegionInput(form: FormState): RegionInput | { error: string } {
       en: form.nameEn.trim() || name,
       ru: form.nameRu.trim() || name
     },
-    sealCharacter: form.sealCharacter.trim() || name.charAt(0),
     status: form.status
   };
 }

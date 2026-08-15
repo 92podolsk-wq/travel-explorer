@@ -692,7 +692,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       step4Title: "Build smart routes",
       step4Body: "Automatically generate a multi-day route based on timing and distance.",
       step5Title: "Enjoy the trip",
-      step5Body: "Share your route and discover Japan at its best."
+      step5Body: "Share your route and discover the best of your destination."
     },
     trip: {
       sharedRouteLabel: "Shared route",
@@ -1076,7 +1076,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       step4Title: "Создавайте умные маршруты",
       step4Body: "Автоматически стройте маршрут на несколько дней с учётом времени и расстояний.",
       step5Title: "Наслаждайтесь путешествием",
-      step5Body: "Делитесь маршрутом и открывайте Японию во всей красе."
+      step5Body: "Делитесь маршрутом и открывайте лучшее в выбранном направлении."
     },
     trip: {
       sharedRouteLabel: "Общий маршрут",

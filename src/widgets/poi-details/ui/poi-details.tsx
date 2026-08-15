@@ -35,6 +35,7 @@ export function PoiDetails() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isUploadPhotoOpen, setIsUploadPhotoOpen] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
 
   const regionPois = pois.filter((poi) => activeRegionIds.includes(poi.regionId));
 
@@ -47,6 +48,7 @@ export function PoiDetails() {
   useEffect(() => {
     setActivePhotoIndex(0);
     setIsReportOpen(false);
+    setIsPhotoViewerOpen(false);
   }, [selectedPoiId, selectedSeasons]);
 
   const seasonFilteredPhotos =
@@ -55,15 +57,21 @@ export function PoiDetails() {
       : (selectedPoi?.photos ?? []).filter((photo) => !photo.season || selectedSeasons.includes(photo.season));
   const displayPhotos = seasonFilteredPhotos.length > 0 ? seasonFilteredPhotos : (selectedPoi?.photos ?? []);
 
-  // Auto-advances the hero photo like an Instagram Story — 3s per photo,
+  // Auto-advances the hero photo like an Instagram Story — 6s per photo,
   // looping back to the first — mirroring the native app's PoiDetailSheet.
+  // Pauses while the fullscreen photo viewer is open.
   useEffect(() => {
-    if (!isDetailsOpen || displayPhotos.length <= 1) return;
+    if (!isDetailsOpen || isPhotoViewerOpen || displayPhotos.length <= 1) return;
     const timer = setTimeout(() => {
       setActivePhotoIndex((current) => (current + 1) % displayPhotos.length);
-    }, 3000);
+    }, 6000);
     return () => clearTimeout(timer);
-  }, [isDetailsOpen, displayPhotos.length, activePhotoIndex]);
+  }, [isDetailsOpen, isPhotoViewerOpen, displayPhotos.length, activePhotoIndex]);
+
+  function goToPhotoOffset(offset: number) {
+    if (displayPhotos.length === 0) return;
+    setActivePhotoIndex((current) => (current + offset + displayPhotos.length) % displayPhotos.length);
+  }
 
   if (!selectedPoi) {
     return null;
@@ -167,14 +175,21 @@ export function PoiDetails() {
 
           <div className="relative h-64 shrink-0 overflow-hidden">
             {activePhoto ? (
-              <Image
-                key={activePhoto.id}
-                src={activePhoto.url}
-                alt={activePhoto.alt ?? poiName}
-                width={760}
-                height={448}
-                className="h-full w-full object-cover"
-              />
+              <button
+                type="button"
+                aria-label={`${t.app.photo} ${activePhotoIndex + 1}`}
+                onClick={() => setIsPhotoViewerOpen(true)}
+                className="block h-full w-full cursor-zoom-in"
+              >
+                <Image
+                  key={activePhoto.id}
+                  src={activePhoto.url}
+                  alt={activePhoto.alt ?? poiName}
+                  width={760}
+                  height={448}
+                  className="h-full w-full object-cover"
+                />
+              </button>
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
                 <MapPin className="h-8 w-8" />
@@ -346,6 +361,65 @@ export function PoiDetails() {
 
       {isUploadPhotoOpen && (
         <UploadPhotoModal poiId={selectedPoi.id} language={language} onClose={() => setIsUploadPhotoOpen(false)} />
+      )}
+
+      {isPhotoViewerOpen && activePhoto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+          <button
+            type="button"
+            aria-label={t.report.close}
+            className="absolute inset-0"
+            onClick={() => setIsPhotoViewerOpen(false)}
+          />
+          <button
+            type="button"
+            aria-label={t.report.close}
+            onClick={() => setIsPhotoViewerOpen(false)}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {displayPhotos.length > 1 && (
+            <>
+              <button
+                type="button"
+                aria-label={`${t.app.photo} ${((activePhotoIndex - 1 + displayPhotos.length) % displayPhotos.length) + 1}`}
+                onClick={() => goToPhotoOffset(-1)}
+                className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:left-4"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${t.app.photo} ${((activePhotoIndex + 1) % displayPhotos.length) + 1}`}
+                onClick={() => goToPhotoOffset(1)}
+                className="absolute right-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-4"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
+
+          <div
+            className="relative z-0 flex max-h-[88vh] max-w-[92vw] items-center justify-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Image
+              key={activePhoto.id}
+              src={activePhoto.url}
+              alt={activePhoto.alt ?? poiName}
+              width={1400}
+              height={1400}
+              className="max-h-[88vh] w-auto max-w-full rounded-md object-contain"
+            />
+            {activePhoto.author && (
+              <span className="absolute bottom-2 right-2 text-xs font-medium text-white/70">
+                © {activePhoto.author}
+              </span>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

@@ -37,7 +37,6 @@ function toRegion(row: RegionRow): Region {
     bounds: row.bounds as [[number, number], [number, number]],
     timezoneOffsetHours: row.timezoneOffsetHours,
     nameByLanguage: row.nameByLanguage as Record<Language, string>,
-    sealCharacter: row.sealCharacter,
     status: row.status as PublishStatus
   };
 }
@@ -62,7 +61,10 @@ function toRegionData(input: RegionInput) {
     defaultZoom: input.defaultZoom,
     bounds: input.bounds,
     timezoneOffsetHours: input.timezoneOffsetHours,
-    sealCharacter: input.sealCharacter,
+    // The DB column is still NOT NULL from an earlier decorative-monogram feature
+    // that's no longer exposed anywhere in the app; auto-derive a value so writes
+    // don't fail, without surfacing it in the domain type or admin form.
+    sealCharacter: input.name.charAt(0) || "?",
     status: input.status
   };
 }

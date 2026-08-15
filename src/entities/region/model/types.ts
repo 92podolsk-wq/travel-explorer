@@ -12,7 +12,6 @@ export type Region = {
   bounds: [[number, number], [number, number]];
   timezoneOffsetHours: number;
   nameByLanguage: Record<Language, string>;
-  sealCharacter: string;
   status: PublishStatus;
 };
 

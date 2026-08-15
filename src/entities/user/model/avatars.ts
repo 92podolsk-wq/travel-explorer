@@ -1,16 +1,16 @@
 export const avatarIds = [
-  "torii",
-  "sakura",
-  "fuji",
-  "koi",
-  "lantern",
-  "maple",
-  "bamboo",
-  "tea",
-  "fan",
-  "pagoda",
-  "maneki-neko",
-  "dango"
+  "compass",
+  "globe",
+  "mountain",
+  "sun",
+  "camera",
+  "plane",
+  "backpack",
+  "map-pin",
+  "suitcase",
+  "tent",
+  "binoculars",
+  "balloon"
 ] as const;
 
 export type AvatarId = (typeof avatarIds)[number];

@@ -156,6 +156,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
           height={36}
           className="h-9 w-9 shrink-0 rounded-full object-cover"
           priority
+          unoptimized
         />
         <div className="hidden text-left leading-tight sm:block">
           <p className="text-sm font-semibold text-foreground">Wayora</p>

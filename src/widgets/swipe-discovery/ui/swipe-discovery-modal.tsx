@@ -140,12 +140,6 @@ function SwipeCard({
             <div className="h-full w-full bg-muted" />
           )}
 
-          {poi.mustVisit && (
-            <span className="absolute left-3 top-3 -rotate-2 rounded bg-primary/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow">
-              Must Visit
-            </span>
-          )}
-
           <motion.div
             style={{ opacity: likeOpacity, mixBlendMode: "multiply" }}
             className="pointer-events-none absolute right-5 top-7 -rotate-[18deg] rounded-md border-[5px] border-emerald-600 bg-emerald-500/30 px-4 py-1.5 text-2xl font-black uppercase tracking-[0.15em] text-emerald-700"

@@ -529,7 +529,6 @@ export function AdminPanel() {
       tags: poi.tags,
       seasons: poi.seasons,
       photoScore: poi.photoScore,
-      mustVisit: poi.mustVisit,
       difficulty: poi.difficulty,
       durationMinutes: poi.durationMinutes,
       importance: poi.importance,

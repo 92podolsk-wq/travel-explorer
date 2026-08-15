@@ -49,7 +49,6 @@ export type Poi = {
   tags: PoiTag[];
   seasons: string[];
   photoScore: number;
-  mustVisit: boolean;
   difficulty: Difficulty;
   durationMinutes: number;
   importance: number;

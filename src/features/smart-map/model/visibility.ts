@@ -75,7 +75,7 @@ export function getVisiblePois(
         matchesSearch &&
         matchesFilterTags &&
         matchesCategory &&
-        (hasActiveFilter || score >= threshold || poi.mustVisit)
+        (hasActiveFilter || score >= threshold)
       );
     })
     .sort((a, b) => {

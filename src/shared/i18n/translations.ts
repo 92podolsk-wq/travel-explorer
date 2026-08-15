@@ -15,7 +15,6 @@ type TranslationDictionary = {
     places: string;
     viewed: string;
     save: string;
-    mustVisit: string;
     photo: string;
     best: string;
     duration: string;
@@ -325,7 +324,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       places: "places",
       viewed: "viewed",
       save: "Save",
-      mustVisit: "Must Visit",
       photo: "Photo",
       best: "Best",
       duration: "Duration",
@@ -707,7 +705,6 @@ export const translations: Record<Language, TranslationDictionary> = {
       places: "мест",
       viewed: "просмотрено",
       save: "Сохранить",
-      mustVisit: "Обязательно",
       photo: "Фото",
       best: "Лучше",
       duration: "Время",

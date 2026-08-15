@@ -61,7 +61,6 @@ type PoiFeatureProperties = {
   id: string;
   name: string;
   selected: boolean;
-  mustVisit: boolean;
   viewed: boolean;
   favorite: boolean;
   visited: boolean;
@@ -137,7 +136,6 @@ function createPoiCollection(
           id: poi.id,
           name: poi.name,
           selected: poi.id === selectedPoiId,
-          mustVisit: poi.mustVisit,
           viewed: viewedPoiIds.includes(poi.id),
           favorite: favoritePoiIds.includes(poi.id),
           visited: visitedPoiIds.includes(poi.id),
@@ -311,14 +309,7 @@ async function addPoiLayers(map: MapLibreMap) {
     source: poiSourceId,
     filter: ["!", ["has", "point_count"]],
     paint: {
-      "circle-radius": [
-        "case",
-        ["==", ["get", "selected"], true],
-        19,
-        ["==", ["get", "mustVisit"], true],
-        15,
-        12.5
-      ],
+      "circle-radius": ["case", ["==", ["get", "selected"], true], 19, 12.5],
       "circle-color": [
         "case",
         ["==", ["get", "selected"], true],

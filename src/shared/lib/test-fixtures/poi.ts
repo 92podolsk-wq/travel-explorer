@@ -19,7 +19,6 @@ export function makePoi(overrides: Partial<Poi> = {}): Poi {
     tags: [],
     seasons: [],
     photoScore: 0,
-    mustVisit: true,
     difficulty: "easy",
     durationMinutes: 60,
     importance: 1,

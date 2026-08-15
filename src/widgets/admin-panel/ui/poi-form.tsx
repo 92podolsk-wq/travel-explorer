@@ -39,7 +39,6 @@ type FormState = {
   importance: string;
   durationMinutes: string;
   difficulty: Difficulty;
-  mustVisit: boolean;
   category: PoiMainCategory;
   tags: PoiTag[];
   seasons: string;
@@ -63,7 +62,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
       importance: "70",
       durationMinutes: "60",
       difficulty: "easy",
-      mustVisit: true,
       category: "unique",
       tags: [],
       seasons: "all year",
@@ -86,7 +84,6 @@ function toFormState(poi: Poi | undefined, defaultRegionId: string): FormState {
     importance: String(poi.importance),
     durationMinutes: String(poi.durationMinutes),
     difficulty: poi.difficulty,
-    mustVisit: poi.mustVisit,
     category: poi.category,
     tags: poi.tags,
     seasons: poi.seasons.join(", "),
@@ -162,7 +159,6 @@ function toPoiInput(form: FormState): PoiInput | { error: string } {
     tags: form.tags,
     seasons: splitList(form.seasons),
     photoScore,
-    mustVisit: form.mustVisit,
     difficulty: form.difficulty,
     durationMinutes,
     importance,
@@ -466,37 +462,21 @@ export function PoiForm({ poi, regions, categories, frequentRegionIds = [], defa
         <Input type="number" min="0" value={form.durationMinutes} onChange={(e) => setForm((p) => ({ ...p, durationMinutes: e.target.value }))} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={fieldLabel} title="Физическая сложность посещения — отображается значком и текстом в карточке места.">
-            Сложность
-          </label>
-          <select
-            className={selectClass}
-            value={form.difficulty}
-            onChange={(e) => setForm((p) => ({ ...p, difficulty: e.target.value as Difficulty }))}
-          >
-            {poiDifficulties.map((difficulty) => (
-              <option key={difficulty} value={difficulty}>
-                {t.difficulty[difficulty]}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-end pb-2.5">
-          <label
-            className="inline-flex cursor-help items-center gap-2 text-sm font-medium"
-            title="Показывает бейдж «Обязательно», добавляет бонус к очкам в режиме «Первое посещение» и гарантирует, что место всегда отображается на карте вне зависимости от порога плотности."
-          >
-            <input
-              type="checkbox"
-              checked={form.mustVisit}
-              onChange={(e) => setForm((p) => ({ ...p, mustVisit: e.target.checked }))}
-              className="h-4 w-4 rounded border-border"
-            />
-            Обязательно к посещению
-          </label>
-        </div>
+      <div>
+        <label className={fieldLabel} title="Физическая сложность посещения — отображается значком и текстом в карточке места.">
+          Сложность
+        </label>
+        <select
+          className={selectClass}
+          value={form.difficulty}
+          onChange={(e) => setForm((p) => ({ ...p, difficulty: e.target.value as Difficulty }))}
+        >
+          {poiDifficulties.map((difficulty) => (
+            <option key={difficulty} value={difficulty}>
+              {t.difficulty[difficulty]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div>

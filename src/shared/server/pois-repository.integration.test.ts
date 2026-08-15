@@ -30,7 +30,6 @@ function makePoiInput(overrides: Partial<PoiInput> = {}): PoiInput {
     tags: [],
     seasons: [],
     photoScore: 0,
-    mustVisit: true,
     difficulty: "easy",
     durationMinutes: 30,
     importance: 1,

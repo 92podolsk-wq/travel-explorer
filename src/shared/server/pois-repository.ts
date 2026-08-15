@@ -65,7 +65,6 @@ export function toPoi(row: PoiRow): Poi {
     tags: row.tags as PoiTag[],
     seasons: row.seasons,
     photoScore: row.photoScore,
-    mustVisit: row.mustVisit,
     difficulty: row.difficulty as Difficulty,
     durationMinutes: row.durationMinutes,
     importance: row.importance,
@@ -117,7 +116,10 @@ async function writePoi(id: string, input: PoiInput) {
       tags: input.tags,
       seasons: input.seasons,
       photoScore: input.photoScore,
-      mustVisit: input.mustVisit,
+      // The DB column is still NOT NULL from a retired "must visit" feature
+      // that no longer exists in the admin form or domain type; write a
+      // fixed inert value so writes don't fail.
+      mustVisit: false,
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,
@@ -136,7 +138,10 @@ async function writePoi(id: string, input: PoiInput) {
       tags: input.tags,
       seasons: input.seasons,
       photoScore: input.photoScore,
-      mustVisit: input.mustVisit,
+      // The DB column is still NOT NULL from a retired "must visit" feature
+      // that no longer exists in the admin form or domain type; write a
+      // fixed inert value so writes don't fail.
+      mustVisit: false,
       difficulty: input.difficulty,
       durationMinutes: input.durationMinutes,
       importance: input.importance,

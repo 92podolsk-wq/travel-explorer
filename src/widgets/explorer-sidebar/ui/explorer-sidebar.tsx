@@ -273,27 +273,31 @@ export function ExplorerSidebar() {
 
         <div className="mb-3 h-[3px] w-11 rounded-full bg-[#a3312c]" />
 
-        <div className="mb-3 flex flex-wrap items-center gap-1">
-          <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
-            <span className="inline-flex items-center gap-0.5" title={t.app.sunrise}>
-              <Sunrise className="h-3 w-3 text-amber-500" />
-              {sunTimes.sunrise ?? "—"}
-            </span>
-            <span className="h-3 w-px bg-border" />
-            <span className="inline-flex items-center gap-0.5" title={t.app.sunset}>
-              <Sunset className="h-3 w-3 text-amber-500" />
-              {sunTimes.sunset ?? "—"}
-            </span>
+        <div className="relative mb-3 flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-1">
+            <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs font-medium text-muted-foreground shadow-sm">
+              <span className="inline-flex items-center gap-0.5" title={t.app.sunrise}>
+                <Sunrise className="h-3 w-3 text-amber-500" />
+                {sunTimes.sunrise ?? "—"}
+              </span>
+              <span className="h-3 w-px bg-border" />
+              <span className="inline-flex items-center gap-0.5" title={t.app.sunset}>
+                <Sunset className="h-3 w-3 text-amber-500" />
+                {sunTimes.sunset ?? "—"}
+              </span>
+            </div>
           </div>
-          <LiveWeatherChips
-            key={activeRegion.id}
-            regionId={activeRegion.id}
-            latitude={activeRegion.center.lat}
-            longitude={activeRegion.center.lng}
-            timeZoneOffsetHours={activeRegion.timezoneOffsetHours}
-            nowLabel={t.app.now}
-            tomorrowLabel={t.app.tomorrow}
-          />
+          <div className="flex flex-wrap items-center gap-1">
+            <LiveWeatherChips
+              key={activeRegion.id}
+              regionId={activeRegion.id}
+              latitude={activeRegion.center.lat}
+              longitude={activeRegion.center.lng}
+              timeZoneOffsetHours={activeRegion.timezoneOffsetHours}
+              nowLabel={t.app.now}
+              tomorrowLabel={t.app.tomorrow}
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5">

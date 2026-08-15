@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Share2, Sparkles, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronLeft, ChevronRight, Clock, Heart, ImagePlus, MapPin, Share2, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { seasons } from "@/entities/poi/model/constants";
-import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
 import { difficultyIcons } from "@/entities/poi/ui/difficulty-icon";
-import { seasonIcons } from "@/entities/poi/ui/season-icon";
 import { getTranslations } from "@/shared/i18n/translations";
-import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
@@ -20,7 +16,6 @@ import { UploadPhotoModal } from "./upload-photo-modal";
 
 export function PoiDetails() {
   const pois = useExplorerStore((state) => state.pois);
-  const categories = useExplorerStore((state) => state.categories);
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const selectedPoiId = useExplorerStore((state) => state.selectedPoiId);
   const favorites = useExplorerStore((state) => state.favorites);
@@ -29,7 +24,6 @@ export function PoiDetails() {
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const toggleVisited = useExplorerStore((state) => state.toggleVisited);
   const selectedSeasons = useExplorerStore((state) => state.selectedSeasons);
-  const toggleSeason = useExplorerStore((state) => state.toggleSeason);
   const isDetailsOpen = useExplorerStore((state) => state.isDetailsOpen);
   const setDetailsOpen = useExplorerStore((state) => state.setDetailsOpen);
   const markPoiViewed = useExplorerStore((state) => state.markPoiViewed);
@@ -54,6 +48,22 @@ export function PoiDetails() {
     setActivePhotoIndex(0);
     setIsReportOpen(false);
   }, [selectedPoiId, selectedSeasons]);
+
+  const seasonFilteredPhotos =
+    selectedSeasons.length === 0
+      ? (selectedPoi?.photos ?? [])
+      : (selectedPoi?.photos ?? []).filter((photo) => !photo.season || selectedSeasons.includes(photo.season));
+  const displayPhotos = seasonFilteredPhotos.length > 0 ? seasonFilteredPhotos : (selectedPoi?.photos ?? []);
+
+  // Auto-advances the hero photo like an Instagram Story — 3s per photo,
+  // looping back to the first — mirroring the native app's PoiDetailSheet.
+  useEffect(() => {
+    if (!isDetailsOpen || displayPhotos.length <= 1) return;
+    const timer = setTimeout(() => {
+      setActivePhotoIndex((current) => (current + 1) % displayPhotos.length);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isDetailsOpen, displayPhotos.length, activePhotoIndex]);
 
   if (!selectedPoi) {
     return null;
@@ -91,16 +101,6 @@ export function PoiDetails() {
     poiCopy?.description
   );
   const DifficultyIcon = difficultyIcons[selectedPoi.difficulty];
-
-  const seasonFilteredPhotos =
-    selectedSeasons.length === 0
-      ? selectedPoi.photos
-      : selectedPoi.photos.filter((photo) => !photo.season || selectedSeasons.includes(photo.season));
-  const displayPhotos = seasonFilteredPhotos.length > 0 ? seasonFilteredPhotos : selectedPoi.photos;
-  const hasSeasonSpecificMatch =
-    selectedSeasons.length > 0 &&
-    selectedPoi.photos.some((photo) => photo.season && selectedSeasons.includes(photo.season));
-  const showSeasonFallbackHint = selectedSeasons.length > 0 && !hasSeasonSpecificMatch;
   const activePhoto = displayPhotos[activePhotoIndex] ?? displayPhotos[0];
 
   const currentIndex = regionPois.findIndex((poi) => poi.id === selectedPoi.id);
@@ -212,66 +212,20 @@ export function PoiDetails() {
                 ))}
               </div>
             )}
-            <div className="absolute left-4 top-4 flex gap-2">
-              {selectedPoi.mustVisit && (
-                <Badge className="gap-1 border-white/70 bg-white/[0.88] text-neutral-900">
-                  <Sparkles className="h-3 w-3" />
-                  {t.app.mustVisit}
-                </Badge>
-              )}
-              <Badge className="gap-1 border-white/70 bg-white/[0.88] text-neutral-900">
-                <Camera className="h-3 w-3" />
-                {t.app.photo} {selectedPoi.photos.length}
-              </Badge>
-            </div>
             <div className="absolute bottom-5 left-5 right-5 text-white">
-              <h2 className="text-3xl font-semibold tracking-normal">{poiName}</h2>
-              <div className="mt-2 flex items-center gap-3 text-sm font-medium">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-3xl font-semibold tracking-normal">{poiName}</h2>
                 {selectedPoi.favoritesCount > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.18] px-2 py-1 text-sm font-medium backdrop-blur">
                     <Heart className="h-4 w-4 fill-white" />
                     {selectedPoi.favoritesCount}
                   </span>
                 )}
-                <span className="rounded-md bg-white/[0.18] px-2 py-1 backdrop-blur">
-                  {t.difficulty[selectedPoi.difficulty]}
-                </span>
               </div>
             </div>
           </div>
 
-          <div className="shrink-0 px-5 pt-3">
-            <div className="flex gap-1.5">
-              {seasons.map((season) => {
-                const SeasonIcon = seasonIcons[season];
-                const isActive = selectedSeasons.includes(season);
-
-                return (
-                  <button
-                    key={season}
-                    type="button"
-                    onClick={() => toggleSeason(season)}
-                    aria-pressed={isActive}
-                    title={t.season[season]}
-                    className={cn(
-                      "flex h-7 flex-1 items-center justify-center gap-1 rounded border transition",
-                      isActive
-                        ? "border-primary/40 bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    <SeasonIcon className="h-3 w-3" />
-                    <span className="text-[10px] font-medium">{t.season[season]}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {showSeasonFallbackHint && (
-              <p className="mt-1.5 text-[11px] text-muted-foreground">{t.app.noSeasonPhotoHint}</p>
-            )}
-          </div>
-
-          <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-5 pb-5 pt-2">
+          <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-5 pb-5 pt-4">
             <div className="mb-4 flex items-center gap-2.5 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <DifficultyIcon className="h-4 w-4 text-primary" />
@@ -322,25 +276,6 @@ export function PoiDetails() {
                 <CheckCircle2 className="h-4 w-4" />
                 {t.app.visited}
               </Button>
-            </div>
-
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold">{t.app.signals}</h3>
-              <div className="flex flex-wrap gap-2">
-                {(() => {
-                  const CategoryIcon = getCategoryIcon(categories, selectedPoi.category);
-                  const category = categories.find((item) => item.id === selectedPoi.category);
-                  return (
-                    <Badge className="gap-1">
-                      <CategoryIcon className="h-3 w-3" />
-                      {category?.nameByLanguage[language] ?? selectedPoi.category}
-                    </Badge>
-                  );
-                })()}
-                {selectedPoi.tags.map((tag) => (
-                  <Badge key={tag}>{t.tag[tag]}</Badge>
-                ))}
-              </div>
             </div>
           </div>
 

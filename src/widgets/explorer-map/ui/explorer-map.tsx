@@ -1280,7 +1280,8 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
       }
 
       const el = document.createElement("div");
-      el.className = "pointer-events-none h-11 w-11 rounded-full bg-[#287f72]/40 animate-ping";
+      el.className = "pointer-events-none relative flex h-11 w-11 items-center justify-center";
+      el.innerHTML = '<span class="absolute inset-0 rounded-full bg-[#287f72]/40 animate-ping"></span>';
 
       selectedPulseMarkerRef.current = new maplibre.Marker({ element: el })
         .setLngLat([selectedPoi.coordinates.lng, selectedPoi.coordinates.lat])

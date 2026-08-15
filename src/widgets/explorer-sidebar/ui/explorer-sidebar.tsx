@@ -20,8 +20,6 @@ import { localizedPoiDescription } from "@/shared/lib/translation-completeness";
 import { LiveWeatherChips } from "./live-weather-chips";
 import { SwipeDiscoveryModal } from "@/widgets/swipe-discovery/ui/swipe-discovery-modal";
 import { Button } from "@/shared/ui/button";
-import { CityIcon } from "@/shared/ui/city-icon";
-import { SeigaihaWatermark } from "@/shared/ui/seigaiha-watermark";
 import { Input } from "@/shared/ui/input";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { cn } from "@/shared/lib/cn";
@@ -273,7 +271,6 @@ export function ExplorerSidebar() {
             <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/75 to-background/95" />
           </>
         )}
-        <SeigaihaWatermark className="-top-8 -right-8" />
         <div
           className="relative mb-3 flex w-fit items-center gap-2.5"
           onMouseEnter={() => setIsGreetingVisible(true)}
@@ -282,7 +279,6 @@ export function ExplorerSidebar() {
           <h1 className="cursor-default text-3xl font-semibold tracking-normal">
             {headingText}
           </h1>
-          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} />
           <AnimatePresence>
             {isGreetingVisible && (
               <motion.div

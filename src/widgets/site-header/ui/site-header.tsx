@@ -13,7 +13,6 @@ import { ThemeSwitcher } from "@/features/theme-switcher/ui/theme-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
-import { CityIcon } from "@/shared/ui/city-icon";
 import { CountryFlagIcon } from "@/shared/ui/country-flag-icon";
 import { cn } from "@/shared/lib/cn";
 
@@ -180,7 +179,6 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
           aria-expanded={isMenuOpen}
           className="flex w-full min-w-0 items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60 sm:w-auto"
         >
-          <CityIcon regionId={activeRegion.id} sealCharacter={activeRegion.sealCharacter} className="h-5 w-5 shrink-0 shadow-none" />
           <span className="min-w-0 flex-1 truncate text-left">
             {isAreaActive
               ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")

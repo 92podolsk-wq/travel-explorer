@@ -327,15 +327,6 @@ export function RegionForm({ region, areas, onCancel, onSubmit }: RegionFormProp
           </label>
           <Input type="number" step="1" min="-12" max="14" value={form.timezoneOffsetHours} onChange={(e) => setForm((p) => ({ ...p, timezoneOffsetHours: e.target.value }))} />
         </div>
-        <div>
-          <label
-            className={fieldLabel}
-            title="Иероглиф на красной печати (ханко), которая показывается рядом с названием города в боковой панели."
-          >
-            Символ печати
-          </label>
-          <Input value={form.sealCharacter} onChange={(e) => setForm((p) => ({ ...p, sealCharacter: e.target.value }))} placeholder="東" />
-        </div>
       </div>
 
       <div>

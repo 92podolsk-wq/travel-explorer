@@ -161,7 +161,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
         <div className="hidden text-left leading-tight sm:block">
           <p className="text-sm font-semibold text-foreground">Wayora</p>
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            Explore Japan
+            Travel Explorer
           </p>
         </div>
       </button>

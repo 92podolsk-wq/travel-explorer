@@ -120,7 +120,7 @@ export function CitiesTable({ regions, areas, countries, pois, onSelect, onAdd }
               <tr key={region.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                 <td className="px-3 py-2 font-medium text-foreground">
                   <button type="button" onClick={() => onSelect(region.id)} className="inline-flex items-center gap-1.5 hover:underline">
-                    {region.name} <span className="text-muted-foreground">({region.sealCharacter})</span>
+                    {region.name}
                     {missingLanguages([region.nameByLanguage]).length > 0 && (
                       <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">Нет перевода</span>
                     )}

@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Wayora — Explore Japan",
+    name: "Wayora — Travel Explorer",
     short_name: "Wayora",
-    description:
-      "Discover the best places to visit in Kyoto, Osaka, Nara, and beyond. Build smart multi-day routes and save favorites.",
+    description: "Discover the best places to visit, build smart multi-day routes, and save favorites.",
     start_url: "/",
     display: "standalone",
     background_color: "#f7f4ee",

@@ -1217,9 +1217,7 @@ export function AdminPanel() {
                     >
                       ← Назад к списку
                     </button>
-                    <p className="text-sm font-semibold">
-                      {region.name} <span className="text-muted-foreground">({region.sealCharacter})</span>
-                    </p>
+                    <p className="text-sm font-semibold">{region.name}</p>
                     <button
                       type="button"
                       aria-label="Удалить город"

@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
-import { HankoSeal } from "./hanko-seal";
 
 const glowPulse = {
   animate: { opacity: [1, 0.55, 1] },
@@ -105,7 +104,17 @@ export function CityIcon({ regionId, sealCharacter, className }: CityIconProps) 
   const markup = cityIconMarkup[regionId];
 
   if (!markup) {
-    return <HankoSeal character={sealCharacter} className={className} />;
+    return (
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-sm",
+          className
+        )}
+      >
+        {sealCharacter.slice(0, 1).toUpperCase()}
+      </span>
+    );
   }
 
   return (

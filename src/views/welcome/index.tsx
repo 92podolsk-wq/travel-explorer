@@ -230,7 +230,7 @@ export function WelcomePage() {
         </section>
 
         <footer className="border-t border-border bg-card px-6 py-6 text-center text-xs text-muted-foreground">
-          Wayora — Explore Japan
+          Wayora — Travel Explorer
         </footer>
       </div>
     </main>

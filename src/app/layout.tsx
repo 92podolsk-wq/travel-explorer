@@ -21,9 +21,9 @@ const manrope = Manrope({
   display: "swap"
 });
 
-const siteTitle = "Wayora — Explore Japan";
+const siteTitle = "Wayora — Travel Explorer";
 const siteDescription =
-  "Discover the best places to visit in Kyoto, Osaka, Nara, and beyond. Build smart multi-day routes, save favorites, and explore Japan through photography, first-visit, and seasonal modes.";
+  "Discover the best places to visit, build smart multi-day routes, save favorites, and explore through photography, first-visit, and seasonal modes.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wayora.ru"),

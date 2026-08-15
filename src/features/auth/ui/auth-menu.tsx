@@ -7,12 +7,23 @@ import type { AuthMeResponse } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { navigateShell } from "@/shared/lib/shell-navigation";
-import { isNativeLocalShell } from "@/shared/lib/native-origins";
+import { isNativeLocalShell, REMOTE_ORIGIN } from "@/shared/lib/native-origins";
 import { getDeviceToken, saveDeviceToken, clearDeviceToken } from "@/shared/lib/device-token-storage";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
+
+const YANDEX_CLIENT_ID = "6857756e83a94852ba0680eacb25e1ed";
+
+function startYandexLogin() {
+  const params = new URLSearchParams({
+    response_type: "code",
+    client_id: YANDEX_CLIENT_ID,
+    redirect_uri: `${REMOTE_ORIGIN}/api/auth/yandex/callback`
+  });
+  window.location.href = `https://oauth.yandex.ru/authorize?${params.toString()}`;
+}
 
 type FormMode = "login" | "register";
 
@@ -61,6 +72,19 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
     clearAuthFormOpenRequest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authFormOpenRequested]);
+
+  // Surfaces a failed /api/auth/yandex/callback redirect (the OAuth flow
+  // leaves the page and comes back, so it can't report errors inline).
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("authError") !== "yandex") return;
+    setFormMode("login");
+    setError(t.yandexError);
+    setIsFormOpen(true);
+    url.searchParams.delete("authError");
+    window.history.replaceState({}, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function resetForm() {
     setEmail("");
@@ -285,6 +309,21 @@ export function AuthMenu({ autoOpenOnRequest = false }: AuthMenuProps) {
                 {t.submit}
               </Button>
             </form>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">{t.continueWith}</span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <button
+              type="button"
+              onClick={startYandexLogin}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-md bg-[#fc3f1d] py-2.5 text-sm font-semibold text-white transition hover:brightness-95"
+            >
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-white text-xs font-extrabold text-[#fc3f1d]">
+                Я
+              </span>
+              {t.loginWithYandex}
+            </button>
             <button
               type="button"
               className="mt-3 text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"

@@ -164,6 +164,9 @@ type TranslationDictionary = {
     submit: string;
     switchToRegister: string;
     switchToLogin: string;
+    continueWith: string;
+    loginWithYandex: string;
+    yandexError: string;
     savedPlaces: string;
     viewedPlaces: string;
     visitedPlaces: string;
@@ -547,6 +550,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       submit: "Continue",
       switchToRegister: "No account yet? Register",
       switchToLogin: "Already have an account? Log in",
+      continueWith: "or continue with",
+      loginWithYandex: "Sign in with Yandex",
+      yandexError: "Couldn't sign in with Yandex.",
       savedPlaces: "Saved places",
       viewedPlaces: "Viewed places",
       visitedPlaces: "Visited places",
@@ -928,6 +934,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       submit: "Продолжить",
       switchToRegister: "Нет аккаунта? Зарегистрироваться",
       switchToLogin: "Уже есть аккаунт? Войти",
+      continueWith: "или продолжить через",
+      loginWithYandex: "Войти через Яндекс",
+      yandexError: "Не удалось войти через Яндекс.",
       savedPlaces: "Сохранённые места",
       viewedPlaces: "Просмотренные места",
       visitedPlaces: "Посещённые места",
@@ -1308,6 +1317,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       submit: "続ける",
       switchToRegister: "アカウントをお持ちでない方は登録",
       switchToLogin: "アカウントをお持ちの方はログイン",
+      continueWith: "または次で続ける",
+      loginWithYandex: "Yandexでログイン",
+      yandexError: "Yandexでのログインに失敗しました。",
       savedPlaces: "保存した場所",
       viewedPlaces: "閲覧した場所",
       visitedPlaces: "訪問した場所",

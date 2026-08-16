@@ -53,6 +53,7 @@ export type Poi = {
   durationMinutes: number;
   importance: number;
   status: PublishStatus;
+  isTemporarilyClosed: boolean;
 };
 
-export type PoiInput = Omit<Poi, "id" | "favoritesCount"> & { id?: string };
+export type PoiInput = Omit<Poi, "id" | "favoritesCount" | "isTemporarilyClosed"> & { id?: string };

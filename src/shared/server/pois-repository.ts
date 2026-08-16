@@ -68,7 +68,8 @@ export function toPoi(row: PoiRow): Poi {
     difficulty: row.difficulty as Difficulty,
     durationMinutes: row.durationMinutes,
     importance: row.importance,
-    status: row.status as PublishStatus
+    status: row.status as PublishStatus,
+    isTemporarilyClosed: row.isTemporarilyClosed
   };
 }
 
@@ -205,6 +206,18 @@ export async function softDeletePoi(id: string): Promise<boolean> {
 export async function restorePoi(id: string): Promise<boolean> {
   try {
     await prisma.poi.update({ where: { id }, data: { deletedAt: null } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function setPoiClosedStatus(id: string, isTemporarilyClosed: boolean): Promise<boolean> {
+  try {
+    await prisma.poi.update({
+      where: { id },
+      data: { isTemporarilyClosed, closedStatusCheckedAt: new Date() }
+    });
     return true;
   } catch {
     return false;

@@ -62,6 +62,8 @@ model Poi {
   durationMinutes  Int
   importance       Int
   status           String   @default("published")
+  isTemporarilyClosed   Boolean   @default(false)
+  closedStatusCheckedAt DateTime?
   deletedAt        DateTime?
   photos           Photo[]
   favoritedBy      Favorite[]

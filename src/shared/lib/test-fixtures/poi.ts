@@ -23,6 +23,7 @@ export function makePoi(overrides: Partial<Poi> = {}): Poi {
     durationMinutes: 60,
     importance: 1,
     status: "published",
+    isTemporarilyClosed: false,
     ...overrides
   };
 }

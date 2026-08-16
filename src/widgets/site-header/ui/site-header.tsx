@@ -33,6 +33,7 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
   const activeRegionIds = useExplorerStore((state) => state.activeRegionIds);
   const setActiveRegion = useExplorerStore((state) => state.setActiveRegion);
   const setActiveArea = useExplorerStore((state) => state.setActiveArea);
+  const setActiveCountry = useExplorerStore((state) => state.setActiveCountry);
   const language = useExplorerStore((state) => state.language);
   const t = getTranslations(language);
   const isNative = useIsNativeApp();
@@ -68,6 +69,18 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
   if (!activeRegion) {
     return null;
   }
+
+  function isCountryFullyActive(countryGroup: CountryGroup) {
+    const countryRegionIds = countryGroup.areaGroups.flatMap((areaGroup) => areaGroup.regions.map((region) => region.id));
+    return (
+      countryRegionIds.length > 0 &&
+      activeRegionIds.length === countryRegionIds.length &&
+      countryRegionIds.every((id) => activeRegionIds.includes(id))
+    );
+  }
+
+  const activeCountryGroup = countryGroups.find((group) => group.country.id === activeCountry?.id);
+  const isCountryActive = activeCountryGroup ? isCountryFullyActive(activeCountryGroup) : false;
 
   const effectiveSelectedCountryId = selectedCountryId ?? activeCountry?.id ?? countryGroups[0]?.country.id;
   const selectedCountryGroup =
@@ -181,15 +194,17 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
           className="flex w-full min-w-0 items-center gap-2 rounded-full border border-border px-3.5 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/60 sm:w-auto"
         >
           <span className="min-w-0 flex-1 truncate text-left">
-            {isAreaActive
-              ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
-              : [
-                  activeRegion.nameByLanguage[language],
-                  activeArea?.nameByLanguage[language],
-                  activeCountry?.nameByLanguage[language]
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
+            {isCountryActive
+              ? activeCountry?.nameByLanguage[language]
+              : isAreaActive
+                ? [activeArea?.nameByLanguage[language], activeCountry?.nameByLanguage[language]].filter(Boolean).join(", ")
+                : [
+                    activeRegion.nameByLanguage[language],
+                    activeArea?.nameByLanguage[language],
+                    activeCountry?.nameByLanguage[language]
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
           </span>
           <ChevronDown
             className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isMenuOpen && "rotate-180")}
@@ -212,21 +227,42 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
               )}
             >
               <div className="flex flex-col gap-4 lg:hidden">
-                {countryGroups.map((countryGroup) => (
-                  <div key={countryGroup.country.id} className="flex flex-col gap-3">
-                    <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                        {t.app.country}
-                      </p>
-                      <p className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-foreground">
-                        <Check className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
-                        <CountryFlagIcon countryId={countryGroup.country.id} />
-                        {countryGroup.country.nameByLanguage[language]}
-                      </p>
+                {countryGroups.map((countryGroup) => {
+                  const isThisCountryActive = isCountryFullyActive(countryGroup);
+                  const hasRegions = countryGroup.areaGroups.length > 0;
+
+                  return (
+                    <div key={countryGroup.country.id} className="flex flex-col gap-3">
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                          {t.app.country}
+                        </p>
+                        <button
+                          type="button"
+                          disabled={!hasRegions}
+                          onClick={() => {
+                            setActiveCountry(countryGroup.country.id);
+                            setIsMenuOpen(false);
+                            router.push("/");
+                          }}
+                          className={cn(
+                            "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-semibold transition disabled:cursor-default disabled:opacity-60",
+                            isThisCountryActive ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/60"
+                          )}
+                        >
+                          {isThisCountryActive ? (
+                            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          ) : (
+                            <span className="h-3.5 w-3.5 shrink-0" />
+                          )}
+                          <CountryFlagIcon countryId={countryGroup.country.id} />
+                          {countryGroup.country.nameByLanguage[language]}
+                        </button>
+                      </div>
+                      {renderAreaGroups(countryGroup.areaGroups)}
                     </div>
-                    {renderAreaGroups(countryGroup.areaGroups)}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="hidden lg:flex">
@@ -235,27 +271,40 @@ export function SiteHeader({ autoOpenAuthOnRequest = false }: SiteHeaderProps) {
                     {t.app.country}
                   </p>
                   <div className="flex flex-col gap-0.5">
-                    {countryGroups.map((countryGroup) => (
-                      <button
-                        key={countryGroup.country.id}
-                        type="button"
-                        onClick={() => setSelectedCountryId(countryGroup.country.id)}
-                        className={cn(
-                          "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-semibold transition",
-                          countryGroup.country.id === effectiveSelectedCountryId
-                            ? "bg-primary/10 text-primary"
-                            : "text-foreground hover:bg-muted/60"
-                        )}
-                      >
-                        {countryGroup.country.id === effectiveSelectedCountryId ? (
-                          <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                        ) : (
-                          <span className="h-3.5 w-3.5 shrink-0" />
-                        )}
-                        <CountryFlagIcon countryId={countryGroup.country.id} />
-                        {countryGroup.country.nameByLanguage[language]}
-                      </button>
-                    ))}
+                    {countryGroups.map((countryGroup) => {
+                      const isThisCountryActive = isCountryFullyActive(countryGroup);
+                      const hasRegions = countryGroup.areaGroups.length > 0;
+
+                      return (
+                        <button
+                          key={countryGroup.country.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCountryId(countryGroup.country.id);
+                            if (hasRegions) {
+                              setActiveCountry(countryGroup.country.id);
+                              setIsMenuOpen(false);
+                              router.push("/");
+                            }
+                          }}
+                          title={hasRegions ? t.app.selectWholeCountry : undefined}
+                          className={cn(
+                            "flex items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 text-left text-sm font-semibold transition",
+                            countryGroup.country.id === effectiveSelectedCountryId || isThisCountryActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-foreground hover:bg-muted/60"
+                          )}
+                        >
+                          {isThisCountryActive ? (
+                            <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          ) : (
+                            <span className="h-3.5 w-3.5 shrink-0" />
+                          )}
+                          <CountryFlagIcon countryId={countryGroup.country.id} />
+                          {countryGroup.country.nameByLanguage[language]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex gap-8 p-4">

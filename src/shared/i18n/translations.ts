@@ -50,6 +50,7 @@ type TranslationDictionary = {
     showFavoritesHint: string;
     hideVisitedHint: string;
     showVisitedHint: string;
+    selectWholeCountry: string;
     categoryFilter: string;
     categorySelectAll: string;
     categoryClearAll: string;
@@ -362,6 +363,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Show saved places on the map",
       hideVisitedHint: "Hide visited places from the map",
       showVisitedHint: "Show visited places on the map",
+      selectWholeCountry: "Show every location in this country",
       categoryFilter: "Category",
       categorySelectAll: "Select all",
       categoryClearAll: "Clear all",
@@ -746,6 +748,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       showFavoritesHint: "Показать сохранённые места на карте",
       hideVisitedHint: "Скрыть посещённые места с карты",
       showVisitedHint: "Показать посещённые места на карте",
+      selectWholeCountry: "Показать все локации этой страны",
       categoryFilter: "Категория",
       categorySelectAll: "Выбрать все",
       categoryClearAll: "Снять все",

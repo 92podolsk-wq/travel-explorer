@@ -85,6 +85,7 @@ type ExplorerState = {
   selectPoiFromMap: (poiId: string) => void;
   setActiveRegion: (regionId: string) => void;
   setActiveArea: (areaId: string) => void;
+  setActiveCountry: (countryId: string) => void;
   toggleCategory: (category: PoiMainCategory) => void;
   selectAllCategories: () => void;
   clearAllCategories: () => void;
@@ -206,6 +207,19 @@ export const useExplorerStore = create<ExplorerState>()(
     set((state) => {
       const areaRegionIds = state.regions.filter((region) => region.areaId === areaId).map((region) => region.id);
       const activeRegionIds = areaRegionIds.length > 0 ? areaRegionIds : state.activeRegionIds;
+      return {
+        activeRegionIds,
+        searchQuery: "",
+        selectedPoiId: firstPoiIdForRegions(state.pois, activeRegionIds)
+      };
+    }),
+  setActiveCountry: (countryId) =>
+    set((state) => {
+      const countryAreaIds = state.areas.filter((area) => area.countryId === countryId).map((area) => area.id);
+      const countryRegionIds = state.regions
+        .filter((region) => countryAreaIds.includes(region.areaId))
+        .map((region) => region.id);
+      const activeRegionIds = countryRegionIds.length > 0 ? countryRegionIds : state.activeRegionIds;
       return {
         activeRegionIds,
         searchQuery: "",

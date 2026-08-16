@@ -87,6 +87,7 @@ type ExplorerState = {
   setActiveArea: (areaId: string) => void;
   toggleCategory: (category: PoiMainCategory) => void;
   selectAllCategories: () => void;
+  clearAllCategories: () => void;
   setSearchQuery: (query: string) => void;
   setLanguage: (language: Language) => void;
   setTheme: (theme: Theme) => void;
@@ -218,6 +219,7 @@ export const useExplorerStore = create<ExplorerState>()(
         : [...state.selectedCategories, category]
     })),
   selectAllCategories: () => set((state) => ({ selectedCategories: state.categories.map((category) => category.id) })),
+  clearAllCategories: () => set({ selectedCategories: [] }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setLanguage: (language) => set({ language }),
   setTheme: (theme) => set({ theme }),

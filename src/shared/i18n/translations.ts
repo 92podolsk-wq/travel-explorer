@@ -51,6 +51,8 @@ type TranslationDictionary = {
     hideVisitedHint: string;
     showVisitedHint: string;
     categoryFilter: string;
+    categorySelectAll: string;
+    categoryClearAll: string;
     noResultsTitle: string;
     noResultsHint: string;
     resetFilters: string;
@@ -361,6 +363,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideVisitedHint: "Hide visited places from the map",
       showVisitedHint: "Show visited places on the map",
       categoryFilter: "Category",
+      categorySelectAll: "Select all",
+      categoryClearAll: "Clear all",
       noResultsTitle: "No places found",
       noResultsHint: "Try a different search or reset your filters.",
       resetFilters: "Reset filters",
@@ -743,6 +747,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       hideVisitedHint: "Скрыть посещённые места с карты",
       showVisitedHint: "Показать посещённые места на карте",
       categoryFilter: "Категория",
+      categorySelectAll: "Выбрать все",
+      categoryClearAll: "Снять все",
       noResultsTitle: "Ничего не найдено",
       noResultsHint: "Попробуйте другой запрос или сбросьте фильтры.",
       resetFilters: "Сбросить фильтры",

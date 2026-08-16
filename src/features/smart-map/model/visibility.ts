@@ -4,18 +4,6 @@ import { computeModeScore } from "@/features/exploration-mode/model/score";
 import { fuzzyMatch } from "@/shared/lib/fuzzy-match";
 import { haversineDistanceMeters } from "@/shared/lib/geo";
 
-const zoomThreshold = (zoom: number) => {
-  if (zoom < 10) {
-    return 92;
-  }
-
-  if (zoom < 13) {
-    return 76;
-  }
-
-  return 0;
-};
-
 type VisibilityOptions = {
   viewedPoiIds?: string[];
   hideViewed?: boolean;
@@ -45,7 +33,6 @@ export function getVisiblePois(
   }: VisibilityOptions = {}
 ) {
   const normalizedQuery = query.trim().toLowerCase();
-  const threshold = zoomThreshold(zoom);
   const hasActiveFilter = selectedModes.length > 0;
   const selectedTags = new Set(selectedModes.flatMap((mode) => mode.tags));
 
@@ -74,8 +61,7 @@ export function getVisiblePois(
         visibleWhenVisited &&
         matchesSearch &&
         matchesFilterTags &&
-        matchesCategory &&
-        (hasActiveFilter || score >= threshold)
+        matchesCategory
       );
     })
     .sort((a, b) => {

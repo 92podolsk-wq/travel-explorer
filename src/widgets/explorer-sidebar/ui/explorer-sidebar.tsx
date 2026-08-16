@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bookmark, Camera, CheckCircle2, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, PanelLeftClose, PanelLeftOpen, Search, Star, Sunrise, Sunset } from "lucide-react";
+import { Bookmark, Camera, CheckCircle2, CheckSquare, ChevronDown, Clock, Eye, EyeOff, Heart, LocateFixed, MapPin, PanelLeftClose, PanelLeftOpen, Search, Square, Star, Sunrise, Sunset } from "lucide-react";
 import { AnimatePresence, animate as animateValue, motion, useDragControls, useMotionValue } from "framer-motion";
 import Image from "next/image";
 import { getCategoryIcon } from "@/entities/poi/ui/category-icon";
@@ -33,6 +33,7 @@ export function ExplorerSidebar() {
   const selectedCategories = useExplorerStore((state) => state.selectedCategories);
   const toggleCategory = useExplorerStore((state) => state.toggleCategory);
   const selectAllCategories = useExplorerStore((state) => state.selectAllCategories);
+  const clearAllCategories = useExplorerStore((state) => state.clearAllCategories);
   const searchQuery = useExplorerStore((state) => state.searchQuery);
   const favorites = useExplorerStore((state) => state.favorites);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
@@ -331,23 +332,45 @@ export function ExplorerSidebar() {
       </div>
 
       <div className="hidden shrink-0 border-b border-border/70 sm:block">
-        <button
-          type="button"
-          onClick={() => setIsCategoryFilterOpen((value) => !value)}
-          aria-expanded={isCategoryFilterOpen}
-          className="flex w-full items-center justify-between gap-2 p-4 pb-3 text-left"
-        >
-          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            {t.app.categoryFilter}
-            {selectedCategories.length < categories.length && (
-              <span className="ml-1.5 text-primary">({selectedCategories.length})</span>
-            )}
-          </span>
-          <ChevronDown
-            className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCategoryFilterOpen && "rotate-180")}
-            aria-hidden="true"
-          />
-        </button>
+        <div className="flex w-full items-center justify-between gap-2 p-4 pb-3">
+          <button
+            type="button"
+            onClick={() => setIsCategoryFilterOpen((value) => !value)}
+            aria-expanded={isCategoryFilterOpen}
+            className="flex flex-1 items-center justify-between gap-2 text-left"
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {t.app.categoryFilter}
+              {selectedCategories.length < categories.length && (
+                <span className="ml-1.5 text-primary">({selectedCategories.length})</span>
+              )}
+            </span>
+            <ChevronDown
+              className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCategoryFilterOpen && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+          <div className="flex shrink-0 items-center gap-0.5">
+            <button
+              type="button"
+              onClick={selectAllCategories}
+              disabled={selectedCategories.length === categories.length}
+              title={t.app.categorySelectAll}
+              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition hover:text-foreground disabled:opacity-30"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={clearAllCategories}
+              disabled={selectedCategories.length === 0}
+              title={t.app.categoryClearAll}
+              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition hover:text-foreground disabled:opacity-30"
+            >
+              <Square className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
         {isCategoryFilterOpen && (
           <div className="flex flex-wrap gap-2 px-4 pb-4">
             {categories.map((category) => {

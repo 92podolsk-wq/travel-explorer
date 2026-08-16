@@ -275,12 +275,16 @@ export const useExplorerStore = create<ExplorerState>()(
   setIsSwipeOpen: (open) => set({ isSwipeOpen: open }),
   setIsMobileSheetExpanded: (expanded) => set({ isMobileSheetExpanded: expanded }),
   setPois: (pois) =>
-    set((state) => ({
-      pois,
-      selectedPoiId: pois.some((poi) => poi.id === state.selectedPoiId)
-        ? state.selectedPoiId
-        : firstPoiIdForRegions(pois, state.activeRegionIds)
-    })),
+    set((state) => {
+      const currentPoi = pois.find((poi) => poi.id === state.selectedPoiId);
+      return {
+        pois,
+        selectedPoiId:
+          currentPoi && state.activeRegionIds.includes(currentPoi.regionId)
+            ? state.selectedPoiId
+            : firstPoiIdForRegions(pois, state.activeRegionIds)
+      };
+    }),
   setRegions: (regions) =>
     set((state) => {
       const validIds = state.activeRegionIds.filter((id) => regions.some((region) => region.id === id));

@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { Category } from "@/entities/category/model/types";
-import { getCategoryIconComponent } from "@/entities/category/ui/category-icon-options";
+import { getCategoryIconComponent, getCategoryImageIconPath } from "@/entities/category/ui/category-icon-options";
 
 export function markerIconId(categoryId: string) {
   return `poi-icon-${categoryId}`;
@@ -45,18 +45,60 @@ function buildIconSvg(shape: string) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${shape}</svg>`;
 }
 
+// The map draws a colored circle behind every marker icon (see explorer-map's
+// "circle-color": ["get", "color"] paint layer), so registered sprites are
+// expected to be a transparent-background glyph, not a filled badge. Brand
+// logos like the BookOff icon come as an opaque circle on a white square —
+// this strips the white/light background down to alpha so the glyph
+// composites onto that circle the same way every line-icon does.
+function extractWhiteGlyphDataUrl(image: HTMLImageElement, sizePx: number): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = sizePx;
+  canvas.height = sizePx;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D context unavailable");
+  ctx.drawImage(image, 0, 0, sizePx, sizePx);
+  const imageData = ctx.getImageData(0, 0, sizePx, sizePx);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    if (brightness > 200) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    } else {
+      data[i + 3] = 0;
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function loadImageElement(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image icon "${src}"`));
+    image.src = src;
+  });
+}
+
 export async function registerCategoryMarkerIcons(map: MapLibreMap, categories: Category[]) {
   await Promise.all(
-    categories.map((category) => {
+    categories.map(async (category) => {
       const id = markerIconId(category.id);
 
       if (map.hasImage(id)) {
-        return Promise.resolve();
+        return;
       }
 
-      const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildIconSvg(iconInnerMarkup(category.icon)))}`;
+      const imagePath = getCategoryImageIconPath(category.icon);
+      const iconUrl = imagePath
+        ? extractWhiteGlyphDataUrl(await loadImageElement(imagePath), 96)
+        : `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildIconSvg(iconInnerMarkup(category.icon)))}`;
 
-      return new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         const image = new Image();
         image.onload = () => {
           if (!map.hasImage(id)) {
@@ -65,7 +107,7 @@ export async function registerCategoryMarkerIcons(map: MapLibreMap, categories: 
           resolve();
         };
         image.onerror = () => reject(new Error(`Failed to load marker icon for category "${category.id}"`));
-        image.src = svgUrl;
+        image.src = iconUrl;
       });
     })
   );

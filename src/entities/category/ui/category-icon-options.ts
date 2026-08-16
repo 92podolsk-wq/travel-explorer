@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import {
   Anchor,
   Bird,
@@ -31,6 +32,27 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
+// A handful of category icons are real brand logos (raster images) rather
+// than line-art glyphs, so they can't come from the lucide set below. This
+// wraps an image path in a component with the same {className, size} shape
+// lucide icons expose, so every existing render call site keeps working
+// unchanged.
+const imageIconPaths: Record<string, string> = {
+  bookoff: "/category-icons/bookoff.png"
+};
+
+function makeImageIcon(src: string): LucideIcon {
+  function ImageIcon({ className, size = 24 }: { className?: string; size?: number | string }) {
+    return createElement("img", {
+      src,
+      alt: "",
+      className,
+      style: { width: size, height: size, borderRadius: "9999px", objectFit: "cover", display: "inline-block" }
+    });
+  }
+  return ImageIcon as unknown as LucideIcon;
+}
+
 export const categoryIconOptions = [
   { key: "trees", icon: Trees, label: "Деревья" },
   { key: "church", icon: Church, label: "Храм" },
@@ -60,7 +82,8 @@ export const categoryIconOptions = [
   { key: "trophy", icon: Trophy, label: "Спорт" },
   { key: "flame", icon: Flame, label: "Огонь" },
   { key: "bird", icon: Bird, label: "Птицы" },
-  { key: "fish", icon: Fish, label: "Рыбалка" }
+  { key: "fish", icon: Fish, label: "Рыбалка" },
+  { key: "bookoff", icon: makeImageIcon(imageIconPaths.bookoff), label: "BookOff" }
 ] as const satisfies ReadonlyArray<{ key: string; icon: LucideIcon; label: string }>;
 
 const categoryIconMap: Record<string, LucideIcon> = Object.fromEntries(
@@ -70,7 +93,12 @@ const categoryIconMap: Record<string, LucideIcon> = Object.fromEntries(
 export const defaultCategoryIcon: LucideIcon = Gem;
 
 export function getCategoryIconComponent(iconKey: string): LucideIcon {
+  if (imageIconPaths[iconKey]) return makeImageIcon(imageIconPaths[iconKey]);
   return categoryIconMap[iconKey] ?? defaultCategoryIcon;
+}
+
+export function getCategoryImageIconPath(iconKey: string): string | null {
+  return imageIconPaths[iconKey] ?? null;
 }
 
 export const categoryColorOptions = [

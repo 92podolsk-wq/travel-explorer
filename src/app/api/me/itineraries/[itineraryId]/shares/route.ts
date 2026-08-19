@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/shared/server/user-auth";
 import { listItineraryShareTargets, shareItinerary } from "@/shared/server/itinerary-shares-repository";
 import { corsPreflight, withCors } from "@/shared/server/cors";
+import type { ItineraryShareRole } from "@/entities/sharing/model/types";
 
 type RouteParams = { params: Promise<{ itineraryId: string }> };
 
@@ -27,12 +28,12 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   const { itineraryId } = await params;
-  const { friendUserId } = (await request.json()) as { friendUserId?: string };
+  const { friendUserId, role } = (await request.json()) as { friendUserId?: string; role?: ItineraryShareRole };
   if (!friendUserId) {
     return withCors(NextResponse.json({ error: "friendUserId is required" }, { status: 400 }), request);
   }
 
-  const shared = await shareItinerary(itineraryId, user.id, friendUserId);
+  const shared = await shareItinerary(itineraryId, user.id, friendUserId, role === "editor" ? "editor" : "viewer");
   if (!shared) {
     return withCors(NextResponse.json({ error: "Можно делиться только с друзьями." }, { status: 403 }), request);
   }

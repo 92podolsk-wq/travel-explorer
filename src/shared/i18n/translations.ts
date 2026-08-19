@@ -154,6 +154,7 @@ type TranslationDictionary = {
     friendsLoading: string;
     friendsEmpty: string;
     friendsRemove: string;
+    itineraryShareCanEdit: string;
     shareChecklist: string;
     sharedChecklistsTitle: string;
     shareItineraryWithFriend: string;
@@ -541,6 +542,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       friendsLoading: "Loading…",
       friendsEmpty: "No friends yet",
       friendsRemove: "Remove",
+      itineraryShareCanEdit: "Editor",
       shareChecklist: "Share",
       sharedChecklistsTitle: "Checklists shared with you",
       shareItineraryWithFriend: "Share",
@@ -926,6 +928,7 @@ export const translations: Record<Language, TranslationDictionary> = {
       friendsLoading: "Загрузка…",
       friendsEmpty: "Пока нет друзей",
       friendsRemove: "Удалить",
+      itineraryShareCanEdit: "Редактор",
       shareChecklist: "Поделиться",
       sharedChecklistsTitle: "Чек-листы, которыми с вами поделились",
       shareItineraryWithFriend: "Поделиться",

@@ -1,5 +1,5 @@
 import type { FriendUser } from "@/entities/user/model/types";
-import type { SharedItinerarySummary } from "@/entities/sharing/model/types";
+import type { ItineraryShareRole, SharedItinerarySummary } from "@/entities/sharing/model/types";
 import { prisma } from "./prisma-client";
 import { areFriends } from "./friendships-repository";
 
@@ -9,9 +9,18 @@ function toFriendUser(row: { id: string; username: string; name: string | null; 
   return { id: row.id, username: row.username, name: row.name, avatarId: row.avatarId };
 }
 
+function toRole(role: string): ItineraryShareRole {
+  return role === "editor" ? "editor" : "viewer";
+}
+
 // Returns false if the itinerary isn't owned by ownerId or the two users
 // aren't friends, so the route can 403/404 instead of creating a dangling share.
-export async function shareItinerary(itineraryId: string, ownerId: string, sharedWithId: string): Promise<boolean> {
+export async function shareItinerary(
+  itineraryId: string,
+  ownerId: string,
+  sharedWithId: string,
+  role: ItineraryShareRole = "viewer"
+): Promise<boolean> {
   if (ownerId === sharedWithId || !(await areFriends(ownerId, sharedWithId))) {
     return false;
   }
@@ -21,8 +30,8 @@ export async function shareItinerary(itineraryId: string, ownerId: string, share
   }
   await prisma.itineraryShare.upsert({
     where: { itineraryId_sharedWithId: { itineraryId, sharedWithId } },
-    update: {},
-    create: { itineraryId, ownerId, sharedWithId }
+    update: { role },
+    create: { itineraryId, ownerId, sharedWithId, role }
   });
   return true;
 }
@@ -34,12 +43,15 @@ export async function unshareItinerary(itineraryId: string, ownerId: string, sha
   return result.count > 0;
 }
 
-export async function listItineraryShareTargets(itineraryId: string, ownerId: string): Promise<FriendUser[]> {
+export async function listItineraryShareTargets(
+  itineraryId: string,
+  ownerId: string
+): Promise<(FriendUser & { role: ItineraryShareRole })[]> {
   const rows = await prisma.itineraryShare.findMany({
     where: { itineraryId, ownerId },
     include: { sharedWith: { select: FRIEND_USER_SELECT } }
   });
-  return rows.map((row) => toFriendUser(row.sharedWith));
+  return rows.map((row) => ({ ...toFriendUser(row.sharedWith), role: toRole(row.role) }));
 }
 
 export async function listItinerariesSharedWithMe(userId: string): Promise<SharedItinerarySummary[]> {
@@ -50,12 +62,22 @@ export async function listItinerariesSharedWithMe(userId: string): Promise<Share
       itinerary: { select: { id: true, title: true } }
     }
   });
-  return rows.map((row) => ({ owner: toFriendUser(row.owner), itinerary: row.itinerary }));
+  return rows.map((row) => ({ owner: toFriendUser(row.owner), itinerary: row.itinerary, role: toRole(row.role) }));
 }
 
 // Confirms sharedWithId actually has access to this itinerary before the
 // route hands back full stop/day data.
 export async function hasItineraryShareAccess(itineraryId: string, sharedWithId: string): Promise<boolean> {
   const row = await prisma.itineraryShare.findFirst({ where: { itineraryId, sharedWithId }, select: { id: true } });
+  return row !== null;
+}
+
+// Editors get the same write access as the owner; viewers (or non-shared
+// users) don't. Used by every itinerary mutation as the non-owner gate.
+export async function hasItineraryEditAccess(itineraryId: string, sharedWithId: string): Promise<boolean> {
+  const row = await prisma.itineraryShare.findFirst({
+    where: { itineraryId, sharedWithId, role: "editor" },
+    select: { id: true }
+  });
   return row !== null;
 }

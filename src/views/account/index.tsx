@@ -65,6 +65,7 @@ import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
 import { avatarIds } from "@/entities/user/model/avatars";
 import type { FriendUser, User } from "@/entities/user/model/types";
+import type { ItineraryShareRole } from "@/entities/sharing/model/types";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
@@ -970,7 +971,7 @@ export function AccountPage({
 
   const [isFriendShareOpen, setIsFriendShareOpen] = useState(false);
   const [shareFriends, setShareFriends] = useState<FriendUser[]>([]);
-  const [itineraryShareTargetIds, setItineraryShareTargetIds] = useState<Set<string>>(new Set());
+  const [itineraryShareRoles, setItineraryShareRoles] = useState<Map<string, ItineraryShareRole>>(new Map());
   const [pendingItineraryShareId, setPendingItineraryShareId] = useState<string | null>(null);
 
   function openItineraryFriendShare() {
@@ -983,7 +984,19 @@ export function AccountPage({
     }
     apiFetch(`/api/me/itineraries/${itinerary.id}/shares`)
       .then((res) => res.json())
-      .then((body: { users: FriendUser[] }) => setItineraryShareTargetIds(new Set(body.users.map((user) => user.id))));
+      .then((body: { users: (FriendUser & { role: ItineraryShareRole })[] }) =>
+        setItineraryShareRoles(new Map(body.users.map((user) => [user.id, user.role])))
+      );
+  }
+
+  async function shareItineraryWithRole(friendId: string, role: ItineraryShareRole) {
+    if (!itinerary) return;
+    await apiFetch(`/api/me/itineraries/${itinerary.id}/shares`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friendUserId: friendId, role })
+    });
+    setItineraryShareRoles((prev) => new Map(prev).set(friendId, role));
   }
 
   async function toggleItineraryShare(friendId: string, isShared: boolean) {
@@ -992,19 +1005,23 @@ export function AccountPage({
     try {
       if (isShared) {
         await apiFetch(`/api/me/itineraries/${itinerary.id}/shares/${friendId}`, { method: "DELETE" });
-        setItineraryShareTargetIds((prev) => {
-          const next = new Set(prev);
+        setItineraryShareRoles((prev) => {
+          const next = new Map(prev);
           next.delete(friendId);
           return next;
         });
       } else {
-        await apiFetch(`/api/me/itineraries/${itinerary.id}/shares`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ friendUserId: friendId })
-        });
-        setItineraryShareTargetIds((prev) => new Set(prev).add(friendId));
+        await shareItineraryWithRole(friendId, "viewer");
       }
+    } finally {
+      setPendingItineraryShareId(null);
+    }
+  }
+
+  async function toggleItineraryShareRole(friendId: string, role: ItineraryShareRole) {
+    setPendingItineraryShareId(friendId);
+    try {
+      await shareItineraryWithRole(friendId, role);
     } finally {
       setPendingItineraryShareId(null);
     }
@@ -1654,7 +1671,8 @@ export function AccountPage({
                   <p className="text-xs text-muted-foreground">{t.friendsEmpty}</p>
                 ) : (
                   shareFriends.map((friend) => {
-                    const isShared = itineraryShareTargetIds.has(friend.id);
+                    const role = itineraryShareRoles.get(friend.id);
+                    const isShared = role !== undefined;
                     return (
                       <div key={friend.id} className="flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-2">
@@ -1663,19 +1681,36 @@ export function AccountPage({
                             {friend.name || `@${friend.username}`}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void toggleItineraryShare(friend.id, isShared)}
-                          disabled={pendingItineraryShareId === friend.id}
-                          className={cn(
-                            "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60",
-                            isShared
-                              ? "border border-border text-muted-foreground hover:text-foreground"
-                              : "border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {isShared && (
+                            <button
+                              type="button"
+                              onClick={() => void toggleItineraryShareRole(friend.id, role === "editor" ? "viewer" : "editor")}
+                              disabled={pendingItineraryShareId === friend.id}
+                              className={cn(
+                                "rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60",
+                                role === "editor"
+                                  ? "bg-primary text-primary-foreground"
+                                  : "border border-border text-muted-foreground hover:text-foreground"
+                              )}
+                            >
+                              {t.itineraryShareCanEdit}
+                            </button>
                           )}
-                        >
-                          {isShared ? t.friendsRemove : t.friendsAdd}
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => void toggleItineraryShare(friend.id, isShared)}
+                            disabled={pendingItineraryShareId === friend.id}
+                            className={cn(
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold disabled:opacity-60",
+                              isShared
+                                ? "border border-border text-muted-foreground hover:text-foreground"
+                                : "border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+                            )}
+                          >
+                            {isShared ? t.friendsRemove : t.friendsAdd}
+                          </button>
+                        </div>
                       </div>
                     );
                   })

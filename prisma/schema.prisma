@@ -202,6 +202,7 @@ model ItineraryShare {
   itineraryId   String
   ownerId       String
   sharedWithId  String
+  role          String   @default("viewer")
   createdAt     DateTime @default(now())
   itinerary     Itinerary @relation(fields: [itineraryId], references: [id], onDelete: Cascade)
   owner         User      @relation("ItineraryShareOwner", fields: [ownerId], references: [id], onDelete: Cascade)

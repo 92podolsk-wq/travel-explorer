@@ -4,6 +4,7 @@ import type { PlannedDay } from "@/shared/lib/itinerary-planner";
 import { toCustomMarker } from "./custom-markers-repository";
 import { toPoi, publicPhotosInclude, favoritesCountInclude, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
+import { hasItineraryEditAccess } from "./itinerary-shares-repository";
 
 const stopInclude = {
   poi: { include: { photos: publicPhotosInclude, _count: favoritesCountInclude } },
@@ -85,8 +86,18 @@ async function loadItinerary(where: { id: string; userId: string } | { shareToke
       ? await prisma.itinerary.findUnique({ where: { shareToken: where.shareToken }, include: itineraryInclude })
       : await prisma.itinerary.findUnique({ where: { id: where.id }, include: itineraryInclude });
 
-  if (!row || ("userId" in where && row.userId !== where.userId)) {
+  if (!row) {
     return null;
+  }
+
+  // Owner always passes; otherwise fall back to an editor-role share grant,
+  // so a companion invited as an editor can hit these exact same mutation
+  // functions the owner uses — see itinerary-shares-repository's role field.
+  if ("userId" in where && row.userId !== where.userId) {
+    const canEdit = await hasItineraryEditAccess(row.id, where.userId);
+    if (!canEdit) {
+      return null;
+    }
   }
 
   const backfilled = await backfillMissingDays(

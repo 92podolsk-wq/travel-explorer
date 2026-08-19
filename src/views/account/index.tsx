@@ -20,7 +20,9 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   Bookmark,
   Check,
+  CheckCircle2,
   ChevronDown,
+  Circle,
   ChevronRight,
   Download,
   Eye,
@@ -74,7 +76,7 @@ import type { Language } from "@/shared/i18n/types";
 
 type Translations = ReturnType<typeof getTranslations>;
 import { estimateTransitionMinutes, sequenceByNearestNeighbor } from "@/shared/lib/itinerary-planner";
-import { formatDistance, haversineDistanceMeters } from "@/shared/lib/geo";
+import { formatDistance, formatSteps, haversineDistanceMeters } from "@/shared/lib/geo";
 import { fetchWalkingRoute, type WalkingRoute } from "@/shared/lib/osrm-route";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { useExplorerStore } from "@/shared/model/explorer-store";
@@ -176,6 +178,8 @@ function ItineraryTimelineRow({
   durationMinutes,
   isDurationOverridden,
   regionName,
+  isVisited,
+  onToggleVisited,
   onSelect,
   onRemove,
   onMoveToDay,
@@ -191,6 +195,8 @@ function ItineraryTimelineRow({
   durationMinutes: number;
   isDurationOverridden: boolean;
   regionName: string;
+  isVisited: boolean;
+  onToggleVisited: (() => void) | null;
   onSelect: () => void;
   onRemove: () => void;
   onMoveToDay: (day: number) => void;
@@ -232,14 +238,27 @@ function ItineraryTimelineRow({
       >
         <GripVertical className="h-4 w-4" />
       </button>
+      {onToggleVisited && (
+        <button
+          type="button"
+          onClick={onToggleVisited}
+          title={t.markVisited}
+          className={cn("shrink-0", isVisited ? "text-primary" : "text-muted-foreground")}
+        >
+          {isVisited ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+        </button>
+      )}
       <button type="button" onClick={onSelect} className="shrink-0">
-        <StopPointThumbnail point={stop.point} className="h-12 w-12" />
+        <StopPointThumbnail point={stop.point} className={cn("h-12 w-12", isVisited && "opacity-45")} />
       </button>
       <div className="min-w-0 flex-1">
         <button
           type="button"
           onClick={onSelect}
-          className="block truncate text-left text-sm font-semibold text-foreground hover:text-primary"
+          className={cn(
+            "block truncate text-left text-sm font-semibold hover:text-primary",
+            isVisited ? "text-muted-foreground line-through" : "text-foreground"
+          )}
         >
           {stopPointName(stop.point, language, dict.app.markerStopFallbackName)}
         </button>
@@ -339,6 +358,8 @@ function ItineraryDayCard({
   onRemoveStop,
   onMoveStopToDay,
   onSetStopDuration,
+  visitedPoiIds,
+  onToggleVisited,
   maxDay,
   t,
   dict,
@@ -365,6 +386,8 @@ function ItineraryDayCard({
   onRemoveStop: (stopId: string) => void;
   onMoveStopToDay: (stopId: string, day: number) => void;
   onSetStopDuration: (stopId: string, minutes: number | null) => void;
+  visitedPoiIds: Set<string>;
+  onToggleVisited: (poiId: string) => void;
   maxDay: number;
   t: Translations["auth"];
   dict: Translations;
@@ -462,6 +485,7 @@ function ItineraryDayCard({
               <>
                 {" · "}
                 {t.dayWalkingDistance.replace("{distance}", formatDistance(summary.walkingDistanceMeters))}
+                {" "}({t.stepsApprox.replace("{count}", formatSteps(summary.walkingDistanceMeters))})
                 {" · "}
                 {formatDurationLabel(summary.totalMinutes, dict.app.hoursShort, dict.app.minutesShort)}
               </>
@@ -581,6 +605,7 @@ function ItineraryDayCard({
                       const stop = stops.find((s) => stopPointId(s.point) === stopPointId(entry.point));
                       if (!stop) return null;
                       const stopRegionId = stopPointRegionId(stop.point);
+                      const stopPoiId = stop.point.kind === "poi" ? stop.point.poi.id : null;
                       return (
                         <ItineraryTimelineRow
                           key={stop.id}
@@ -591,6 +616,8 @@ function ItineraryDayCard({
                           durationMinutes={entry.durationMinutes}
                           isDurationOverridden={entry.isDurationOverridden}
                           regionName={stopRegionId ? regionName(stopRegionId) : ""}
+                          isVisited={stopPoiId != null && visitedPoiIds.has(stopPoiId)}
+                          onToggleVisited={stopPoiId != null ? () => onToggleVisited(stopPoiId) : null}
                           onSelect={() => {
                             if (stop.point.kind === "poi") goToPoi(stop.point.poi.id);
                           }}
@@ -607,7 +634,8 @@ function ItineraryDayCard({
                     if (entry.type === "travel") {
                       return (
                         <p key={`travel-${index}`} className="pl-1 text-xs text-muted-foreground">
-                          {entry.minutes} {dict.app.minutesShort} ({formatDistance(entry.meters)})
+                          {entry.minutes} {dict.app.minutesShort} ({formatDistance(entry.meters)},{" "}
+                          {t.stepsApprox.replace("{count}", formatSteps(entry.meters))})
                         </p>
                       );
                     }
@@ -695,6 +723,7 @@ export function AccountPage({
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
+  const toggleVisited = useExplorerStore((state) => state.toggleVisited);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
   const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const clearViewedPois = useExplorerStore((state) => state.clearViewedPois);
@@ -1876,6 +1905,8 @@ export function AccountPage({
                       onRemoveStop={handleRemoveStopById}
                       onMoveStopToDay={handleMoveStopToDay}
                       onSetStopDuration={handleSetStopDuration}
+                      visitedPoiIds={new Set(visitedPoiIds)}
+                      onToggleVisited={toggleVisited}
                       maxDay={maxDay}
                       t={t}
                       dict={dict}

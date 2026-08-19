@@ -65,6 +65,37 @@ type RealtimeSocket = WebSocket & { user?: PresenceUser };
 // sufficient — no cross-process pub/sub needed.
 const rooms = new Map<string, Set<RealtimeSocket>>();
 
+// userId -> Set<WebSocket>, separate from the per-itinerary rooms above — a
+// user counts as "online" while holding any open connection at all, even
+// with no itinerary open. Backs the online/last-seen indicator in profiles.
+const onlineUsers = new Map<string, Set<RealtimeSocket>>();
+
+function markOnline(ws: RealtimeSocket) {
+  if (!ws.user) return;
+  let sockets = onlineUsers.get(ws.user.id);
+  if (!sockets) {
+    sockets = new Set();
+    onlineUsers.set(ws.user.id, sockets);
+  }
+  sockets.add(ws);
+}
+
+// Persists lastSeenAt once the user's final socket closes, so "last seen"
+// reflects when they actually went offline rather than when they connected.
+function markOffline(ws: RealtimeSocket) {
+  if (!ws.user) return;
+  const sockets = onlineUsers.get(ws.user.id);
+  if (!sockets?.delete(ws)) return;
+  if (sockets.size === 0) {
+    onlineUsers.delete(ws.user.id);
+    prisma.user.update({ where: { id: ws.user.id }, data: { lastSeenAt: new Date() } }).catch(() => {});
+  }
+}
+
+function isUserOnline(userId: string) {
+  return onlineUsers.has(userId);
+}
+
 function joinRoom(itineraryId: string, ws: RealtimeSocket) {
   let room = rooms.get(itineraryId);
   if (!room) {
@@ -116,7 +147,8 @@ function broadcastPresence(itineraryId: string) {
 // API route handlers can't import this entry file (it owns the raw HTTP
 // server startup, not something a route module should trigger). See
 // src/shared/server/realtime.ts for the typed consumer side.
-(globalThis as unknown as { __wayoraRealtimeHub?: { broadcast: typeof broadcast } }).__wayoraRealtimeHub = { broadcast };
+(globalThis as unknown as { __wayoraRealtimeHub?: { broadcast: typeof broadcast; isUserOnline: typeof isUserOnline } }).__wayoraRealtimeHub =
+  { broadcast, isUserOnline };
 
 app.prepare().then(() => {
   const server = createServer((req, res) => {
@@ -150,6 +182,8 @@ app.prepare().then(() => {
   });
 
   wss.on("connection", (ws: RealtimeSocket) => {
+    markOnline(ws);
+
     ws.on("message", (raw: Buffer) => {
       let message: { type?: string; itineraryId?: string };
       try {
@@ -168,8 +202,14 @@ app.prepare().then(() => {
       }
     });
 
-    ws.on("close", () => leaveAllRooms(ws));
-    ws.on("error", () => leaveAllRooms(ws));
+    ws.on("close", () => {
+      leaveAllRooms(ws);
+      markOffline(ws);
+    });
+    ws.on("error", () => {
+      leaveAllRooms(ws);
+      markOffline(ws);
+    });
   });
 
   server.listen(port, () => {

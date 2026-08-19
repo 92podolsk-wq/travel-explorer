@@ -6,6 +6,7 @@ import type { FriendEntry, FriendsResponse, FriendUser } from "@/entities/user/m
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { cn } from "@/shared/lib/cn";
+import { formatLastSeen } from "@/shared/lib/format-last-seen";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 
@@ -130,10 +131,20 @@ export function FriendsCard() {
             results.map((user) => (
               <div key={user.id} className="flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2.5 py-1.5">
                 <div className="flex min-w-0 items-center gap-2">
-                  <ProfileAvatar avatarId={user.avatarId} className="h-7 w-7 shrink-0" />
+                  <div className="relative shrink-0">
+                    <ProfileAvatar avatarId={user.avatarId} className="h-7 w-7" />
+                    {user.isOnline && (
+                      <span
+                        aria-hidden
+                        className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-card bg-emerald-400"
+                      />
+                    )}
+                  </div>
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold text-foreground">{user.name || `@${user.username}`}</p>
-                    <p className="truncate text-[11px] text-muted-foreground">@{user.username}</p>
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      @{user.username} · {formatLastSeen(user.lastSeenAt, user.isOnline, language)}
+                    </p>
                   </div>
                 </div>
                 {friendIds.has(user.id) ? (
@@ -250,13 +261,24 @@ export function FriendsCard() {
 }
 
 function FriendRow({ entry, actions, busy }: { entry: FriendEntry; actions: ReactNode; busy: boolean }) {
+  const language = useExplorerStore((state) => state.language);
   return (
     <div className={cn("flex items-center justify-between gap-2 rounded-md bg-muted/40 px-2.5 py-1.5", busy && "opacity-60")}>
       <div className="flex min-w-0 items-center gap-2">
-        <ProfileAvatar avatarId={entry.user.avatarId} className="h-7 w-7 shrink-0" />
+        <div className="relative shrink-0">
+          <ProfileAvatar avatarId={entry.user.avatarId} className="h-7 w-7" />
+          {entry.user.isOnline && (
+            <span
+              aria-hidden
+              className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-card bg-emerald-400"
+            />
+          )}
+        </div>
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold text-foreground">{entry.user.name || `@${entry.user.username}`}</p>
-          <p className="truncate text-[11px] text-muted-foreground">@{entry.user.username}</p>
+          <p className="truncate text-[11px] text-muted-foreground">
+            @{entry.user.username} · {formatLastSeen(entry.user.lastSeenAt, entry.user.isOnline, language)}
+          </p>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1.5">{actions}</div>

@@ -9,6 +9,7 @@ import type { User } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { cn } from "@/shared/lib/cn";
+import { formatLastSeen } from "@/shared/lib/format-last-seen";
 import { navigateShell } from "@/shared/lib/shell-navigation";
 import { isNativeLocalShell } from "@/shared/lib/native-origins";
 import { getDeviceToken, clearDeviceToken } from "@/shared/lib/device-token-storage";
@@ -219,6 +220,12 @@ export function ProfileTab() {
               <div className="rounded-full border-2 border-white/50 p-0.5">
                 <ProfileAvatar avatarId={currentUser.avatarId} className="h-16 w-16" />
               </div>
+              {currentUser.isOnline && (
+                <span
+                  aria-hidden
+                  className="absolute bottom-0.5 left-0.5 h-3 w-3 rounded-full border-2 border-[#1a5049] bg-emerald-400"
+                />
+              )}
               <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#1a5049] bg-primary text-white">
                 <Pencil className="h-2.5 w-2.5" />
               </span>
@@ -283,6 +290,10 @@ export function ProfileTab() {
                   </span>
                 </div>
                 <p className="mt-0.5 text-xs text-white/80">@{currentUser.username}</p>
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] text-white/70">
+                  {currentUser.isOnline && <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+                  {formatLastSeen(currentUser.lastSeenAt, currentUser.isOnline, language)}
+                </p>
                 <button
                   type="button"
                   onClick={handleStartEditProfile}

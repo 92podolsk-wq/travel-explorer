@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findUserByEmail } from "@/shared/server/users-repository";
 import { createUserSession, verifyPassword } from "@/shared/server/user-auth";
 import { corsPreflight, withCors } from "@/shared/server/cors";
+import { isUserOnline } from "@/shared/server/realtime";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -34,7 +35,9 @@ export async function POST(request: Request) {
         name: existing.name,
         avatarId: existing.avatarId,
         hideFromSearch: existing.hideFromSearch,
-        createdAt: existing.createdAt.toISOString()
+        createdAt: existing.createdAt.toISOString(),
+        lastSeenAt: existing.lastSeenAt ? existing.lastSeenAt.toISOString() : null,
+        isOnline: isUserOnline(existing.id)
       },
       token
     }),

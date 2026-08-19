@@ -3,6 +3,7 @@ import type { AuthMeResponse } from "@/entities/user/model/types";
 import { getCurrentUser } from "@/shared/server/user-auth";
 import { getUserPoiState } from "@/shared/server/user-pois-repository";
 import { corsPreflight, withCors } from "@/shared/server/cors";
+import { isUserOnline } from "@/shared/server/realtime";
 
 export async function OPTIONS(request: Request) {
   return corsPreflight(request);
@@ -26,7 +27,9 @@ export async function GET(request: Request) {
         name: user.name,
         avatarId: user.avatarId,
         hideFromSearch: user.hideFromSearch,
-        createdAt: user.createdAt.toISOString()
+        createdAt: user.createdAt.toISOString(),
+        lastSeenAt: user.lastSeenAt ? user.lastSeenAt.toISOString() : null,
+        isOnline: isUserOnline(user.id)
       },
       ...poiState
     } satisfies AuthMeResponse),

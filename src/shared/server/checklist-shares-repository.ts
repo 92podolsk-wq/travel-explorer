@@ -2,11 +2,25 @@ import type { FriendUser } from "@/entities/user/model/types";
 import type { SharedChecklist } from "@/entities/sharing/model/types";
 import { prisma } from "./prisma-client";
 import { areFriends } from "./friendships-repository";
+import { isUserOnline } from "./realtime";
 
-const FRIEND_USER_SELECT = { id: true, username: true, name: true, avatarId: true } as const;
+const FRIEND_USER_SELECT = { id: true, username: true, name: true, avatarId: true, lastSeenAt: true } as const;
 
-function toFriendUser(row: { id: string; username: string; name: string | null; avatarId: string | null }): FriendUser {
-  return { id: row.id, username: row.username, name: row.name, avatarId: row.avatarId };
+function toFriendUser(row: {
+  id: string;
+  username: string;
+  name: string | null;
+  avatarId: string | null;
+  lastSeenAt: Date | null;
+}): FriendUser {
+  return {
+    id: row.id,
+    username: row.username,
+    name: row.name,
+    avatarId: row.avatarId,
+    lastSeenAt: row.lastSeenAt ? row.lastSeenAt.toISOString() : null,
+    isOnline: isUserOnline(row.id)
+  };
 }
 
 // Returns null if the two users aren't friends, so the route can 403 instead

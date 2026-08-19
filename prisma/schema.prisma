@@ -144,6 +144,7 @@ model User {
   canAccessHiddenCategories Boolean @default(false)
   hideFromSearch Boolean @default(false)
   createdAt    DateTime @default(now())
+  lastSeenAt   DateTime?
   sessions     Session[]
   favorites    Favorite[]
   viewedPois   ViewedPoi[]

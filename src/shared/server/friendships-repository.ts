@@ -1,12 +1,20 @@
 import type { FriendEntry, FriendUser } from "@/entities/user/model/types";
 import { prisma } from "./prisma-client";
+import { isUserOnline } from "./realtime";
 
-const FRIEND_USER_SELECT = { id: true, username: true, name: true, avatarId: true } as const;
+const FRIEND_USER_SELECT = { id: true, username: true, name: true, avatarId: true, lastSeenAt: true } as const;
 
-type FriendUserRow = { id: string; username: string; name: string | null; avatarId: string | null };
+type FriendUserRow = { id: string; username: string; name: string | null; avatarId: string | null; lastSeenAt: Date | null };
 
 function toFriendUser(row: FriendUserRow): FriendUser {
-  return { id: row.id, username: row.username, name: row.name, avatarId: row.avatarId };
+  return {
+    id: row.id,
+    username: row.username,
+    name: row.name,
+    avatarId: row.avatarId,
+    lastSeenAt: row.lastSeenAt ? row.lastSeenAt.toISOString() : null,
+    isOnline: isUserOnline(row.id)
+  };
 }
 
 export async function searchUsersByUsername(query: string, excludingUserId: string, limit = 10): Promise<FriendUser[]> {

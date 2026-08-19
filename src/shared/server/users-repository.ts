@@ -1,5 +1,6 @@
 import type { AdminUser, User } from "@/entities/user/model/types";
 import { prisma } from "./prisma-client";
+import { isUserOnline } from "./realtime";
 
 type UserRow = Awaited<ReturnType<typeof prisma.user.findFirstOrThrow>>;
 
@@ -11,7 +12,9 @@ function toUser(row: UserRow): User {
     name: row.name,
     avatarId: row.avatarId,
     hideFromSearch: row.hideFromSearch,
-    createdAt: row.createdAt.toISOString()
+    createdAt: row.createdAt.toISOString(),
+    lastSeenAt: row.lastSeenAt ? row.lastSeenAt.toISOString() : null,
+    isOnline: isUserOnline(row.id)
   };
 }
 

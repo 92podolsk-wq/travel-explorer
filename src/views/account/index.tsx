@@ -37,6 +37,7 @@ import {
   Search,
   Share2,
   Sparkles,
+  StickyNote,
   Trash2,
   UserPlus,
   Wand2,
@@ -101,6 +102,7 @@ type DayConfigPatch = Partial<{
   lunchEnabled: boolean | null;
   lunchStartMinutes: number | null;
   lunchDurationMinutes: number | null;
+  notes: string | null;
 }>;
 
 type AccountTab = "route" | "saved" | "history" | "profile";
@@ -184,6 +186,7 @@ function ItineraryTimelineRow({
   onRemove,
   onMoveToDay,
   onSetDuration,
+  onSetNotes,
   maxDay,
   t,
   dict
@@ -201,6 +204,7 @@ function ItineraryTimelineRow({
   onRemove: () => void;
   onMoveToDay: (day: number) => void;
   onSetDuration: (minutes: number | null) => void;
+  onSetNotes: (notes: string | null) => void;
   maxDay: number;
   t: Translations["auth"];
   dict: Translations;
@@ -208,6 +212,8 @@ function ItineraryTimelineRow({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stop.id });
   const [isEditingDuration, setIsEditingDuration] = useState(false);
   const [departureDraft, setDepartureDraft] = useState(minutesToTimeInputValue(departureMinutes));
+  const [isNotesOpen, setIsNotesOpen] = useState(Boolean(stop.notes));
+  const [notesDraft, setNotesDraft] = useState(stop.notes ?? "");
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -227,8 +233,9 @@ function ItineraryTimelineRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 rounded-md border border-border bg-card/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60"
+      className="flex flex-col gap-2 rounded-md border border-border bg-card/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60"
     >
+    <div className="flex items-center gap-2">
       <button
         type="button"
         {...attributes}
@@ -325,6 +332,14 @@ function ItineraryTimelineRow({
         </select>
         <button
           type="button"
+          onClick={() => setIsNotesOpen((v) => !v)}
+          title={t.notesPlaceholder}
+          className={cn("shrink-0 rounded-md p-1.5 transition", stop.notes ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+        >
+          <StickyNote className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
           onClick={onRemove}
           aria-label={t.removeFromItinerary}
           className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
@@ -332,6 +347,17 @@ function ItineraryTimelineRow({
           <X className="h-4 w-4" />
         </button>
       </div>
+    </div>
+      {isNotesOpen && (
+        <textarea
+          value={notesDraft}
+          onChange={(e) => setNotesDraft(e.target.value)}
+          onBlur={() => onSetNotes(notesDraft.trim() ? notesDraft.trim() : null)}
+          placeholder={t.notesPlaceholder}
+          rows={2}
+          className="ml-11 w-[calc(100%-2.75rem)] resize-none rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+        />
+      )}
     </div>
   );
 }
@@ -348,6 +374,7 @@ function ItineraryDayCard({
   lunchEnabled,
   lunchStartMinutes,
   lunchDurationMinutes,
+  notes,
   onRenameDay,
   onUpdateDayConfig,
   onOptimizeDay,
@@ -358,6 +385,7 @@ function ItineraryDayCard({
   onRemoveStop,
   onMoveStopToDay,
   onSetStopDuration,
+  onSetStopNotes,
   visitedPoiIds,
   onToggleVisited,
   maxDay,
@@ -376,6 +404,7 @@ function ItineraryDayCard({
   lunchEnabled: boolean | null;
   lunchStartMinutes: number | null;
   lunchDurationMinutes: number | null;
+  notes: string | null;
   onRenameDay: (title: string) => void;
   onUpdateDayConfig: (patch: DayConfigPatch) => void;
   onOptimizeDay: () => void;
@@ -386,6 +415,7 @@ function ItineraryDayCard({
   onRemoveStop: (stopId: string) => void;
   onMoveStopToDay: (stopId: string, day: number) => void;
   onSetStopDuration: (stopId: string, minutes: number | null) => void;
+  onSetStopNotes: (stopId: string, notes: string | null) => void;
   visitedPoiIds: Set<string>;
   onToggleVisited: (poiId: string) => void;
   maxDay: number;
@@ -399,6 +429,7 @@ function ItineraryDayCard({
   const [titleDraft, setTitleDraft] = useState(title ?? "");
   const [isEditingStart, setIsEditingStart] = useState(false);
   const [startDraft, setStartDraft] = useState("");
+  const [notesDraft, setNotesDraft] = useState(notes ?? "");
 
   const points = stops.map((stop) => stop.point);
   const summary = computeItinerarySummary(stops);
@@ -525,6 +556,14 @@ function ItineraryDayCard({
 
       {isExpanded && (
         <div className="mt-3 flex flex-col gap-3">
+          <textarea
+            value={notesDraft}
+            onChange={(e) => setNotesDraft(e.target.value)}
+            onBlur={() => onUpdateDayConfig({ notes: notesDraft.trim() ? notesDraft.trim() : null })}
+            placeholder={t.dayNotesPlaceholder}
+            rows={2}
+            className="w-full resize-none rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/25"
+          />
           <div className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-xs">
             <span className="font-medium text-muted-foreground">{t.lunchToggleLabel}:</span>
             <select
@@ -624,6 +663,7 @@ function ItineraryDayCard({
                           onRemove={() => onRemoveStop(stop.id)}
                           onMoveToDay={(targetDay) => onMoveStopToDay(stop.id, targetDay)}
                           onSetDuration={(minutes) => onSetStopDuration(stop.id, minutes)}
+                          onSetNotes={(notes) => onSetStopNotes(stop.id, notes)}
                           maxDay={maxDay}
                           t={t}
                           dict={dict}
@@ -903,6 +943,16 @@ export function AccountPage({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ durationOverrideMinutes: minutes })
+    });
+    if (res.ok) setItinerary(await res.json());
+  }
+
+  async function handleSetStopNotes(stopId: string, notes: string | null) {
+    if (!itinerary) return;
+    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ notes })
     });
     if (res.ok) setItinerary(await res.json());
   }
@@ -1895,6 +1945,7 @@ export function AccountPage({
                       lunchEnabled={dayInfo.lunchEnabled}
                       lunchStartMinutes={dayInfo.lunchStartMinutes}
                       lunchDurationMinutes={dayInfo.lunchDurationMinutes}
+                      notes={dayInfo.notes}
                       onRenameDay={(title) => handleRenameDay(dayInfo.day, title)}
                       onUpdateDayConfig={(patch) => updateDayConfig(dayInfo.day, patch)}
                       onOptimizeDay={() => handleOptimizeDay(dayInfo.day)}
@@ -1905,6 +1956,7 @@ export function AccountPage({
                       onRemoveStop={handleRemoveStopById}
                       onMoveStopToDay={handleMoveStopToDay}
                       onSetStopDuration={handleSetStopDuration}
+                      onSetStopNotes={handleSetStopNotes}
                       visitedPoiIds={new Set(visitedPoiIds)}
                       onToggleVisited={toggleVisited}
                       maxDay={maxDay}

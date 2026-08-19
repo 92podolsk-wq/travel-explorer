@@ -47,6 +47,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     lunchEnabled?: boolean | null;
     lunchStartMinutes?: number | null;
     lunchDurationMinutes?: number | null;
+    notes?: string | null;
   };
 
   const patch: {
@@ -55,6 +56,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     lunchEnabled?: boolean | null;
     lunchStartMinutes?: number | null;
     lunchDurationMinutes?: number | null;
+    notes?: string | null;
   } = {};
   if (body.title !== undefined) {
     if (!body.title.trim()) {
@@ -66,6 +68,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   if (body.lunchEnabled !== undefined) patch.lunchEnabled = body.lunchEnabled;
   if (body.lunchStartMinutes !== undefined) patch.lunchStartMinutes = body.lunchStartMinutes;
   if (body.lunchDurationMinutes !== undefined) patch.lunchDurationMinutes = body.lunchDurationMinutes;
+  if (body.notes !== undefined) patch.notes = body.notes;
 
   const result = await updateDay(user.id, itineraryId, day, patch);
   if (!result) {

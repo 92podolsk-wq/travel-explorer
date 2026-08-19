@@ -44,7 +44,8 @@ function toItinerary(row: ItineraryRow): Itinerary {
         day: stop.day,
         position: stop.position,
         point: toStopPoint(stop),
-        durationOverrideMinutes: stop.durationOverrideMinutes
+        durationOverrideMinutes: stop.durationOverrideMinutes,
+        notes: stop.notes
       })),
     days: [...row.days]
       .sort((a, b) => a.day - b.day)
@@ -54,7 +55,8 @@ function toItinerary(row: ItineraryRow): Itinerary {
         startMinutes: d.startMinutes,
         lunchEnabled: d.lunchEnabled,
         lunchStartMinutes: d.lunchStartMinutes,
-        lunchDurationMinutes: d.lunchDurationMinutes
+        lunchDurationMinutes: d.lunchDurationMinutes,
+        notes: d.notes
       }))
   };
 }
@@ -279,7 +281,7 @@ export async function updateStopById(
   userId: string,
   itineraryId: string,
   stopId: string,
-  patch: { day?: number; durationOverrideMinutes?: number | null }
+  patch: { day?: number; durationOverrideMinutes?: number | null; notes?: string | null }
 ): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });
   if (!itinerary) {
@@ -291,7 +293,7 @@ export async function updateStopById(
     return null;
   }
 
-  const data: { day?: number; position?: number; durationOverrideMinutes?: number | null } = {};
+  const data: { day?: number; position?: number; durationOverrideMinutes?: number | null; notes?: string | null } = {};
   if (patch.day != null && patch.day !== stop.day) {
     const maxPosition = itinerary.stops
       .filter((s) => s.day === patch.day && s.id !== stopId)
@@ -301,6 +303,9 @@ export async function updateStopById(
   }
   if (patch.durationOverrideMinutes !== undefined) {
     data.durationOverrideMinutes = patch.durationOverrideMinutes;
+  }
+  if (patch.notes !== undefined) {
+    data.notes = patch.notes;
   }
 
   await prisma.itineraryStop.update({
@@ -436,6 +441,7 @@ export async function updateDay(
     lunchEnabled?: boolean | null;
     lunchStartMinutes?: number | null;
     lunchDurationMinutes?: number | null;
+    notes?: string | null;
   }
 ): Promise<Itinerary | null> {
   const itinerary = await loadItinerary({ id: itineraryId, userId });

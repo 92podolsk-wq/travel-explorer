@@ -305,6 +305,7 @@ model ItineraryStop {
   day                     Int           @default(1)
   position                Int
   durationOverrideMinutes Int?
+  notes                   String?
 
   @@unique([itineraryId, poiId])
   @@unique([itineraryId, customMarkerId])
@@ -320,6 +321,7 @@ model ItineraryDay {
   lunchEnabled         Boolean?
   lunchStartMinutes    Int?
   lunchDurationMinutes Int?
+  notes                String?
 
   @@unique([itineraryId, day])
 }

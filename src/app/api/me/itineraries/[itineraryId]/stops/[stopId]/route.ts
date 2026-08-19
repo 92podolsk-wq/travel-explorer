@@ -31,16 +31,17 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   }
 
   const { itineraryId, stopId } = await params;
-  const { day, durationOverrideMinutes } = (await request.json()) as {
+  const { day, durationOverrideMinutes, notes } = (await request.json()) as {
     day?: number;
     durationOverrideMinutes?: number | null;
+    notes?: string | null;
   };
 
   if (day !== undefined && (typeof day !== "number" || day < 1)) {
     return withCors(NextResponse.json({ error: "Invalid day" }, { status: 400 }), request);
   }
 
-  const result = await updateStopById(user.id, itineraryId, stopId, { day, durationOverrideMinutes });
+  const result = await updateStopById(user.id, itineraryId, stopId, { day, durationOverrideMinutes, notes });
   if (!result) {
     return withCors(NextResponse.json({ error: "Stop not found" }, { status: 404 }), request);
   }

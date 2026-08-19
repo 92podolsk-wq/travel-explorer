@@ -235,6 +235,8 @@ type TranslationDictionary = {
     addLocationEmpty: string;
     stepsApprox: string;
     markVisited: string;
+    notesPlaceholder: string;
+    dayNotesPlaceholder: string;
     dayWalkingDistance: string;
     dayEmptyPlaceholder: string;
     renameDayPlaceholder: string;
@@ -628,6 +630,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       addLocationEmpty: "No results",
       stepsApprox: "~{count} steps",
       markVisited: "Mark as visited",
+      notesPlaceholder: "Note for this stop…",
+      dayNotesPlaceholder: "Note for the day…",
       dayWalkingDistance: "{distance} walking",
       dayEmptyPlaceholder: "No stops yet — add places from your favorites.",
       renameDayPlaceholder: "Day title",
@@ -1019,6 +1023,8 @@ export const translations: Record<Language, TranslationDictionary> = {
       addLocationEmpty: "Ничего не найдено",
       stepsApprox: "~{count} шагов",
       markVisited: "Отметить посещённым",
+      notesPlaceholder: "Заметка к точке…",
+      dayNotesPlaceholder: "Заметка к дню…",
       dayWalkingDistance: "{distance} пешком",
       dayEmptyPlaceholder: "Пока нет точек — добавьте места из избранного.",
       renameDayPlaceholder: "Название дня",

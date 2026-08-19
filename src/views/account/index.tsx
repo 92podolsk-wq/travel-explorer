@@ -775,6 +775,66 @@ export function AccountPage({
   const setItineraries = useExplorerStore((state) => state.setItineraries);
   const activeItineraryId = useExplorerStore((state) => state.activeItineraryId);
   const setActiveItineraryId = useExplorerStore((state) => state.setActiveItineraryId);
+
+  const [presenceUsers, setPresenceUsers] = useState<
+    { id: string; name: string | null; username: string; avatarId: string | null }[]
+  >([]);
+
+  // Live updates for collaborative trip editing: a companion's mutation
+  // broadcasts over this socket (see server.mts + src/shared/server/
+  // realtime.ts), and we just refetch — no need to reconcile a partial
+  // payload since GET /api/me/itineraries/[id] is already cheap. The same
+  // socket also carries presence: who else currently has this trip open.
+  useEffect(() => {
+    const itineraryId = itinerary?.id;
+    if (!itineraryId || typeof window === "undefined") return;
+
+    let cancelled = false;
+    let socket: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function connect() {
+      if (cancelled) return;
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      socket = new WebSocket(`${wsProtocol}//${window.location.host}/realtime`);
+
+      socket.onopen = () => {
+        socket?.send(JSON.stringify({ type: "subscribe", itineraryId }));
+      };
+
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "itinerary:updated" && message.itineraryId === itineraryId) {
+            apiFetch(`/api/me/itineraries/${itineraryId}`).then((res) => {
+              if (res.ok && !cancelled) res.json().then(setItinerary);
+            });
+          } else if (message.type === "presence" && message.itineraryId === itineraryId) {
+            setPresenceUsers(message.users);
+          }
+        } catch {
+          // ignore malformed frames
+        }
+      };
+
+      socket.onclose = () => {
+        if (!cancelled) setPresenceUsers([]);
+        if (!cancelled) reconnectTimer = setTimeout(connect, 3000);
+      };
+    }
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      socket?.close();
+      setPresenceUsers([]);
+    };
+  }, [itinerary?.id, setItinerary]);
+
+  const otherPresenceUsers = presenceUsers.filter((u) => u.id !== currentUser?.id);
+
   const dict = getTranslations(language);
   const t = dict.auth;
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
@@ -1721,6 +1781,17 @@ export function AccountPage({
                 )}
               </h2>
               <div className="flex items-center gap-3">
+                {otherPresenceUsers.length > 0 && (
+                  <div className="flex items-center -space-x-1.5" title={otherPresenceUsers.map((u) => u.name || `@${u.username}`).join(", ")}>
+                    {otherPresenceUsers.slice(0, 4).map((u) => (
+                      <ProfileAvatar
+                        key={u.id}
+                        avatarId={u.avatarId}
+                        className="h-6 w-6 rounded-full border-2 border-card"
+                      />
+                    ))}
+                  </div>
+                )}
                 {regions.length > 0 && itinerary && (
                   <button
                     type="button"

@@ -28,6 +28,42 @@ export async function unregisterPushToken(token: string) {
   await prisma.pushToken.deleteMany({ where: { token } });
 }
 
+// Targeted send (as opposed to broadcastPushNotification's site-wide blast)
+// — used for per-user activity notifications like "X changed your trip".
+export async function sendPushNotificationToUser(
+  userId: string,
+  title: string,
+  body: string,
+  data?: Record<string, string>
+) {
+  const app = getFirebaseApp();
+  if (!app) return;
+
+  const tokens = await prisma.pushToken.findMany({ where: { userId }, select: { id: true, token: true } });
+  if (tokens.length === 0) return;
+
+  const messaging = getMessaging(app);
+  const response = await messaging.sendEachForMulticast({
+    tokens: tokens.map((entry) => entry.token),
+    notification: { title, body },
+    ...(data ? { data } : {})
+  });
+
+  const staleTokenIds = response.responses
+    .map((result, index) =>
+      !result.success &&
+      (result.error?.code === "messaging/registration-token-not-registered" ||
+        result.error?.code === "messaging/invalid-registration-token")
+        ? tokens[index]!.id
+        : null
+    )
+    .filter((id): id is string => id !== null);
+
+  if (staleTokenIds.length > 0) {
+    await prisma.pushToken.deleteMany({ where: { id: { in: staleTokenIds } } });
+  }
+}
+
 export type BroadcastResult = {
   sent: number;
   failed: number;

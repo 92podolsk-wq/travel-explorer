@@ -5,6 +5,8 @@ import { toCustomMarker } from "./custom-markers-repository";
 import { toPoi, publicPhotosInclude, favoritesCountInclude, type PoiRow } from "./pois-repository";
 import { prisma } from "./prisma-client";
 import { hasItineraryEditAccess } from "./itinerary-shares-repository";
+import { broadcastItineraryUpdate } from "./realtime";
+import { sendPushNotificationToUser } from "./push-notifications";
 
 const stopInclude = {
   poi: { include: { photos: publicPhotosInclude, _count: favoritesCountInclude } },
@@ -120,6 +122,41 @@ export async function getItinerary(userId: string, itineraryId: string): Promise
   return row ? toItinerary(row) : null;
 }
 
+// Pushes an activity notification to every other owner/editor/viewer on this
+// itinerary (not the person who made the change). Best-effort — a missing
+// Firebase config or an unregistered token is silently skipped upstream.
+async function notifyCollaborators(actorUserId: string, itineraryId: string, message: string) {
+  const [itinerary, shares, actor] = await Promise.all([
+    prisma.itinerary.findUnique({ where: { id: itineraryId }, select: { userId: true, title: true } }),
+    prisma.itineraryShare.findMany({ where: { itineraryId }, select: { sharedWithId: true } }),
+    prisma.user.findUnique({ where: { id: actorUserId }, select: { name: true, username: true } })
+  ]);
+  if (!itinerary) return;
+
+  const recipientIds = new Set([itinerary.userId, ...shares.map((s) => s.sharedWithId)]);
+  recipientIds.delete(actorUserId);
+  if (recipientIds.size === 0) return;
+
+  const actorName = actor?.name || `@${actor?.username ?? "?"}`;
+  const title = `${actorName} · ${itinerary.title}`;
+  await Promise.all(
+    [...recipientIds].map((recipientId) => sendPushNotificationToUser(recipientId, title, message).catch(() => {}))
+  );
+}
+
+// Every mutation function below ends by re-fetching the itinerary to return
+// the caller its fresh state — piggyback the live-update broadcast and the
+// collaborator push notification on that same point so every write path
+// notifies other viewers exactly once.
+async function finishMutation(userId: string, itineraryId: string, activityMessage?: string): Promise<Itinerary | null> {
+  const result = await getItinerary(userId, itineraryId);
+  if (result) {
+    broadcastItineraryUpdate(itineraryId);
+    notifyCollaborators(userId, itineraryId, activityMessage ?? `Маршрут «${result.title}» изменён`).catch(() => {});
+  }
+  return result;
+}
+
 export async function listItineraries(userId: string): Promise<ItinerarySummary[]> {
   return prisma.itinerary.findMany({
     where: { userId },
@@ -149,6 +186,7 @@ export async function deleteItinerary(userId: string, itineraryId: string): Prom
   }
 
   await prisma.itinerary.delete({ where: { id: itineraryId } });
+  broadcastItineraryUpdate(itineraryId);
   return true;
 }
 
@@ -174,7 +212,8 @@ export async function addStop(userId: string, itineraryId: string, poiId: string
     update: {}
   });
 
-  return getItinerary(userId, itineraryId);
+  const poi = await prisma.poi.findUnique({ where: { id: poiId }, select: { name: true } });
+  return finishMutation(userId, itineraryId, poi ? `Добавлена точка: ${poi.name}` : undefined);
 }
 
 export async function addStops(userId: string, itineraryId: string, poiIds: string[]): Promise<Itinerary | null> {
@@ -199,7 +238,7 @@ export async function addStops(userId: string, itineraryId: string, poiIds: stri
     });
   }
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId, newPoiIds.length > 0 ? `Добавлено точек: ${newPoiIds.length}` : undefined);
 }
 
 export async function addMarkerStop(userId: string, itineraryId: string, customMarkerId: string): Promise<Itinerary | null> {
@@ -221,7 +260,7 @@ export async function addMarkerStop(userId: string, itineraryId: string, customM
     update: {}
   });
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function clearStops(userId: string, itineraryId: string): Promise<Itinerary | null> {
@@ -236,7 +275,7 @@ export async function clearStops(userId: string, itineraryId: string): Promise<I
     prisma.itinerary.update({ where: { id: itineraryId }, data: { title: "Мой маршрут" } })
   ]);
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function removeStopById(userId: string, itineraryId: string, stopId: string): Promise<Itinerary | null> {
@@ -245,8 +284,11 @@ export async function removeStopById(userId: string, itineraryId: string, stopId
     return null;
   }
 
+  const removed = itinerary.stops.find((s) => s.id === stopId);
+  const removedName = removed?.poi?.name ?? removed?.customMarker?.label ?? null;
+
   await prisma.itineraryStop.deleteMany({ where: { id: stopId, itineraryId } });
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId, removedName ? `Удалена точка: ${removedName}` : undefined);
 }
 
 export async function reorderDayStops(
@@ -274,7 +316,7 @@ export async function reorderDayStops(
     )
   );
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function updateStopById(
@@ -313,7 +355,7 @@ export async function updateStopById(
     data
   });
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function moveStopToDayWithOrder(
@@ -343,7 +385,7 @@ export async function moveStopToDayWithOrder(
     )
   ]);
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function generateItinerary(
@@ -374,7 +416,7 @@ export async function generateItinerary(
     ...(title ? [prisma.itinerary.update({ where: { id: itineraryId }, data: { title } })] : [])
   ]);
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function renameItinerary(userId: string, itineraryId: string, title: string): Promise<Itinerary | null> {
@@ -384,7 +426,7 @@ export async function renameItinerary(userId: string, itineraryId: string, title
   }
 
   await prisma.itinerary.update({ where: { id: itineraryId }, data: { title } });
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function updateItineraryStartDate(
@@ -401,7 +443,7 @@ export async function updateItineraryStartDate(
     where: { id: itineraryId },
     data: { startDate: startDate ? new Date(startDate) : null }
   });
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function addDay(userId: string, itineraryId: string): Promise<Itinerary | null> {
@@ -414,7 +456,7 @@ export async function addDay(userId: string, itineraryId: string): Promise<Itine
     Math.max(0, ...itinerary.stops.map((stop) => stop.day), ...itinerary.days.map((day) => day.day)) + 1;
 
   await prisma.itineraryDay.create({ data: { itineraryId, day: nextDay, title: null } });
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function removeDay(userId: string, itineraryId: string, day: number): Promise<Itinerary | null> {
@@ -428,7 +470,7 @@ export async function removeDay(userId: string, itineraryId: string, day: number
     prisma.itineraryDay.deleteMany({ where: { itineraryId, day } })
   ]);
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function updateDay(
@@ -455,7 +497,7 @@ export async function updateDay(
     update: patch
   });
 
-  return getItinerary(userId, itineraryId);
+  return finishMutation(userId, itineraryId);
 }
 
 export async function getItineraryById(itineraryId: string): Promise<Itinerary | null> {

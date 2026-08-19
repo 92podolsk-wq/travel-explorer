@@ -230,6 +230,9 @@ type TranslationDictionary = {
     removeDayConfirm: string;
     optimizeDay: string;
     dayPlaceCount: string;
+    addLocation: string;
+    addLocationTitle: string;
+    addLocationEmpty: string;
     dayWalkingDistance: string;
     dayEmptyPlaceholder: string;
     renameDayPlaceholder: string;
@@ -618,6 +621,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       removeDayConfirm: "Remove this day and all its stops? This can't be undone.",
       optimizeDay: "Optimize",
       dayPlaceCount: "{count} places",
+      addLocation: "Add location",
+      addLocationTitle: "Add location",
+      addLocationEmpty: "No results",
       dayWalkingDistance: "{distance} walking",
       dayEmptyPlaceholder: "No stops yet — add places from your favorites.",
       renameDayPlaceholder: "Day title",
@@ -1004,6 +1010,9 @@ export const translations: Record<Language, TranslationDictionary> = {
       removeDayConfirm: "Удалить этот день и все его точки? Это действие нельзя отменить.",
       optimizeDay: "Оптимизировать",
       dayPlaceCount: "{count} мест",
+      addLocation: "Добавить локацию",
+      addLocationTitle: "Добавить локацию",
+      addLocationEmpty: "Ничего не найдено",
       dayWalkingDistance: "{distance} пешком",
       dayEmptyPlaceholder: "Пока нет точек — добавьте места из избранного.",
       renameDayPlaceholder: "Название дня",

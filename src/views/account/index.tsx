@@ -32,6 +32,7 @@ import {
   Pencil,
   Plus,
   Route,
+  Search,
   Share2,
   Sparkles,
   Trash2,
@@ -39,6 +40,7 @@ import {
   Wand2,
   X
 } from "lucide-react";
+import { fuzzyMatch } from "@/shared/lib/fuzzy-match";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import { computeItinerarySummary } from "@/entities/itinerary/model/summary";
@@ -751,6 +753,32 @@ export function AccountPage({
       .map((stop) => (stop.point.kind === "poi" ? stop.point.poi.id : null))
       .filter((id): id is string => id !== null)
   );
+
+  const [isAddStopOpen, setIsAddStopOpen] = useState(false);
+  const [addStopQuery, setAddStopQuery] = useState("");
+
+  function poiDisplayName(poi: Poi) {
+    return poi.nameByLanguage?.[language] ?? poi.name;
+  }
+
+  const addStopSections = useMemo(() => {
+    const query = addStopQuery.trim().toLowerCase();
+    const filtered = query.length > 0 ? pois.filter((poi) => fuzzyMatch(poiDisplayName(poi), query)) : pois;
+    const byRegion = new Map<string, Poi[]>();
+    for (const poi of filtered) {
+      const list = byRegion.get(poi.regionId);
+      if (list) list.push(poi);
+      else byRegion.set(poi.regionId, [poi]);
+    }
+    return Array.from(byRegion.entries())
+      .map(([regionId, regionPois]) => ({
+        regionId,
+        name: regionName(regionId),
+        pois: [...regionPois].sort((a, b) => poiDisplayName(a).localeCompare(poiDisplayName(b)))
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pois, addStopQuery, language]);
 
   function clampDayCount(raw: string) {
     const parsed = Number(raw);
@@ -1855,10 +1883,16 @@ export function AccountPage({
                       defaultExpanded={index === 0}
                     />
                   ))}
-                  <Button type="button" variant="outline" onClick={handleAddDay} disabled={isAddingDay} className="gap-1.5">
-                    <Plus className="h-4 w-4" />
-                    {t.addDay}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" onClick={() => setIsAddStopOpen(true)} className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      {t.addLocation}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={handleAddDay} disabled={isAddingDay} className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      {t.addDay}
+                    </Button>
+                  </div>
                 </div>
                 <DragOverlay>
                   {activeDragStop ? (
@@ -1943,6 +1977,66 @@ export function AccountPage({
           </section>
         </div>
       </div>
+
+      {isAddStopOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close"
+            className="fixed inset-0 z-40 bg-black/20"
+            onClick={() => setIsAddStopOpen(false)}
+          />
+          <div className="fixed left-1/2 top-1/2 z-50 flex max-h-[78vh] w-[24rem] max-w-[92vw] -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border bg-card p-4 shadow-panel">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-sm font-semibold text-foreground">{t.addLocationTitle}</p>
+              <button type="button" aria-label="Close" onClick={() => setIsAddStopOpen(false)}>
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="mb-2 flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5">
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <input
+                value={addStopQuery}
+                onChange={(e) => setAddStopQuery(e.target.value)}
+                placeholder={dict.app.searchPlaceholder}
+                className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {addStopSections.length === 0 ? (
+                <p className="py-6 text-center text-xs text-muted-foreground">{t.addLocationEmpty}</p>
+              ) : (
+                addStopSections.map((section) => (
+                  <div key={section.regionId} className="mb-2">
+                    <p className="sticky top-0 bg-card py-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      {section.name}
+                    </p>
+                    {section.pois.map((poi) => {
+                      const isAdded = itineraryPoiIds.has(poi.id);
+                      return (
+                        <button
+                          key={poi.id}
+                          type="button"
+                          disabled={isAdded}
+                          onClick={() => void handleAddToItinerary(poi.id)}
+                          className="flex w-full items-center gap-2.5 rounded-md py-1.5 text-left disabled:opacity-50"
+                        >
+                          <span className="flex-1 truncate text-sm text-foreground">{poiDisplayName(poi)}</span>
+                          {isAdded ? (
+                            <Check className="h-4 w-4 shrink-0 text-primary" />
+                          ) : (
+                            <Plus className="h-4 w-4 shrink-0 text-primary" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {pendingClear && (
         <>

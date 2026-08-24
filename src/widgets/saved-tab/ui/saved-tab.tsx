@@ -9,24 +9,23 @@ import { getTranslations } from "@/shared/i18n/translations";
 import { cn } from "@/shared/lib/cn";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useItineraryStopMutations } from "@/shared/model/use-itinerary-stop-mutations";
+import { useShareItinerary } from "@/shared/model/use-share-itinerary";
 import { Button } from "@/shared/ui/button";
 import { FavoritesMap } from "@/widgets/favorites-map/ui/favorites-map";
 
 const FAVORITES_TRIP_HOURS_PER_DAY = 6;
 
-// itinerary/goToMap/onGenerateItinerary/onShareItinerary/isLinkCopied/
-// siteSettings are still owned by the route tab (inline in AccountPage
-// until that tab gets its own split) — threaded through as props rather
-// than duplicated here. requestClear likewise stays a prop since the
-// confirm-clear dialog is shared 3-way with the route/history tabs.
+// itinerary/goToMap/onGenerateItinerary/siteSettings are still owned by the
+// route tab (inline in AccountPage until that tab gets its own split) —
+// threaded through as props rather than duplicated here. requestClear
+// likewise stays a prop since the confirm-clear dialog is shared 3-way with
+// the route/history tabs.
 export function SavedTab({
   isActive,
   requestClear,
   goToPoi,
   goToMap,
   onGenerateItinerary,
-  onShareItinerary,
-  isLinkCopied,
   siteSettings
 }: {
   isActive: boolean;
@@ -34,8 +33,6 @@ export function SavedTab({
   goToPoi: (poiId: string) => void;
   goToMap: () => void;
   onGenerateItinerary: () => void;
-  onShareItinerary: () => void;
-  isLinkCopied: boolean;
   siteSettings: SiteSettings;
 }) {
   const language = useExplorerStore((state) => state.language);
@@ -47,6 +44,7 @@ export function SavedTab({
 
   const { itineraryPoiIds, handleAddToItinerary, handleAddAllToItinerary, handleAddRegionToItinerary, handleRemovePoiFromItinerary } =
     useItineraryStopMutations();
+  const { handleShareItinerary, isLinkCopied } = useShareItinerary();
 
   const [collapsedFavoriteRegionIds, setCollapsedFavoriteRegionIds] = useState<Set<string>>(new Set());
 
@@ -160,7 +158,7 @@ export function SavedTab({
                 {itinerary && itinerary.stops.length > 0 && (
                   <button
                     type="button"
-                    onClick={onShareItinerary}
+                    onClick={handleShareItinerary}
                     title={isLinkCopied ? t.linkCopied : t.shareItinerary}
                     className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition hover:text-primary"
                   >

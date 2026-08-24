@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   DndContext,
   DragOverlay,
@@ -59,7 +58,7 @@ import {
   stopPointRegionId
 } from "@/entities/itinerary/model/stop-point";
 import type { Poi } from "@/entities/poi/model/types";
-import { PoiRow, PoiThumbnail } from "@/entities/poi/ui/poi-row";
+import { PoiThumbnail } from "@/entities/poi/ui/poi-row";
 import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
@@ -79,6 +78,7 @@ import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useItineraryRealtime } from "@/shared/realtime/useItineraryRealtime";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { useItineraryStopMutations } from "@/shared/model/use-itinerary-stop-mutations";
+import { useShareItinerary } from "@/shared/model/use-share-itinerary";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { subscribeAccountTabChange } from "@/shared/lib/account-tab-navigation";
 import { navigateShell, useShellNavigation } from "@/shared/lib/shell-navigation";
@@ -745,7 +745,6 @@ export function AccountPage({
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | "itinerary" | null>(null);
   const [pendingRemoveDay, setPendingRemoveDay] = useState<number | null>(null);
   const [pendingDeleteItinerary, setPendingDeleteItinerary] = useState(false);
-  const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState("");
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
@@ -788,6 +787,7 @@ export function AccountPage({
     handleRemoveStopById,
     handleRemovePoiFromItinerary
   } = useItineraryStopMutations();
+  const { handleShareItinerary, isLinkCopied } = useShareItinerary();
 
   const [isAddStopOpen, setIsAddStopOpen] = useState(false);
   const [addStopQuery, setAddStopQuery] = useState("");
@@ -1037,24 +1037,6 @@ export function AccountPage({
     } finally {
       setPendingItineraryShareId(null);
     }
-  }
-
-  async function handleShareItinerary() {
-    if (!itinerary) return;
-    const url = `${window.location.origin}/trip/${itinerary.shareToken}`;
-
-    if (typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title: itinerary.title, url });
-        return;
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
-      }
-    }
-
-    await navigator.clipboard.writeText(url);
-    setIsLinkCopied(true);
-    setTimeout(() => setIsLinkCopied(false), 2000);
   }
 
   async function handleSwitchItinerary(id: string) {
@@ -1353,8 +1335,6 @@ export function AccountPage({
             goToPoi={goToPoi}
             goToMap={goToMap}
             onGenerateItinerary={handleGoToGenerateItinerary}
-            onShareItinerary={handleShareItinerary}
-            isLinkCopied={isLinkCopied}
             siteSettings={effectiveSiteSettings}
           />
 

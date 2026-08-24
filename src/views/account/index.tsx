@@ -83,6 +83,7 @@ import { apiFetch } from "@/shared/lib/api-fetch";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { useItineraryRealtime } from "@/shared/realtime/useItineraryRealtime";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
+import { useItineraryStopMutations } from "@/shared/model/use-itinerary-stop-mutations";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { subscribeAccountTabChange } from "@/shared/lib/account-tab-navigation";
 import { navigateShell, useShellNavigation } from "@/shared/lib/shell-navigation";
@@ -826,11 +827,14 @@ export function AccountPage({
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
-  const itineraryPoiIds = new Set(
-    (itinerary?.stops ?? [])
-      .map((stop) => (stop.point.kind === "poi" ? stop.point.poi.id : null))
-      .filter((id): id is string => id !== null)
-  );
+  const {
+    itineraryPoiIds,
+    handleAddToItinerary,
+    handleAddAllToItinerary,
+    handleAddRegionToItinerary,
+    handleRemoveStopById,
+    handleRemovePoiFromItinerary
+  } = useItineraryStopMutations();
 
   const [isAddStopOpen, setIsAddStopOpen] = useState(false);
   const [addStopQuery, setAddStopQuery] = useState("");
@@ -864,42 +868,6 @@ export function AccountPage({
     return Math.min(14, Math.max(1, Math.round(parsed)));
   }
 
-  async function handleAddToItinerary(poiId: string) {
-    if (!itinerary) return;
-    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ poiId })
-    });
-    if (res.ok) setItinerary(await res.json());
-  }
-
-  async function handleAddAllToItinerary() {
-    if (!itinerary) return;
-    const poiIds = favoritePois.filter((poi) => !itineraryPoiIds.has(poi.id)).map((poi) => poi.id);
-    if (poiIds.length === 0) return;
-    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ poiIds })
-    });
-    if (res.ok) setItinerary(await res.json());
-  }
-
-  async function handleAddRegionToItinerary(regionId: string) {
-    if (!itinerary) return;
-    const poiIds = favoritePois
-      .filter((poi) => poi.regionId === regionId && !itineraryPoiIds.has(poi.id))
-      .map((poi) => poi.id);
-    if (poiIds.length === 0) return;
-    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ poiIds })
-    });
-    if (res.ok) setItinerary(await res.json());
-  }
-
   function toggleFavoriteRegionCollapsed(regionId: string) {
     setCollapsedFavoriteRegionIds((prev) => {
       const next = new Set(prev);
@@ -921,19 +889,6 @@ export function AccountPage({
     if (!itinerary) return;
     const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops`, { method: "DELETE" });
     if (res.ok) setItinerary(await res.json());
-  }
-
-  async function handleRemoveStopById(stopId: string) {
-    if (!itinerary) return;
-    const res = await apiFetch(`/api/me/itineraries/${itinerary.id}/stops/${stopId}`, { method: "DELETE" });
-    if (res.ok) setItinerary(await res.json());
-  }
-
-  async function handleRemovePoiFromItinerary(poiId: string) {
-    if (!itinerary) return;
-    const stop = itinerary.stops.find((s) => s.point.kind === "poi" && s.point.poi.id === poiId);
-    if (!stop) return;
-    await handleRemoveStopById(stop.id);
   }
 
   async function handleMoveStopToDay(stopId: string, day: number) {

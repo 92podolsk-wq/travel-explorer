@@ -18,17 +18,12 @@ import {
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  Bookmark,
   Check,
   CheckCircle2,
   ChevronDown,
   Circle,
-  ChevronRight,
   Download,
   GripVertical,
-  Info,
-  ListPlus,
-  Map as MapIcon,
   MapPin,
   Pencil,
   Plus,
@@ -92,12 +87,12 @@ import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 import { FavoritesMap } from "@/widgets/favorites-map/ui/favorites-map";
 import { HistoryTab } from "@/widgets/history-tab/ui/history-tab";
+import { SavedTab } from "@/widgets/saved-tab/ui/saved-tab";
 import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
 import { ProfileTab } from "@/widgets/profile-tab/ui/profile-tab";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
 
 const DEFAULT_DAY_START_MINUTES = 540; // 09:00
-const FAVORITES_TRIP_HOURS_PER_DAY = 6;
 
 type DayConfigPatch = Partial<{
   title: string;
@@ -723,8 +718,6 @@ export function AccountPage({
   const currentUser = useExplorerStore((state) => state.currentUser);
   const pois = useExplorerStore((state) => state.pois);
   const regions = useExplorerStore((state) => state.regions);
-  const favorites = useExplorerStore((state) => state.favorites);
-  const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const toggleVisited = useExplorerStore((state) => state.toggleVisited);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
@@ -767,7 +760,6 @@ export function AccountPage({
   const [optimizingDay, setOptimizingDay] = useState<number | null>(null);
   const [activeDragStop, setActiveDragStop] = useState<ItineraryStopWithPoi | null>(null);
   const [activeTab, setActiveTab] = useState<AccountTab>("route");
-  const [collapsedFavoriteRegionIds, setCollapsedFavoriteRegionIds] = useState<Set<string>>(new Set());
 
   const shellAccountTab = useShellNavigation().accountTab;
 
@@ -827,18 +819,6 @@ export function AccountPage({
     const parsed = Number(raw);
     if (!raw.trim() || Number.isNaN(parsed)) return 1;
     return Math.min(14, Math.max(1, Math.round(parsed)));
-  }
-
-  function toggleFavoriteRegionCollapsed(regionId: string) {
-    setCollapsedFavoriteRegionIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(regionId)) {
-        next.delete(regionId);
-      } else {
-        next.add(regionId);
-      }
-      return next;
-    });
   }
 
   function handleGoToGenerateItinerary() {
@@ -1267,19 +1247,7 @@ export function AccountPage({
     );
   }
 
-  const favoritePois = pois.filter((poi) => favorites.includes(poi.id));
   const maxDay = itinerary && itinerary.days.length > 0 ? Math.max(...itinerary.days.map((d) => d.day)) : 0;
-  const favoritesByRegion = regions
-    .map((region) => ({ regionId: region.id, pois: favoritePois.filter((poi) => poi.regionId === region.id) }))
-    .filter((group) => group.pois.length > 0);
-  const favoritesTotalMinutes = favoritePois.reduce((sum, poi) => sum + poi.durationMinutes, 0);
-  const favoritesTripDays =
-    favoritePois.length > 0 ? Math.max(1, Math.ceil(favoritesTotalMinutes / (FAVORITES_TRIP_HOURS_PER_DAY * 60))) : 0;
-  const favoritesRegionProgress = favoritesByRegion.map(({ regionId, pois: regionPois }) => {
-    const totalInRegion = pois.filter((poi) => poi.regionId === regionId).length;
-    const percent = totalInRegion > 0 ? Math.round((regionPois.length / totalInRegion) * 100) : 0;
-    return { regionId, count: regionPois.length, percent };
-  });
 
   return (
     <main className="flex min-h-dvh flex-col bg-muted">
@@ -1379,236 +1347,16 @@ export function AccountPage({
 
           {activeTab === "profile" && <ProfileTab />}
 
-          <section className={cn("flex flex-col gap-3", activeTab !== "saved" && "hidden")}>
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Bookmark className="h-4 w-4 text-primary" />
-                {t.savedPlaces}
-              </h2>
-              {favoritePois.length > 0 && (
-                <div className="flex items-center gap-3">
-                  {favoritePois.some((poi) => !itineraryPoiIds.has(poi.id)) && (
-                    <button
-                      type="button"
-                      onClick={handleAddAllToItinerary}
-                      className="text-[11px] font-medium text-primary underline-offset-2 hover:underline"
-                    >
-                      {t.addAllToItinerary}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setPendingClear("saved")}
-                    className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                  >
-                    {t.clearSaved}
-                  </button>
-                </div>
-              )}
-            </div>
-            {favoritePois.length > 0 && (
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-4 rounded-lg border border-border bg-card/[0.78] p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex flex-wrap items-center gap-6">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <Bookmark className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <div className="text-xl font-bold text-foreground">{favoritePois.length}</div>
-                        <div className="text-xs text-muted-foreground">{t.favoritesStatsSaved}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500/10 text-sky-600">
-                        <MapIcon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <div className="text-xl font-bold text-foreground">{favoritesByRegion.length}</div>
-                        <div className="text-xs text-muted-foreground">{t.favoritesStatsRegions}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-500/10 text-violet-600">
-                        <Route className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <div className="text-xl font-bold text-foreground">
-                          {favoritesTripDays}{" "}
-                          <span className="text-xs font-normal text-muted-foreground">{t.favoritesStatsDaysUnit}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          {t.favoritesStatsDays}
-                          <span title={t.favoritesStatsDaysHint.replace("{hoursPerDay}", String(FAVORITES_TRIP_HOURS_PER_DAY))}>
-                            <Info className="h-3 w-3" />
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 rounded-lg bg-primary/5 p-3 sm:max-w-xs">
-                    <Sparkles className="h-5 w-5 shrink-0 text-primary" />
-                    <div className="flex-1 text-xs">
-                      <div className="font-semibold text-foreground">{t.favoritesCtaTitle}</div>
-                      <div className="text-muted-foreground">
-                        {t.favoritesCtaBody.replace("{days}", String(favoritesTripDays))}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      {itinerary && itinerary.stops.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={handleShareItinerary}
-                          title={isLinkCopied ? t.linkCopied : t.shareItinerary}
-                          className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition hover:text-primary"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
-                      )}
-                      <Button type="button" size="sm" onClick={handleGoToGenerateItinerary}>
-                        {t.favoritesCtaButton}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {favoritesRegionProgress.length > 0 && (
-                  <div className="flex flex-col gap-2.5 rounded-lg border border-border bg-card/[0.78] p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                        <MapPin className="h-3.5 w-3.5 text-primary" />
-                        {t.favoritesProgressTitle}
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={goToMap}
-                        className="flex items-center gap-0.5 text-[11px] font-medium text-primary underline-offset-2 hover:underline"
-                      >
-                        {t.favoritesProgressViewAll}
-                        <ChevronRight className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <div className="flex flex-col gap-2.5">
-                      {favoritesRegionProgress.map(({ regionId, count, percent }) => (
-                        <div key={regionId} className="flex items-center gap-3 text-xs">
-                          <span className="w-16 shrink-0 truncate font-medium text-foreground">{regionName(regionId)}</span>
-                          <span className="w-14 shrink-0 text-muted-foreground">
-                            {count} {t.favoritesProgressPlacesUnit}
-                          </span>
-                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className="h-full rounded-full bg-primary"
-                              style={{ width: `${Math.min(100, percent)}%` }}
-                            />
-                          </div>
-                          <span className="w-9 shrink-0 text-right text-muted-foreground">{percent}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <FavoritesMap
-                  pois={favoritePois}
-                  mapStyleId={effectiveSiteSettings.mapStyleId}
-                  protomapsPmtilesUrl={effectiveSiteSettings.protomapsPmtilesUrl}
-                  onSelectPoi={goToPoi}
-                  onOpenFullMap={goToMap}
-                  openMapLabel={t.favoritesMapOpen}
-                />
-              </div>
-            )}
-            {favoritePois.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t.noSavedPlaces}</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {favoritesByRegion.map(({ regionId, pois: regionPois }) => {
-                  const isCollapsed = collapsedFavoriteRegionIds.has(regionId);
-                  const hasAddable = regionPois.some((poi) => !itineraryPoiIds.has(poi.id));
-                  return (
-                    <div key={regionId} className="flex flex-col gap-2 rounded-lg border border-border bg-card/[0.62] p-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => toggleFavoriteRegionCollapsed(regionId)}
-                          className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm font-semibold text-foreground"
-                        >
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-                          <span className="truncate">{regionName(regionId)}</span>
-                          <span className="shrink-0 text-xs font-normal text-muted-foreground">
-                            ({regionPois.length})
-                          </span>
-                          <ChevronDown
-                            className={cn(
-                              "ml-auto h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform",
-                              !isCollapsed && "rotate-180"
-                            )}
-                          />
-                        </button>
-                        {hasAddable && (
-                          <button
-                            type="button"
-                            onClick={() => handleAddRegionToItinerary(regionId)}
-                            title={t.addRegionToItinerary}
-                            className="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:text-primary"
-                          >
-                            <ListPlus className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                      {!isCollapsed && (
-                        <div className="flex flex-col gap-2">
-                          {regionPois.map((poi, index) => {
-                            const isInItinerary = itineraryPoiIds.has(poi.id);
-                            return (
-                              <motion.div
-                                key={poi.id}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
-                              >
-                                <PoiRow
-                                  poi={poi}
-                                  regionName={regionName(poi.regionId)}
-                                  onSelect={() => goToPoi(poi.id)}
-                                  action={
-                                    <div className="flex shrink-0 items-center gap-1.5">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          isInItinerary ? handleRemovePoiFromItinerary(poi.id) : handleAddToItinerary(poi.id)
-                                        }
-                                        className={cn(
-                                          "shrink-0 whitespace-nowrap rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition",
-                                          isInItinerary
-                                            ? "border-primary/40 bg-primary/10 text-primary"
-                                            : "border-border text-muted-foreground hover:text-foreground"
-                                        )}
-                                      >
-                                        {isInItinerary ? t.inItinerary : t.addToItinerary}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleFavorite(poi.id)}
-                                        title={t.removeFromFavorites}
-                                        className="rounded-md p-1.5 text-muted-foreground transition hover:text-red-600"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  }
-                                />
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+          <SavedTab
+            isActive={activeTab === "saved"}
+            requestClear={setPendingClear}
+            goToPoi={goToPoi}
+            goToMap={goToMap}
+            onGenerateItinerary={handleGoToGenerateItinerary}
+            onShareItinerary={handleShareItinerary}
+            isLinkCopied={isLinkCopied}
+            siteSettings={effectiveSiteSettings}
+          />
 
           <section className={cn("flex flex-col gap-3", activeTab !== "route" && "hidden")}>
             <div className="flex items-center justify-between gap-2">

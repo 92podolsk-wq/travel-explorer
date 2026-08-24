@@ -25,7 +25,6 @@ import {
   Circle,
   ChevronRight,
   Download,
-  Eye,
   GripVertical,
   Info,
   ListPlus,
@@ -65,6 +64,7 @@ import {
   stopPointRegionId
 } from "@/entities/itinerary/model/stop-point";
 import type { Poi } from "@/entities/poi/model/types";
+import { PoiRow, PoiThumbnail } from "@/entities/poi/ui/poi-row";
 import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
 import type { AvatarId } from "@/entities/user/model/avatars";
@@ -91,6 +91,7 @@ import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import { cn } from "@/shared/lib/cn";
 import { FavoritesMap } from "@/widgets/favorites-map/ui/favorites-map";
+import { HistoryTab } from "@/widgets/history-tab/ui/history-tab";
 import { ItineraryDayMap } from "@/widgets/itinerary-day-map/ui/itinerary-day-map";
 import { ProfileTab } from "@/widgets/profile-tab/ui/profile-tab";
 import { SiteHeader } from "@/widgets/site-header/ui/site-header";
@@ -120,20 +121,6 @@ type AccountPageProps = {
   isEmbedded?: boolean;
 };
 
-function PoiThumbnail({ poi, className }: { poi: Poi; className?: string }) {
-  const thumbnail = poi.photos[0]?.url;
-
-  return thumbnail ? (
-    <div className={cn("relative shrink-0 overflow-hidden rounded", className)}>
-      <Image src={thumbnail} alt={poi.name} fill sizes="48px" className="object-cover" />
-    </div>
-  ) : (
-    <div className={cn("flex shrink-0 items-center justify-center rounded bg-muted text-muted-foreground", className)}>
-      <MapPin className="h-5 w-5" />
-    </div>
-  );
-}
-
 function StopPointThumbnail({ point, className }: { point: ItineraryStopPoint; className?: string }) {
   if (point.kind === "poi") {
     return <PoiThumbnail poi={point.poi} className={className} />;
@@ -145,31 +132,6 @@ function StopPointThumbnail({ point, className }: { point: ItineraryStopPoint; c
       style={{ backgroundColor: stopPointColor(point) ?? "#7a7a7a" }}
     >
       <MapPin className="h-5 w-5 text-white" />
-    </div>
-  );
-}
-
-function PoiRow({
-  poi,
-  regionName,
-  onSelect,
-  action
-}: {
-  poi: Poi;
-  regionName: string;
-  onSelect: () => void;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="flex w-full items-center gap-3 rounded-md border border-border bg-card/[0.78] p-2.5 shadow-sm transition hover:bg-muted/60">
-      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-        <PoiThumbnail poi={poi} className="h-12 w-12" />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-foreground">{poi.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{regionName}</p>
-        </div>
-      </button>
-      {action}
     </div>
   );
 }
@@ -763,7 +725,6 @@ export function AccountPage({
   const regions = useExplorerStore((state) => state.regions);
   const favorites = useExplorerStore((state) => state.favorites);
   const toggleFavorite = useExplorerStore((state) => state.toggleFavorite);
-  const viewedPoiIds = useExplorerStore((state) => state.viewedPoiIds);
   const visitedPoiIds = useExplorerStore((state) => state.visitedPoiIds);
   const toggleVisited = useExplorerStore((state) => state.toggleVisited);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
@@ -1307,8 +1268,6 @@ export function AccountPage({
   }
 
   const favoritePois = pois.filter((poi) => favorites.includes(poi.id));
-  const viewedPois = pois.filter((poi) => viewedPoiIds.includes(poi.id));
-  const visitedPois = pois.filter((poi) => visitedPoiIds.includes(poi.id));
   const maxDay = itinerary && itinerary.days.length > 0 ? Math.max(...itinerary.days.map((d) => d.day)) : 0;
   const favoritesByRegion = regions
     .map((region) => ({ regionId: region.id, pois: favoritePois.filter((poi) => poi.regionId === region.id) }))
@@ -1966,73 +1925,7 @@ export function AccountPage({
             )}
           </section>
 
-          <section className={cn("flex flex-col gap-3", activeTab !== "history" && "hidden")}>
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <MapPin className="h-4 w-4 text-primary" />
-                {t.visitedPlaces}
-              </h2>
-              {visitedPois.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setPendingClear("visited")}
-                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  {t.clearVisited}
-                </button>
-              )}
-            </div>
-            {visitedPois.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t.noVisitedPlaces}</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {visitedPois.map((poi, index) => (
-                  <motion.div
-                    key={poi.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
-                  >
-                    <PoiRow poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className={cn("flex flex-col gap-3", activeTab !== "history" && "hidden")}>
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
-                <Eye className="h-4 w-4 text-primary" />
-                {t.viewedPlaces}
-              </h2>
-              {viewedPois.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setPendingClear("viewed")}
-                  className="text-[11px] font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-                >
-                  {t.clearViewed}
-                </button>
-              )}
-            </div>
-            {viewedPois.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t.noViewedPlaces}</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {viewedPois.map((poi, index) => (
-                  <motion.div
-                    key={poi.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.03, ease: "easeOut" }}
-                  >
-                    <PoiRow poi={poi} regionName={regionName(poi.regionId)} onSelect={() => goToPoi(poi.id)} />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </section>
+          <HistoryTab isActive={activeTab === "history"} requestClear={setPendingClear} goToPoi={goToPoi} />
         </div>
       </div>
 

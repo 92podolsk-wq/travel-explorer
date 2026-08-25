@@ -3,17 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, BellOff, Check, Heart, LogOut, Map as MapIcon, Pencil, Route as RouteIcon, Trash2, X } from "lucide-react";
-import type { AvatarId } from "@/entities/user/model/avatars";
-import { avatarIds } from "@/entities/user/model/avatars";
 import type { User } from "@/entities/user/model/types";
+import { AvatarPickerPanel } from "@/entities/user/ui/avatar-picker-panel";
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
-import { cn } from "@/shared/lib/cn";
 import { formatLastSeen } from "@/shared/lib/format-last-seen";
 import { navigateShell } from "@/shared/lib/shell-navigation";
 import { isNativeLocalShell } from "@/shared/lib/native-origins";
 import { getDeviceToken, clearDeviceToken } from "@/shared/lib/device-token-storage";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { useAvatarPicker } from "@/shared/model/use-avatar-picker";
 import { Button } from "@/shared/ui/button";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
 import {
@@ -51,26 +50,13 @@ export function ProfileTab() {
   const [isBusy, setIsBusy] = useState(false);
   const [downloadedCount, setDownloadedCount] = useState(0);
   const [mapsDeleted, setMapsDeleted] = useState(false);
-  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const { isAvatarPickerOpen, setIsAvatarPickerOpen, handleSelectAvatar } = useAvatarPicker();
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
   const [usernameDraft, setUsernameDraft] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [hideFromSearchDraft, setHideFromSearchDraft] = useState(false);
-
-  async function handleSelectAvatar(avatarId: AvatarId) {
-    const res = await apiFetch("/api/me/avatar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ avatarId })
-    });
-    if (res.ok) {
-      const data = (await res.json()) as { user: User };
-      hydrateAuth(data.user);
-      setIsAvatarPickerOpen(false);
-    }
-  }
 
   function handleStartEditProfile() {
     setNameDraft(currentUser?.name ?? "");
@@ -309,33 +295,7 @@ export function ProfileTab() {
       )}
 
       {isAvatarPickerOpen && currentUser && (
-        <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
-          <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
-          <div className="grid grid-cols-6 gap-3">
-            {avatarIds.map((avatarId) => {
-              const isSelected = currentUser.avatarId === avatarId;
-              return (
-                <button
-                  key={avatarId}
-                  type="button"
-                  onClick={() => void handleSelectAvatar(avatarId)}
-                  aria-label={avatarId}
-                  className={cn(
-                    "relative flex items-center justify-center rounded-full border-2 p-0.5 transition hover:-translate-y-0.5",
-                    isSelected ? "border-primary" : "border-transparent"
-                  )}
-                >
-                  <ProfileAvatar avatarId={avatarId} className="h-11 w-11" />
-                  {isSelected && (
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="h-2.5 w-2.5" />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <AvatarPickerPanel title={t.chooseAvatar} currentAvatarId={currentUser.avatarId} onSelect={handleSelectAvatar} />
       )}
 
       {currentUser && (

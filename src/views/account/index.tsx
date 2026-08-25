@@ -3,19 +3,17 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
 import type { Area } from "@/entities/area/model/types";
 import type { Country } from "@/entities/country/model/types";
 import type { Poi } from "@/entities/poi/model/types";
 import type { Region } from "@/entities/region/model/types";
 import type { SiteSettings } from "@/entities/site-setting/model/types";
-import type { AvatarId } from "@/entities/user/model/avatars";
-import { avatarIds } from "@/entities/user/model/avatars";
-import type { User } from "@/entities/user/model/types";
+import { AvatarPickerPanel } from "@/entities/user/ui/avatar-picker-panel";
 import { LanguageSwitcher } from "@/features/language-switcher/ui/language-switcher";
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { useAvatarPicker } from "@/shared/model/use-avatar-picker";
 import { useHydrateAuth } from "@/shared/model/use-hydrate-auth";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
 import { subscribeAccountTabChange } from "@/shared/lib/account-tab-navigation";
@@ -99,7 +97,6 @@ export function AccountPage({
   const authStatus = useExplorerStore((state) => state.authStatus);
   const currentUser = useExplorerStore((state) => state.currentUser);
   const selectPoiFromMap = useExplorerStore((state) => state.selectPoiFromMap);
-  const hydrateAuth = useExplorerStore((state) => state.hydrateAuth);
   const clearViewedPois = useExplorerStore((state) => state.clearViewedPois);
   const clearFavoritePois = useExplorerStore((state) => state.clearFavoritePois);
   const clearVisitedPois = useExplorerStore((state) => state.clearVisitedPois);
@@ -108,7 +105,7 @@ export function AccountPage({
 
   const dict = getTranslations(language);
   const t = dict.auth;
-  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const { isAvatarPickerOpen, setIsAvatarPickerOpen, handleSelectAvatar } = useAvatarPicker();
   const [pendingClear, setPendingClear] = useState<"saved" | "visited" | "viewed" | "itinerary" | null>(null);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AccountTab>("route");
@@ -176,20 +173,6 @@ export function AccountPage({
           ? t.clearItinerary
           : t.clearViewed;
 
-  async function handleSelectAvatar(avatarId: AvatarId) {
-    const res = await apiFetch("/api/me/avatar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ avatarId })
-    });
-
-    if (res.ok) {
-      const data = (await res.json()) as { user: User };
-      hydrateAuth(data.user);
-      setIsAvatarPickerOpen(false);
-    }
-  }
-
   if (authStatus === "loading") {
     return (
       <main className="flex min-h-dvh flex-col bg-muted">
@@ -250,33 +233,7 @@ export function AccountPage({
           </div>
 
           {isAvatarPickerOpen && !(activeTab === "profile" && currentUser) && (
-            <section className="flex flex-col gap-3 rounded-md border border-border bg-card/[0.78] p-4">
-              <h2 className="text-sm font-semibold text-foreground">{t.chooseAvatar}</h2>
-              <div className="grid grid-cols-6 gap-3">
-                {avatarIds.map((avatarId) => {
-                  const isSelected = currentUser?.avatarId === avatarId;
-                  return (
-                    <button
-                      key={avatarId}
-                      type="button"
-                      onClick={() => handleSelectAvatar(avatarId)}
-                      aria-label={avatarId}
-                      className={cn(
-                        "relative flex items-center justify-center rounded-full border-2 p-0.5 transition hover:-translate-y-0.5",
-                        isSelected ? "border-primary" : "border-transparent"
-                      )}
-                    >
-                      <ProfileAvatar avatarId={avatarId} className="h-11 w-11" />
-                      {isSelected && (
-                        <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                          <Check className="h-2.5 w-2.5" />
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
+            <AvatarPickerPanel title={t.chooseAvatar} currentAvatarId={currentUser?.avatarId} onSelect={handleSelectAvatar} />
           )}
 
           {activeTab !== "profile" && (

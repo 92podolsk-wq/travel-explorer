@@ -12,13 +12,7 @@ export type PackingChecklistState = {
 
 const STORAGE_KEY = "travel-explorer-packing-checklist";
 
-// TODO(checklist-redesign phase 2): split into defaultPackingLabels (general
-// packing) + defaultDocumentLabels (Паспорт/Билеты/Деньги) once the UI grows
-// a "Документы" section to show them in.
 const defaultPackingLabels = [
-  "Паспорт / документы",
-  "Билеты и бронирования",
-  "Деньги и карты",
   "Зарядка и переходник",
   "Power bank",
   "Лекарства",
@@ -30,8 +24,14 @@ const defaultPackingLabels = [
   "Бытовая аптечка"
 ];
 
+const defaultDocumentLabels = ["Паспорт / документы", "Билеты и бронирования", "Деньги и карты"];
+
 function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function itemsFrom(labels: string[]): ChecklistItem[] {
+  return labels.map((label) => ({ id: makeId(), label, checked: false }));
 }
 
 function defaultState(): PackingChecklistState {
@@ -39,8 +39,8 @@ function defaultState(): PackingChecklistState {
     tripName: null,
     tripStartDate: null,
     tripEndDate: null,
-    packingItems: defaultPackingLabels.map((label) => ({ id: makeId(), label, checked: false })),
-    documentItems: [],
+    packingItems: itemsFrom(defaultPackingLabels),
+    documentItems: itemsFrom(defaultDocumentLabels),
     shoppingItems: [],
     departureItems: []
   };

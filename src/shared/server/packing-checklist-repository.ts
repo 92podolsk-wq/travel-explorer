@@ -1,14 +1,7 @@
 import type { ChecklistItem, PackingChecklist } from "@/entities/checklist/model/types";
 import { prisma } from "./prisma-client";
 
-// TODO(checklist-redesign phase 2): split into defaultPackingItems (general
-// packing) + defaultDocumentItems (Паспорт/Билеты/Деньги) once the UI grows a
-// "Документы" section to show them in — kept as one list for now so this
-// schema-only change has zero visible effect until the new UI ships.
 const DEFAULT_PACKING_LABELS = [
-  "Паспорт / документы",
-  "Билеты и бронирования",
-  "Деньги и карты",
   "Зарядка и переходник",
   "Power bank",
   "Лекарства",
@@ -20,12 +13,22 @@ const DEFAULT_PACKING_LABELS = [
   "Бытовая аптечка"
 ];
 
+const DEFAULT_DOCUMENT_LABELS = ["Паспорт / документы", "Билеты и бронирования", "Деньги и карты"];
+
 function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function itemsFrom(labels: string[]): ChecklistItem[] {
+  return labels.map((label) => ({ id: makeId(), label, checked: false }));
+}
+
 function defaultPackingItems(): ChecklistItem[] {
-  return DEFAULT_PACKING_LABELS.map((label) => ({ id: makeId(), label, checked: false }));
+  return itemsFrom(DEFAULT_PACKING_LABELS);
+}
+
+function defaultDocumentItems(): ChecklistItem[] {
+  return itemsFrom(DEFAULT_DOCUMENT_LABELS);
 }
 
 export function toChecklist(row: {
@@ -52,7 +55,7 @@ export async function getOrCreateChecklist(userId: string): Promise<PackingCheck
   const row = await prisma.packingChecklist.upsert({
     where: { userId },
     update: {},
-    create: { userId, packingItems: defaultPackingItems() }
+    create: { userId, packingItems: defaultPackingItems(), documentItems: defaultDocumentItems() }
   });
   return toChecklist(row);
 }
@@ -82,7 +85,7 @@ export async function updateChecklist(
       tripStartDate: tripStartDate ?? null,
       tripEndDate: tripEndDate ?? null,
       packingItems: patch.packingItems ?? defaultPackingItems(),
-      documentItems: patch.documentItems ?? [],
+      documentItems: patch.documentItems ?? defaultDocumentItems(),
       shoppingItems: patch.shoppingItems ?? [],
       departureItems: patch.departureItems ?? []
     }

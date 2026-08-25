@@ -33,10 +33,14 @@ export function SharedChecklistsCard() {
       </h2>
       {shared.map(({ owner, checklist }) => {
         const isOpen = openOwnerId === owner.id;
-        const totalItems = checklist.packingItems.length + checklist.shoppingItems.length;
-        const checkedItems =
-          checklist.packingItems.filter((item) => item.checked).length +
-          checklist.shoppingItems.filter((item) => item.checked).length;
+        const allItems = [
+          ...checklist.packingItems,
+          ...checklist.documentItems,
+          ...checklist.shoppingItems,
+          ...checklist.departureItems
+        ];
+        const totalItems = allItems.length;
+        const checkedItems = allItems.filter((item) => item.checked).length;
         return (
           <div key={owner.id} className="rounded-md bg-muted/40 p-2.5">
             <button
@@ -54,7 +58,7 @@ export function SharedChecklistsCard() {
             </button>
             {isOpen && (
               <div className="mt-2 flex flex-col gap-1">
-                {[...checklist.packingItems, ...checklist.shoppingItems].map((item) => (
+                {allItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-2 text-xs">
                     {item.checked ? (
                       <CheckSquare className="h-3.5 w-3.5 shrink-0 text-primary" />

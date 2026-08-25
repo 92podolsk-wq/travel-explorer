@@ -1,11 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, CheckSquare, ListChecks, Plus, Share2, Square, X } from "lucide-react";
+import {
+  CalendarDays,
+  CheckSquare,
+  ChevronDown,
+  ChevronUp,
+  ListChecks,
+  Plus,
+  Share2,
+  Sparkles,
+  Square,
+  Trash2
+} from "lucide-react";
 import type { ChecklistItem, PackingChecklist } from "@/entities/checklist/model/types";
 import type { FriendUser } from "@/entities/user/model/types";
 import { getTranslations } from "@/shared/i18n/translations";
 import { apiFetch } from "@/shared/lib/api-fetch";
+import { cn } from "@/shared/lib/cn";
 import { useExplorerStore } from "@/shared/model/explorer-store";
 import { Input } from "@/shared/ui/input";
 import { ProfileAvatar } from "@/shared/ui/profile-avatar";
@@ -15,77 +27,147 @@ function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+type ChecklistFilter = "all" | "incomplete" | "complete";
+
+function filterItems(items: ChecklistItem[], filter: ChecklistFilter): ChecklistItem[] {
+  if (filter === "incomplete") return items.filter((item) => !item.checked);
+  if (filter === "complete") return items.filter((item) => item.checked);
+  return items;
+}
+
 function ChecklistSection({
+  emoji,
   title,
   items,
+  filter,
+  isOpen,
+  onToggleOpen,
   addPlaceholder,
+  deleteLabel,
   onToggle,
   onRemove,
   onAdd
 }: {
+  emoji: string;
   title: string;
   items: ChecklistItem[];
+  filter: ChecklistFilter;
+  isOpen: boolean;
+  onToggleOpen: () => void;
   addPlaceholder: string;
+  deleteLabel: string;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onAdd: (label: string) => void;
 }) {
   const [draft, setDraft] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+  const visibleItems = filterItems(items, filter);
+  const doneCount = items.filter((item) => item.checked).length;
 
   function submit() {
     const trimmed = draft.trim();
     if (!trimmed) return;
     onAdd(trimmed);
     setDraft("");
+    setIsAdding(false);
   }
 
   return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold text-foreground">{title}</h3>
-      <ul className="flex flex-col">
-        {items.map((item) => (
-          <li key={item.id} className="flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0">
+    <div className="rounded-md border border-border/60">
+      <button
+        type="button"
+        onClick={onToggleOpen}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
+      >
+        <span className="flex items-center gap-2 text-xs font-semibold text-foreground">
+          <span aria-hidden>{emoji}</span>
+          {title}
+        </span>
+        <span className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+          {doneCount}/{items.length}
+          {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="border-t border-border/60 px-3 pb-3 pt-2">
+          <ul className="flex flex-col">
+            {visibleItems.map((item) => (
+              <li
+                key={item.id}
+                className="group flex items-center justify-between gap-2 border-b border-border py-1.5 last:border-0"
+              >
+                <button
+                  type="button"
+                  onClick={() => onToggle(item.id)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                >
+                  {item.checked ? (
+                    <CheckSquare className="h-4 w-4 shrink-0 text-primary" />
+                  ) : (
+                    <Square className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
+                  <span
+                    className={cn(
+                      "truncate text-sm",
+                      item.checked ? "text-muted-foreground line-through" : "text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemove(item.id)}
+                  aria-label={deleteLabel}
+                  className="shrink-0 text-muted-foreground opacity-0 transition group-hover:opacity-100 hover:text-red-600"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {isAdding ? (
+            <div className="mt-2 flex items-center gap-2">
+              <Input
+                autoFocus
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    submit();
+                  }
+                  if (event.key === "Escape") setIsAdding(false);
+                }}
+                onBlur={() => {
+                  if (!draft.trim()) setIsAdding(false);
+                }}
+                placeholder={addPlaceholder}
+                className="h-9 text-xs"
+              />
+              <button
+                type="button"
+                onClick={submit}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-white"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={() => onToggle(item.id)}
-              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+              onClick={() => setIsAdding(true)}
+              className="mt-2 flex items-center gap-1 text-xs font-medium text-primary hover:underline"
             >
-              {item.checked ? (
-                <CheckSquare className="h-4 w-4 shrink-0 text-primary" />
-              ) : (
-                <Square className="h-4 w-4 shrink-0 text-muted-foreground" />
-              )}
-              <span className={`truncate text-sm ${item.checked ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                {item.label}
-              </span>
+              <Plus className="h-3.5 w-3.5" />
+              {addPlaceholder}
             </button>
-            <button type="button" onClick={() => onRemove(item.id)} className="shrink-0 text-muted-foreground hover:text-foreground">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="mt-2 flex items-center gap-2">
-        <Input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              submit();
-            }
-          }}
-          placeholder={addPlaceholder}
-          className="h-9 text-xs"
-        />
-        <button
-          type="button"
-          onClick={submit}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-white"
-        >
-          <Plus className="h-4 w-4" />
-        </button>
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -101,6 +183,12 @@ export function PackingChecklistCard() {
   const [friends, setFriends] = useState<FriendUser[]>([]);
   const [shareTargetIds, setShareTargetIds] = useState<Set<string>>(new Set());
   const [pendingShareId, setPendingShareId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<ChecklistFilter>("all");
+  const [openPacking, setOpenPacking] = useState(true);
+  const [openDocuments, setOpenDocuments] = useState(false);
+  const [openShopping, setOpenShopping] = useState(false);
+  const [openDeparture, setOpenDeparture] = useState(false);
+  const [tripNameDraft, setTripNameDraft] = useState("");
 
   useEffect(() => {
     if (currentUser) {
@@ -112,6 +200,10 @@ export function PackingChecklistCard() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
+
+  useEffect(() => {
+    setTripNameDraft(state?.tripName ?? "");
+  }, [state?.tripName]);
 
   function applyPatch(patch: Partial<PackingChecklistState>) {
     setState((current) => {
@@ -168,11 +260,39 @@ export function PackingChecklistCard() {
   if (!state) return null;
 
   const dateLocale = language === "ru" ? "ru-RU" : "en-US";
-  const dateLabel = state.tripStartDate
-    ? appT.checklistDateSet.replace(
-        "{date}",
-        new Date(state.tripStartDate).toLocaleDateString(dateLocale, { day: "numeric", month: "long" })
-      )
+  function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(dateLocale, { day: "numeric", month: "long" });
+  }
+
+  const daysUntilTrip = (() => {
+    if (!state.tripStartDate) return null;
+    const startOfToday = new Date().setHours(0, 0, 0, 0);
+    const startOfTrip = new Date(state.tripStartDate).setHours(0, 0, 0, 0);
+    const days = Math.round((startOfTrip - startOfToday) / 86_400_000);
+    return days >= 0 ? days : null;
+  })();
+
+  const totalCount =
+    state.packingItems.length + state.documentItems.length + state.shoppingItems.length + state.departureItems.length;
+  const doneCount =
+    state.packingItems.filter((item) => item.checked).length +
+    state.documentItems.filter((item) => item.checked).length +
+    state.shoppingItems.filter((item) => item.checked).length +
+    state.departureItems.filter((item) => item.checked).length;
+  const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+  const isAllDone = totalCount > 0 && doneCount === totalCount;
+
+  function commitTripName() {
+    const trimmed = tripNameDraft.trim();
+    if (trimmed !== (state!.tripName ?? "")) {
+      applyPatch({ tripName: trimmed || null });
+    }
+  }
+
+  const tripSubtitle = state.tripStartDate
+    ? state.tripEndDate
+      ? `${formatDate(state.tripStartDate)} – ${formatDate(state.tripEndDate)}`
+      : formatDate(state.tripStartDate)
     : appT.checklistSetDate;
 
   return (
@@ -226,46 +346,170 @@ export function PackingChecklistCard() {
         </div>
       )}
 
-      <label className="relative inline-flex w-fit cursor-pointer items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary">
-        <CalendarDays className="h-3.5 w-3.5" />
-        {dateLabel}
-        <input
-          type="date"
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          value={state.tripStartDate ? state.tripStartDate.slice(0, 10) : ""}
-          onChange={(event) =>
-            applyPatch({ tripStartDate: event.target.value ? new Date(event.target.value).toISOString() : null })
-          }
+      <div className="flex flex-col gap-2 rounded-md bg-muted/40 p-3">
+        <Input
+          value={tripNameDraft}
+          onChange={(event) => setTripNameDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+          }}
+          onBlur={commitTripName}
+          placeholder={appT.checklistTripNamePlaceholder}
+          className="h-8 border-none bg-transparent px-0 text-sm font-bold text-foreground shadow-none focus-visible:ring-0"
         />
-      </label>
 
-      <ChecklistSection
-        title={appT.checklistPackingTitle}
-        items={state.packingItems}
-        addPlaceholder={appT.checklistAddPlaceholder}
-        onToggle={(id) =>
-          applyPatch({
-            packingItems: state.packingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-          })
-        }
-        onRemove={(id) => applyPatch({ packingItems: state.packingItems.filter((item) => item.id !== id) })}
-        onAdd={(label) => applyPatch({ packingItems: [...state.packingItems, { id: makeId(), label, checked: false }] })}
-      />
+        <div className="flex items-center gap-2">
+          <label className="relative flex flex-1 items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary">
+            <CalendarDays className="h-3.5 w-3.5" />
+            {state.tripStartDate ? formatDate(state.tripStartDate) : appT.checklistSetDate}
+            <input
+              type="date"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={state.tripStartDate ? state.tripStartDate.slice(0, 10) : ""}
+              onChange={(event) =>
+                applyPatch({ tripStartDate: event.target.value ? new Date(event.target.value).toISOString() : null })
+              }
+            />
+          </label>
+          <label className="relative flex flex-1 items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary">
+            <CalendarDays className="h-3.5 w-3.5" />
+            {state.tripEndDate ? formatDate(state.tripEndDate) : appT.checklistSetDate}
+            <input
+              type="date"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              value={state.tripEndDate ? state.tripEndDate.slice(0, 10) : ""}
+              onChange={(event) =>
+                applyPatch({ tripEndDate: event.target.value ? new Date(event.target.value).toISOString() : null })
+              }
+            />
+          </label>
+        </div>
 
-      <div className="h-px bg-border" />
+        {daysUntilTrip != null && (
+          <p className="text-[11px] text-muted-foreground">
+            {tripSubtitle} · {appT.checklistDaysUntilTrip.replace("{n}", String(daysUntilTrip))}
+          </p>
+        )}
 
-      <ChecklistSection
-        title={appT.checklistShoppingTitle}
-        items={state.shoppingItems}
-        addPlaceholder={appT.checklistAddPlaceholder}
-        onToggle={(id) =>
-          applyPatch({
-            shoppingItems: state.shoppingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-          })
-        }
-        onRemove={(id) => applyPatch({ shoppingItems: state.shoppingItems.filter((item) => item.id !== id) })}
-        onAdd={(label) => applyPatch({ shoppingItems: [...state.shoppingItems, { id: makeId(), label, checked: false }] })}
-      />
+        {totalCount > 0 && (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+              <span>
+                {doneCount} / {totalCount}
+              </span>
+              <span>{progressPercent}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-border">
+              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isAllDone && (
+        <div className="flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+          <Sparkles className="h-4 w-4 shrink-0" />
+          <span>
+            <span className="font-semibold">{appT.checklistAllDoneTitle}</span> {appT.checklistAllDoneBody}
+          </span>
+        </div>
+      )}
+
+      <div className="flex gap-1.5 rounded-md border border-border bg-muted/30 p-1">
+        {(
+          [
+            { id: "all", label: appT.checklistFilterAll, count: totalCount },
+            { id: "incomplete", label: appT.checklistFilterIncomplete, count: totalCount - doneCount },
+            { id: "complete", label: appT.checklistFilterComplete, count: doneCount }
+          ] as const
+        ).map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => setFilter(option.id)}
+            className={cn(
+              "flex-1 rounded px-2 py-1.5 text-[11px] font-semibold transition",
+              filter === option.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {option.label} {option.count}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <ChecklistSection
+          emoji="🧳"
+          title={appT.checklistPackingTitle}
+          items={state.packingItems}
+          filter={filter}
+          isOpen={openPacking}
+          onToggleOpen={() => setOpenPacking((value) => !value)}
+          addPlaceholder={appT.checklistAddPlaceholder}
+          deleteLabel={appT.checklistDeleteItem}
+          onToggle={(id) =>
+            applyPatch({
+              packingItems: state.packingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+            })
+          }
+          onRemove={(id) => applyPatch({ packingItems: state.packingItems.filter((item) => item.id !== id) })}
+          onAdd={(label) => applyPatch({ packingItems: [...state.packingItems, { id: makeId(), label, checked: false }] })}
+        />
+
+        <ChecklistSection
+          emoji="📄"
+          title={appT.checklistDocumentsTitle}
+          items={state.documentItems}
+          filter={filter}
+          isOpen={openDocuments}
+          onToggleOpen={() => setOpenDocuments((value) => !value)}
+          addPlaceholder={appT.checklistAddPlaceholder}
+          deleteLabel={appT.checklistDeleteItem}
+          onToggle={(id) =>
+            applyPatch({
+              documentItems: state.documentItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+            })
+          }
+          onRemove={(id) => applyPatch({ documentItems: state.documentItems.filter((item) => item.id !== id) })}
+          onAdd={(label) => applyPatch({ documentItems: [...state.documentItems, { id: makeId(), label, checked: false }] })}
+        />
+
+        <ChecklistSection
+          emoji="🛍"
+          title={appT.checklistShoppingTitle}
+          items={state.shoppingItems}
+          filter={filter}
+          isOpen={openShopping}
+          onToggleOpen={() => setOpenShopping((value) => !value)}
+          addPlaceholder={appT.checklistAddPlaceholder}
+          deleteLabel={appT.checklistDeleteItem}
+          onToggle={(id) =>
+            applyPatch({
+              shoppingItems: state.shoppingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+            })
+          }
+          onRemove={(id) => applyPatch({ shoppingItems: state.shoppingItems.filter((item) => item.id !== id) })}
+          onAdd={(label) => applyPatch({ shoppingItems: [...state.shoppingItems, { id: makeId(), label, checked: false }] })}
+        />
+
+        <ChecklistSection
+          emoji="🏠"
+          title={appT.checklistDepartureTitle}
+          items={state.departureItems}
+          filter={filter}
+          isOpen={openDeparture}
+          onToggleOpen={() => setOpenDeparture((value) => !value)}
+          addPlaceholder={appT.checklistAddPlaceholder}
+          deleteLabel={appT.checklistDeleteItem}
+          onToggle={(id) =>
+            applyPatch({
+              departureItems: state.departureItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+            })
+          }
+          onRemove={(id) => applyPatch({ departureItems: state.departureItems.filter((item) => item.id !== id) })}
+          onAdd={(label) => applyPatch({ departureItems: [...state.departureItems, { id: makeId(), label, checked: false }] })}
+        />
+      </div>
     </section>
   );
 }

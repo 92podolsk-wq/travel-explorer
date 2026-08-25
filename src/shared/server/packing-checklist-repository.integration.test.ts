@@ -21,15 +21,16 @@ afterAll(async () => {
 });
 
 describe("getOrCreateChecklist", () => {
-  it("seeds a default packing list and leaves the new document/departure arrays empty", async () => {
+  it("seeds default packing + document items, leaving shopping/departure empty", async () => {
     const checklist = await getOrCreateChecklist(userId);
 
     expect(checklist.tripName).toBeNull();
     expect(checklist.tripStartDate).toBeNull();
     expect(checklist.tripEndDate).toBeNull();
     expect(checklist.packingItems.length).toBeGreaterThan(0);
-    expect(checklist.packingItems.map((item) => item.label)).toContain("Паспорт / документы");
-    expect(checklist.documentItems).toEqual([]);
+    expect(checklist.documentItems.length).toBeGreaterThan(0);
+    expect(checklist.documentItems.map((item) => item.label)).toContain("Паспорт / документы");
+    expect(checklist.packingItems.map((item) => item.label)).not.toContain("Паспорт / документы");
     expect(checklist.shoppingItems).toEqual([]);
     expect(checklist.departureItems).toEqual([]);
   });

@@ -74,9 +74,19 @@ type TranslationDictionary = {
     checklistCardTitle: string;
     checklistSetDate: string;
     checklistDateSet: string;
+    checklistTripNamePlaceholder: string;
+    checklistDaysUntilTrip: string;
     checklistPackingTitle: string;
+    checklistDocumentsTitle: string;
     checklistShoppingTitle: string;
+    checklistDepartureTitle: string;
     checklistAddPlaceholder: string;
+    checklistDeleteItem: string;
+    checklistFilterAll: string;
+    checklistFilterIncomplete: string;
+    checklistFilterComplete: string;
+    checklistAllDoneTitle: string;
+    checklistAllDoneBody: string;
     retryButton: string;
     noSeasonPhotoHint: string;
     tomorrow: string;
@@ -395,9 +405,19 @@ export const translations: Record<Language, TranslationDictionary> = {
       checklistCardTitle: "Packing checklist",
       checklistSetDate: "Set trip date",
       checklistDateSet: "Trip on {date}",
+      checklistTripNamePlaceholder: "Trip name",
+      checklistDaysUntilTrip: "{n} days to go",
       checklistPackingTitle: "To pack",
+      checklistDocumentsTitle: "Documents",
       checklistShoppingTitle: "To buy",
+      checklistDepartureTitle: "Before you leave",
       checklistAddPlaceholder: "Add an item",
+      checklistDeleteItem: "Delete",
+      checklistFilterAll: "All",
+      checklistFilterIncomplete: "To do",
+      checklistFilterComplete: "Done",
+      checklistAllDoneTitle: "All set!",
+      checklistAllDoneBody: "You're ready for the trip.",
       retryButton: "Try again",
       noSeasonPhotoHint: "No photo for this season — showing the default one",
       tomorrow: "Tomorrow",
@@ -788,9 +808,19 @@ export const translations: Record<Language, TranslationDictionary> = {
       checklistCardTitle: "Чек-лист сборов",
       checklistSetDate: "Указать дату поездки",
       checklistDateSet: "Поездка {date}",
+      checklistTripNamePlaceholder: "Название поездки",
+      checklistDaysUntilTrip: "через {n} дн.",
       checklistPackingTitle: "Взять с собой",
+      checklistDocumentsTitle: "Документы",
       checklistShoppingTitle: "Купить",
+      checklistDepartureTitle: "Перед выездом",
       checklistAddPlaceholder: "Добавить пункт",
+      checklistDeleteItem: "Удалить",
+      checklistFilterAll: "Все",
+      checklistFilterIncomplete: "Не выполнено",
+      checklistFilterComplete: "Выполнено",
+      checklistAllDoneTitle: "Всё готово!",
+      checklistAllDoneBody: "Можно отправляться в поездку.",
       retryButton: "Повторить",
       noSeasonPhotoHint: "Нет фото для этого сезона — показано стандартное",
       tomorrow: "Завтра",

@@ -1,13 +1,20 @@
 export type ChecklistItem = { id: string; label: string; checked: boolean };
 
 export type PackingChecklistState = {
-  tripDate: string | null;
+  tripName: string | null;
+  tripStartDate: string | null;
+  tripEndDate: string | null;
   packingItems: ChecklistItem[];
+  documentItems: ChecklistItem[];
   shoppingItems: ChecklistItem[];
+  departureItems: ChecklistItem[];
 };
 
 const STORAGE_KEY = "travel-explorer-packing-checklist";
 
+// TODO(checklist-redesign phase 2): split into defaultPackingLabels (general
+// packing) + defaultDocumentLabels (Паспорт/Билеты/Деньги) once the UI grows
+// a "Документы" section to show them in.
 const defaultPackingLabels = [
   "Паспорт / документы",
   "Билеты и бронирования",
@@ -29,9 +36,34 @@ function makeId(): string {
 
 function defaultState(): PackingChecklistState {
   return {
-    tripDate: null,
+    tripName: null,
+    tripStartDate: null,
+    tripEndDate: null,
     packingItems: defaultPackingLabels.map((label) => ({ id: makeId(), label, checked: false })),
-    shoppingItems: []
+    documentItems: [],
+    shoppingItems: [],
+    departureItems: []
+  };
+}
+
+// Existing browsers may still have the pre-redesign shape saved
+// (`tripDate`, no document/departure arrays) — backfill it on read instead
+// of discarding the user's saved items.
+type LegacyPackingChecklistState = {
+  tripDate?: string | null;
+  packingItems?: ChecklistItem[];
+  shoppingItems?: ChecklistItem[];
+};
+
+function migrateState(raw: PackingChecklistState & LegacyPackingChecklistState): PackingChecklistState {
+  return {
+    tripName: raw.tripName ?? null,
+    tripStartDate: raw.tripStartDate ?? raw.tripDate ?? null,
+    tripEndDate: raw.tripEndDate ?? null,
+    packingItems: raw.packingItems ?? [],
+    documentItems: raw.documentItems ?? [],
+    shoppingItems: raw.shoppingItems ?? [],
+    departureItems: raw.departureItems ?? []
   };
 }
 
@@ -39,7 +71,7 @@ export function readChecklistState(): PackingChecklistState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
-    return JSON.parse(raw) as PackingChecklistState;
+    return migrateState(JSON.parse(raw));
   } catch {
     return defaultState();
   }

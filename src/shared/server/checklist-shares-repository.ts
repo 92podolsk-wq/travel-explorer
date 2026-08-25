@@ -3,6 +3,7 @@ import type { SharedChecklist } from "@/entities/sharing/model/types";
 import { prisma } from "./prisma-client";
 import { areFriends } from "./friendships-repository";
 import { isUserOnline } from "./realtime";
+import { toChecklist } from "./packing-checklist-repository";
 
 const FRIEND_USER_SELECT = { id: true, username: true, name: true, avatarId: true, lastSeenAt: true } as const;
 
@@ -63,10 +64,6 @@ export async function listChecklistsSharedWithMe(userId: string): Promise<Shared
     .filter((row) => row.owner.packingChecklist !== null)
     .map((row) => ({
       owner: toFriendUser(row.owner),
-      checklist: {
-        tripDate: row.owner.packingChecklist!.tripDate ? row.owner.packingChecklist!.tripDate.toISOString() : null,
-        packingItems: row.owner.packingChecklist!.packingItems as SharedChecklist["checklist"]["packingItems"],
-        shoppingItems: row.owner.packingChecklist!.shoppingItems as SharedChecklist["checklist"]["shoppingItems"]
-      }
+      checklist: toChecklist(row.owner.packingChecklist!)
     }));
 }

@@ -168,10 +168,10 @@ export function PackingChecklistCard() {
   if (!state) return null;
 
   const dateLocale = language === "ru" ? "ru-RU" : "en-US";
-  const dateLabel = state.tripDate
+  const dateLabel = state.tripStartDate
     ? appT.checklistDateSet.replace(
         "{date}",
-        new Date(state.tripDate).toLocaleDateString(dateLocale, { day: "numeric", month: "long" })
+        new Date(state.tripStartDate).toLocaleDateString(dateLocale, { day: "numeric", month: "long" })
       )
     : appT.checklistSetDate;
 
@@ -232,8 +232,10 @@ export function PackingChecklistCard() {
         <input
           type="date"
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          value={state.tripDate ? state.tripDate.slice(0, 10) : ""}
-          onChange={(event) => applyPatch({ tripDate: event.target.value ? new Date(event.target.value).toISOString() : null })}
+          value={state.tripStartDate ? state.tripStartDate.slice(0, 10) : ""}
+          onChange={(event) =>
+            applyPatch({ tripStartDate: event.target.value ? new Date(event.target.value).toISOString() : null })
+          }
         />
       </label>
 

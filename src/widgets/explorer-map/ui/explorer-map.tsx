@@ -22,16 +22,16 @@ import type { MapStyleId } from "@/entities/site-setting/model/types";
 import { getVisiblePois } from "@/features/smart-map/model/visibility";
 import { getLocalizedPoiSearchText, getTranslations } from "@/shared/i18n/translations";
 import type { Language } from "@/shared/i18n/types";
-import { apiFetch } from "@/shared/lib/api-fetch";
 import { cn } from "@/shared/lib/cn";
 import { getCurrentPosition } from "@/shared/lib/geolocate";
 import { useIsNativeApp } from "@/shared/lib/use-is-native-app";
-import { downloadRegionForOffline } from "@/shared/lib/offline-map-download";
-import { areRegionsDownloaded, markRegionsDownloaded } from "@/shared/lib/offline-maps-storage";
 import { presetMapStyleUrl, resolveMapStyle } from "@/shared/map/map-styles";
 import { registerCategoryMarkerIcons, registerVisitedBadgeIcon, visitedBadgeIconId } from "@/shared/map/poi-marker-icons";
 import { buildRegionVoronoi, emptyRegionVoronoiCollection, type RegionVoronoiCollection } from "@/shared/map/region-voronoi";
 import { useExplorerStore } from "@/shared/model/explorer-store";
+import { mergeBounds } from "../model/merge-bounds";
+import { useCustomMarkerActions } from "../model/use-custom-marker-actions";
+import { useOfflineMapDownload } from "../model/use-offline-map-download";
 import { AddMarkerPanel } from "./add-marker-panel";
 
 const poiSourceId = "travel-explorer-pois";
@@ -647,20 +647,6 @@ async function fetchWalkingRouteCoordinates(coordinates: Poi["coordinates"][]): 
   }
 }
 
-function mergeBounds(regions: Region[]): [[number, number], [number, number]] {
-  const [first, ...rest] = regions;
-  return rest.reduce<[[number, number], [number, number]]>(
-    (bounds, region) => [
-      [Math.min(bounds[0][0], region.bounds[0][0]), Math.min(bounds[0][1], region.bounds[0][1])],
-      [Math.max(bounds[1][0], region.bounds[1][0]), Math.max(bounds[1][1], region.bounds[1][1])]
-    ],
-    [
-      [first.bounds[0][0], first.bounds[0][1]],
-      [first.bounds[1][0], first.bounds[1][1]]
-    ]
-  );
-}
-
 type ExplorerMapProps = {
   initialMapStyleId: MapStyleId;
   initialProtomapsPmtilesUrl: string | null;
@@ -701,55 +687,25 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
   const setIsAddingMarker = useExplorerStore((state) => state.setIsAddingMarker);
   const setIsSwipeOpen = useExplorerStore((state) => state.setIsSwipeOpen);
   const isMobileSheetExpanded = useExplorerStore((state) => state.isMobileSheetExpanded);
-  const addCustomMarkerToState = useExplorerStore((state) => state.addCustomMarkerToState);
-  const currentUser = useExplorerStore((state) => state.currentUser);
   const t = getTranslations(language);
   const userMarkerRef = useRef<MapLibreMarker | null>(null);
   const selectedPulseMarkerRef = useRef<MapLibreMarker | null>(null);
-  const [pendingMarkerCoords, setPendingMarkerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const isNative = useIsNativeApp();
-  const [offlineDownloadState, setOfflineDownloadState] = useState<"idle" | "downloading" | "done" | "error">("idle");
-  const [offlineDownloadProgress, setOfflineDownloadProgress] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    areRegionsDownloaded(activeRegionIds).then((downloaded) => {
-      if (!cancelled) setOfflineDownloadState(downloaded ? "done" : "idle");
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRegionIds.join(",")]);
-
-  async function handleDownloadOfflineMap() {
-    const activeRegions = regions.filter((region) => activeRegionIds.includes(region.id));
-    const styleUrl = presetMapStyleUrl(initialMapStyleId);
-    if (activeRegions.length === 0 || !styleUrl) {
-      return;
-    }
-
-    const bounds = activeRegions.length === 1 ? activeRegions[0].bounds : mergeBounds(activeRegions);
-
-    setOfflineDownloadState("downloading");
-    setOfflineDownloadProgress(0);
-
-    try {
-      await downloadRegionForOffline({
-        bounds,
-        minZoom: 10,
-        maxZoom: 16,
-        styleUrl,
-        onProgress: ({ loaded, total }) => {
-          setOfflineDownloadProgress(total > 0 ? Math.round((loaded / total) * 100) : 0);
-        }
-      });
-      await markRegionsDownloaded(activeRegionIds);
-      setOfflineDownloadState("done");
-    } catch {
-      setOfflineDownloadState("error");
-    }
-  }
+  const {
+    pendingMarkerCoords,
+    setPendingMarkerCoords,
+    handleToggleAddMarker,
+    handleSaveMarker,
+    handleDeleteMarker,
+    handleAddMarkerToItineraryClick,
+    handleRemoveMarkerStopClick
+  } = useCustomMarkerActions();
+  const { offlineDownloadState, offlineDownloadProgress, handleDownloadOfflineMap } = useOfflineMapDownload(
+    activeRegionIds,
+    regions,
+    initialMapStyleId
+  );
 
   async function handleLocateMe() {
     const map = mapRef.current;
@@ -764,82 +720,6 @@ export function ExplorerMap({ initialMapStyleId, initialProtomapsPmtilesUrl }: E
     } finally {
       setIsLocatingUser(false);
     }
-  }
-
-  function handleToggleAddMarker() {
-    if (isAddingMarker) {
-      setIsAddingMarker(false);
-      setPendingMarkerCoords(null);
-    } else {
-      setIsAddingMarker(true);
-    }
-  }
-
-  async function handleSaveMarker(color: string, label: string): Promise<{ ok: true } | { ok: false; error: string }> {
-    if (!pendingMarkerCoords) {
-      return { ok: false, error: t.app.markerSaveError };
-    }
-
-    if (!currentUser) {
-      addCustomMarkerToState({
-        id: `local-${Date.now()}`,
-        lat: pendingMarkerCoords.lat,
-        lng: pendingMarkerCoords.lng,
-        color,
-        label,
-        createdAt: new Date().toISOString()
-      });
-      setIsAddingMarker(false);
-      setPendingMarkerCoords(null);
-      return { ok: true };
-    }
-
-    const res = await apiFetch("/api/me/custom-markers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lat: pendingMarkerCoords.lat, lng: pendingMarkerCoords.lng, color, label })
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string; limit?: number } | null;
-      if (data?.error === "MARKER_LIMIT_REACHED") {
-        return { ok: false, error: t.app.markerLimitReached.replace("{limit}", String(data.limit ?? customMarkerLimit)) };
-      }
-      return { ok: false, error: t.app.markerSaveError };
-    }
-
-    const marker = (await res.json()) as CustomMarker;
-    addCustomMarkerToState(marker);
-    setIsAddingMarker(false);
-    setPendingMarkerCoords(null);
-    return { ok: true };
-  }
-
-  async function handleDeleteMarker(id: string) {
-    useExplorerStore.getState().removeCustomMarkerFromState(id);
-    if (useExplorerStore.getState().currentUser && !id.startsWith("local-")) {
-      await apiFetch(`/api/me/custom-markers/${id}`, { method: "DELETE" }).catch(() => {});
-    }
-  }
-
-  async function handleAddMarkerToItineraryClick(customMarkerId: string) {
-    const state = useExplorerStore.getState();
-    if (!state.currentUser || !state.itinerary) return;
-    const res = await apiFetch(`/api/me/itineraries/${state.itinerary.id}/stops`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ customMarkerId })
-    });
-    if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
-  }
-
-  async function handleRemoveMarkerStopClick(customMarkerId: string) {
-    const state = useExplorerStore.getState();
-    if (!state.itinerary) return;
-    const stop = state.itinerary.stops.find((s) => s.point.kind === "marker" && s.point.marker.id === customMarkerId);
-    if (!stop) return;
-    const res = await apiFetch(`/api/me/itineraries/${state.itinerary.id}/stops/${stop.id}`, { method: "DELETE" });
-    if (res.ok) useExplorerStore.getState().setItinerary(await res.json());
   }
 
   const activeRegions = useMemo(

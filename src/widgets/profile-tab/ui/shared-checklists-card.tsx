@@ -33,12 +33,7 @@ export function SharedChecklistsCard() {
       </h2>
       {shared.map(({ owner, checklist }) => {
         const isOpen = openOwnerId === owner.id;
-        const allItems = [
-          ...checklist.packingItems,
-          ...checklist.documentItems,
-          ...checklist.shoppingItems,
-          ...checklist.departureItems
-        ];
+        const allItems = checklist.categories.flatMap((category) => category.items);
         const totalItems = allItems.length;
         const checkedItems = allItems.filter((item) => item.checked).length;
         return (

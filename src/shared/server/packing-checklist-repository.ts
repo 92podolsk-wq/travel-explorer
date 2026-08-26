@@ -1,4 +1,4 @@
-import type { ChecklistItem, PackingChecklist } from "@/entities/checklist/model/types";
+import type { ChecklistCategory, ChecklistItem, PackingChecklist } from "@/entities/checklist/model/types";
 import { prisma } from "./prisma-client";
 
 const DEFAULT_PACKING_LABELS = [
@@ -23,31 +23,24 @@ function itemsFrom(labels: string[]): ChecklistItem[] {
   return labels.map((label) => ({ id: makeId(), label, checked: false }));
 }
 
-function defaultPackingItems(): ChecklistItem[] {
-  return itemsFrom(DEFAULT_PACKING_LABELS);
-}
-
-function defaultDocumentItems(): ChecklistItem[] {
-  return itemsFrom(DEFAULT_DOCUMENT_LABELS);
+function defaultCategories(): ChecklistCategory[] {
+  return [
+    { id: "packing", title: "Взять с собой", emoji: "🧳", items: itemsFrom(DEFAULT_PACKING_LABELS) },
+    { id: "documents", title: "Документы", emoji: "📄", items: itemsFrom(DEFAULT_DOCUMENT_LABELS) }
+  ];
 }
 
 export function toChecklist(row: {
   tripName: string | null;
   tripStartDate: Date | null;
   tripEndDate: Date | null;
-  packingItems: unknown;
-  documentItems: unknown;
-  shoppingItems: unknown;
-  departureItems: unknown;
+  categories: unknown;
 }): PackingChecklist {
   return {
     tripName: row.tripName,
     tripStartDate: row.tripStartDate ? row.tripStartDate.toISOString() : null,
     tripEndDate: row.tripEndDate ? row.tripEndDate.toISOString() : null,
-    packingItems: row.packingItems as ChecklistItem[],
-    documentItems: row.documentItems as ChecklistItem[],
-    shoppingItems: row.shoppingItems as ChecklistItem[],
-    departureItems: row.departureItems as ChecklistItem[]
+    categories: row.categories as ChecklistCategory[]
   };
 }
 
@@ -55,7 +48,7 @@ export async function getOrCreateChecklist(userId: string): Promise<PackingCheck
   const row = await prisma.packingChecklist.upsert({
     where: { userId },
     update: {},
-    create: { userId, packingItems: defaultPackingItems(), documentItems: defaultDocumentItems() }
+    create: { userId, categories: defaultCategories() }
   });
   return toChecklist(row);
 }
@@ -74,20 +67,14 @@ export async function updateChecklist(
       tripName: patch.tripName,
       tripStartDate,
       tripEndDate,
-      packingItems: patch.packingItems,
-      documentItems: patch.documentItems,
-      shoppingItems: patch.shoppingItems,
-      departureItems: patch.departureItems
+      categories: patch.categories
     },
     create: {
       userId,
       tripName: patch.tripName ?? null,
       tripStartDate: tripStartDate ?? null,
       tripEndDate: tripEndDate ?? null,
-      packingItems: patch.packingItems ?? defaultPackingItems(),
-      documentItems: patch.documentItems ?? defaultDocumentItems(),
-      shoppingItems: patch.shoppingItems ?? [],
-      departureItems: patch.departureItems ?? []
+      categories: patch.categories ?? defaultCategories()
     }
   });
   return toChecklist(row);

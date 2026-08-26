@@ -1,10 +1,17 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "./prisma-client";
 import { getOrCreateChecklist, updateChecklist } from "./packing-checklist-repository";
+import type { ChecklistCategory } from "@/entities/checklist/model/types";
 
 const userEmail = "checklist-repo-test@example.com";
 
 let userId: string;
+
+function findCategory(categories: ChecklistCategory[], id: string): ChecklistCategory {
+  const category = categories.find((c) => c.id === id);
+  if (!category) throw new Error(`category ${id} not found`);
+  return category;
+}
 
 beforeEach(async () => {
   const user = await prisma.user.create({ data: { email: userEmail, username: "checklist_repo_test", passwordHash: "test-hash" } });
@@ -21,27 +28,30 @@ afterAll(async () => {
 });
 
 describe("getOrCreateChecklist", () => {
-  it("seeds default packing + document items, leaving shopping/departure empty", async () => {
+  it("seeds default packing + document categories", async () => {
     const checklist = await getOrCreateChecklist(userId);
 
     expect(checklist.tripName).toBeNull();
     expect(checklist.tripStartDate).toBeNull();
     expect(checklist.tripEndDate).toBeNull();
-    expect(checklist.packingItems.length).toBeGreaterThan(0);
-    expect(checklist.documentItems.length).toBeGreaterThan(0);
-    expect(checklist.documentItems.map((item) => item.label)).toContain("Паспорт / документы");
-    expect(checklist.packingItems.map((item) => item.label)).not.toContain("Паспорт / документы");
-    expect(checklist.shoppingItems).toEqual([]);
-    expect(checklist.departureItems).toEqual([]);
+
+    const packing = findCategory(checklist.categories, "packing");
+    const documents = findCategory(checklist.categories, "documents");
+    expect(packing.items.length).toBeGreaterThan(0);
+    expect(documents.items.length).toBeGreaterThan(0);
+    expect(documents.items.map((item) => item.label)).toContain("Паспорт / документы");
+    expect(packing.items.map((item) => item.label)).not.toContain("Паспорт / документы");
   });
 
   it("is idempotent — a second call returns the same row instead of reseeding", async () => {
     const first = await getOrCreateChecklist(userId);
-    await updateChecklist(userId, { packingItems: [] });
+    await updateChecklist(userId, {
+      categories: first.categories.map((c) => (c.id === "packing" ? { ...c, items: [] } : c))
+    });
 
     const second = await getOrCreateChecklist(userId);
 
-    expect(second.packingItems).toEqual([]);
+    expect(findCategory(second.categories, "packing").items).toEqual([]);
     expect(second.tripStartDate).toBe(first.tripStartDate);
   });
 });
@@ -74,16 +84,20 @@ describe("updateChecklist", () => {
     expect(afterClear.tripStartDate).toBeNull();
   });
 
-  it("patches the new documentItems/departureItems arrays independently of packing/shopping", async () => {
+  it("patches the categories array wholesale, replacing the previous list", async () => {
     await getOrCreateChecklist(userId);
 
     const updated = await updateChecklist(userId, {
-      documentItems: [{ id: "doc-1", label: "Паспорт", checked: false }],
-      departureItems: [{ id: "dep-1", label: "Выключить утюг", checked: true }]
+      categories: [
+        { id: "documents", title: "Документы", emoji: "📄", items: [{ id: "doc-1", label: "Паспорт", checked: false }] },
+        { id: "departure", title: "Перед выездом", emoji: "🏠", items: [{ id: "dep-1", label: "Выключить утюг", checked: true }] }
+      ]
     });
 
-    expect(updated.documentItems).toEqual([{ id: "doc-1", label: "Паспорт", checked: false }]);
-    expect(updated.departureItems).toEqual([{ id: "dep-1", label: "Выключить утюг", checked: true }]);
-    expect(updated.shoppingItems).toEqual([]);
+    expect(findCategory(updated.categories, "documents").items).toEqual([{ id: "doc-1", label: "Паспорт", checked: false }]);
+    expect(findCategory(updated.categories, "departure").items).toEqual([
+      { id: "dep-1", label: "Выключить утюг", checked: true }
+    ]);
+    expect(updated.categories.find((c) => c.id === "packing")).toBeUndefined();
   });
 });

@@ -184,10 +184,7 @@ export function PackingChecklistCard() {
   const [shareTargetIds, setShareTargetIds] = useState<Set<string>>(new Set());
   const [pendingShareId, setPendingShareId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ChecklistFilter>("all");
-  const [openPacking, setOpenPacking] = useState(true);
-  const [openDocuments, setOpenDocuments] = useState(false);
-  const [openShopping, setOpenShopping] = useState(false);
-  const [openDeparture, setOpenDeparture] = useState(false);
+  const [openCategoryIds, setOpenCategoryIds] = useState<Set<string>>(new Set());
   const [tripNameDraft, setTripNameDraft] = useState("");
 
   useEffect(() => {
@@ -204,6 +201,13 @@ export function PackingChecklistCard() {
   useEffect(() => {
     setTripNameDraft(state?.tripName ?? "");
   }, [state?.tripName]);
+
+  useEffect(() => {
+    if (state && state.categories.length > 0) {
+      setOpenCategoryIds((prev) => (prev.size === 0 ? new Set([state.categories[0].id]) : prev));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state === null]);
 
   function applyPatch(patch: Partial<PackingChecklistState>) {
     setState((current) => {
@@ -272,15 +276,33 @@ export function PackingChecklistCard() {
     return days >= 0 ? days : null;
   })();
 
-  const totalCount =
-    state.packingItems.length + state.documentItems.length + state.shoppingItems.length + state.departureItems.length;
-  const doneCount =
-    state.packingItems.filter((item) => item.checked).length +
-    state.documentItems.filter((item) => item.checked).length +
-    state.shoppingItems.filter((item) => item.checked).length +
-    state.departureItems.filter((item) => item.checked).length;
+  const totalCount = state.categories.reduce((sum, category) => sum + category.items.length, 0);
+  const doneCount = state.categories.reduce(
+    (sum, category) => sum + category.items.filter((item) => item.checked).length,
+    0
+  );
   const progressPercent = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
   const isAllDone = totalCount > 0 && doneCount === totalCount;
+
+  function updateCategoryItems(categoryId: string, updater: (items: ChecklistItem[]) => ChecklistItem[]) {
+    applyPatch({
+      categories: state!.categories.map((category) =>
+        category.id === categoryId ? { ...category, items: updater(category.items) } : category
+      )
+    });
+  }
+
+  function toggleCategoryOpen(categoryId: string) {
+    setOpenCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryId)) {
+        next.delete(categoryId);
+      } else {
+        next.add(categoryId);
+      }
+      return next;
+    });
+  }
 
   function commitTripName() {
     const trimmed = tripNameDraft.trim();
@@ -438,77 +460,28 @@ export function PackingChecklistCard() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <ChecklistSection
-          emoji="🧳"
-          title={appT.checklistPackingTitle}
-          items={state.packingItems}
-          filter={filter}
-          isOpen={openPacking}
-          onToggleOpen={() => setOpenPacking((value) => !value)}
-          addPlaceholder={appT.checklistAddPlaceholder}
-          deleteLabel={appT.checklistDeleteItem}
-          onToggle={(id) =>
-            applyPatch({
-              packingItems: state.packingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-            })
-          }
-          onRemove={(id) => applyPatch({ packingItems: state.packingItems.filter((item) => item.id !== id) })}
-          onAdd={(label) => applyPatch({ packingItems: [...state.packingItems, { id: makeId(), label, checked: false }] })}
-        />
-
-        <ChecklistSection
-          emoji="📄"
-          title={appT.checklistDocumentsTitle}
-          items={state.documentItems}
-          filter={filter}
-          isOpen={openDocuments}
-          onToggleOpen={() => setOpenDocuments((value) => !value)}
-          addPlaceholder={appT.checklistAddPlaceholder}
-          deleteLabel={appT.checklistDeleteItem}
-          onToggle={(id) =>
-            applyPatch({
-              documentItems: state.documentItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-            })
-          }
-          onRemove={(id) => applyPatch({ documentItems: state.documentItems.filter((item) => item.id !== id) })}
-          onAdd={(label) => applyPatch({ documentItems: [...state.documentItems, { id: makeId(), label, checked: false }] })}
-        />
-
-        <ChecklistSection
-          emoji="🛍"
-          title={appT.checklistShoppingTitle}
-          items={state.shoppingItems}
-          filter={filter}
-          isOpen={openShopping}
-          onToggleOpen={() => setOpenShopping((value) => !value)}
-          addPlaceholder={appT.checklistAddPlaceholder}
-          deleteLabel={appT.checklistDeleteItem}
-          onToggle={(id) =>
-            applyPatch({
-              shoppingItems: state.shoppingItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-            })
-          }
-          onRemove={(id) => applyPatch({ shoppingItems: state.shoppingItems.filter((item) => item.id !== id) })}
-          onAdd={(label) => applyPatch({ shoppingItems: [...state.shoppingItems, { id: makeId(), label, checked: false }] })}
-        />
-
-        <ChecklistSection
-          emoji="🏠"
-          title={appT.checklistDepartureTitle}
-          items={state.departureItems}
-          filter={filter}
-          isOpen={openDeparture}
-          onToggleOpen={() => setOpenDeparture((value) => !value)}
-          addPlaceholder={appT.checklistAddPlaceholder}
-          deleteLabel={appT.checklistDeleteItem}
-          onToggle={(id) =>
-            applyPatch({
-              departureItems: state.departureItems.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
-            })
-          }
-          onRemove={(id) => applyPatch({ departureItems: state.departureItems.filter((item) => item.id !== id) })}
-          onAdd={(label) => applyPatch({ departureItems: [...state.departureItems, { id: makeId(), label, checked: false }] })}
-        />
+        {state.categories.map((category) => (
+          <ChecklistSection
+            key={category.id}
+            emoji={category.emoji}
+            title={category.title}
+            items={category.items}
+            filter={filter}
+            isOpen={openCategoryIds.has(category.id)}
+            onToggleOpen={() => toggleCategoryOpen(category.id)}
+            addPlaceholder={appT.checklistAddPlaceholder}
+            deleteLabel={appT.checklistDeleteItem}
+            onToggle={(id) =>
+              updateCategoryItems(category.id, (items) =>
+                items.map((item) => (item.id === id ? { ...item, checked: !item.checked } : item))
+              )
+            }
+            onRemove={(id) => updateCategoryItems(category.id, (items) => items.filter((item) => item.id !== id))}
+            onAdd={(label) =>
+              updateCategoryItems(category.id, (items) => [...items, { id: makeId(), label, checked: false }])
+            }
+          />
+        ))}
       </div>
     </section>
   );

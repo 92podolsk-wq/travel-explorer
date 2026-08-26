@@ -1,25 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Ban, Eye, EyeOff, LogOut, ShieldCheck, Trash2 } from "lucide-react";
-import type { AdminAccount } from "@/entities/admin-account/model/types";
-import type { Area, AreaInput } from "@/entities/area/model/types";
-import type { Category, CategoryInput } from "@/entities/category/model/types";
-import type { Country, CountryInput } from "@/entities/country/model/types";
-import type { ExplorationMode, ExplorationModeInput } from "@/entities/exploration-mode/model/types";
+import type { Area } from "@/entities/area/model/types";
 import type { AdminPhoto } from "@/entities/photo/model/types";
-import type { Poi, PoiInput } from "@/entities/poi/model/types";
 import type { PoiReport } from "@/entities/poi-report/model/types";
-import type { Region, RegionInput } from "@/entities/region/model/types";
-import type { AdminUser } from "@/entities/user/model/types";
-import type { TrashedPoi } from "@/shared/server/pois-repository";
 import { getTranslations } from "@/shared/i18n/translations";
 import { Button } from "@/shared/ui/button";
 import { CityPicker } from "@/shared/ui/city-picker";
 import { Input } from "@/shared/ui/input";
 import { cn } from "@/shared/lib/cn";
+import type { Selection } from "../model/types";
+import { useAdminAuth } from "../model/use-admin-auth";
+import { useCountriesAdmin } from "../model/use-countries-admin";
+import { useAreasAdmin } from "../model/use-areas-admin";
+import { useCitiesAdmin } from "../model/use-cities-admin";
+import { useLocationsAdmin } from "../model/use-locations-admin";
+import { useModesAdmin } from "../model/use-modes-admin";
+import { useCategoriesAdmin } from "../model/use-categories-admin";
+import { useUsersAdmin } from "../model/use-users-admin";
+import { useAccountsAdmin } from "../model/use-accounts-admin";
 import { AdminAccountForm } from "./admin-account-form";
 import { AreaForm } from "./area-form";
 import { CategoryForm } from "./category-form";
@@ -39,10 +41,6 @@ import { ReportsTab } from "./reports-tab";
 import { PoiForm } from "./poi-form";
 import { RegionForm } from "./region-form";
 import { SiteSettingsTab } from "./site-settings-tab";
-
-type AuthViewState = { mode: "loading" } | { mode: "login" } | { mode: "ready" } | { mode: "error"; message: string };
-
-type Selection = { mode: "empty" } | { mode: "create" } | { mode: "edit"; id: string };
 
 type Tab =
   | "dashboard"
@@ -123,20 +121,6 @@ export function AdminPanel() {
     router.replace(`/admin?${params.toString()}`, { scroll: false });
   }
 
-  const [authView, setAuthView] = useState<AuthViewState>({ mode: "loading" });
-
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [regions, setRegions] = useState<Region[]>([]);
-  const [pois, setPois] = useState<Poi[]>([]);
-  const [explorationModes, setExplorationModes] = useState<ExplorationMode[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [accounts, setAccounts] = useState<AdminAccount[]>([]);
-  const [reports, setReports] = useState<PoiReport[]>([]);
-  const [photos, setPhotos] = useState<AdminPhoto[]>([]);
-  const [currentAdmin, setCurrentAdmin] = useState<{ name: string; email: string } | null>(null);
-
   const countrySelection: Selection = activeTab === "countries" ? urlSelection : { mode: "empty" };
   const setCountrySelection = (selection: Selection) => navigateToSelection("countries", selection);
   const areaSelection: Selection = activeTab === "areas" ? urlSelection : { mode: "empty" };
@@ -145,14 +129,6 @@ export function AdminPanel() {
   const setCitySelection = (selection: Selection) => navigateToSelection("cities", selection);
   const locationSelection: Selection = activeTab === "locations" ? urlSelection : { mode: "empty" };
   const setLocationSelection = (selection: Selection) => navigateToSelection("locations", selection);
-  const [locationCityFilter, setLocationCityFilter] = useState<string>("all");
-  const [showDraftsOnly, setShowDraftsOnly] = useState(false);
-  const [locationSelectedIds, setLocationSelectedIds] = useState<Set<string>>(new Set());
-  const [isLocationsTrashOpen, setIsLocationsTrashOpen] = useState(false);
-  const [locationsTrash, setLocationsTrash] = useState<TrashedPoi[]>([]);
-  const [bulkCityTarget, setBulkCityTarget] = useState<string>("");
-  const [bulkCategoryTarget, setBulkCategoryTarget] = useState<string>("");
-  const [isBulkWorking, setIsBulkWorking] = useState(false);
   const modeSelection: Selection = activeTab === "modes" ? urlSelection : { mode: "empty" };
   const setModeSelection = (selection: Selection) => navigateToSelection("modes", selection);
   const categorySelection: Selection = activeTab === "categories" ? urlSelection : { mode: "empty" };
@@ -160,60 +136,98 @@ export function AdminPanel() {
   const accountSelection: Selection = activeTab === "accounts" ? urlSelection : { mode: "empty" };
   const setAccountSelection = (selection: Selection) => navigateToSelection("accounts", selection);
 
-  const [countriesError, setCountriesError] = useState<string | null>(null);
-  const [areasError, setAreasError] = useState<string | null>(null);
-  const [citiesError, setCitiesError] = useState<string | null>(null);
-  const [locationsError, setLocationsError] = useState<string | null>(null);
-  const [modesError, setModesError] = useState<string | null>(null);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const [usersError, setUsersError] = useState<string | null>(null);
-  const [accountsError, setAccountsError] = useState<string | null>(null);
+  const {
+    countries,
+    error: countriesError,
+    load: loadCountries,
+    handleCreate: handleCreateCountry,
+    handleUpdate: handleUpdateCountry,
+    handleDelete: handleDeleteCountry
+  } = useCountriesAdmin(setCountrySelection);
+  const {
+    areas,
+    error: areasError,
+    load: loadAreas,
+    handleCreate: handleCreateArea,
+    handleUpdate: handleUpdateArea,
+    handleDelete: handleDeleteArea
+  } = useAreasAdmin(setAreaSelection);
+  const {
+    regions,
+    error: citiesError,
+    load: loadRegions,
+    handleCreate: handleCreateCity,
+    handleUpdate: handleUpdateCity,
+    handleDelete: handleDeleteCity
+  } = useCitiesAdmin(setCitySelection);
+  const {
+    pois,
+    error: locationsError,
+    locationCityFilter,
+    setLocationCityFilter,
+    showDraftsOnly,
+    setShowDraftsOnly,
+    selectedIds: locationSelectedIds,
+    isTrashOpen: isLocationsTrashOpen,
+    setIsTrashOpen: setIsLocationsTrashOpen,
+    trash: locationsTrash,
+    bulkCityTarget,
+    setBulkCityTarget,
+    bulkCategoryTarget,
+    setBulkCategoryTarget,
+    isBulkWorking,
+    load: loadPois,
+    handleCreate: handleCreateLocation,
+    handleUpdate: handleUpdateLocation,
+    handleDelete: handleDeleteLocation,
+    handleDuplicate: handleDuplicateLocation,
+    toggleSelected: toggleLocationSelected,
+    clearSelected: clearLocationSelected,
+    toggleAllSelected: toggleAllLocationsSelected,
+    handleBulkSetStatus,
+    handleBulkDelete: handleBulkDeleteLocations,
+    handleOpenTrash: handleOpenLocationsTrash,
+    handleRestore: handleRestoreLocation,
+    handlePurge: handlePurgeLocation,
+    handleBulkChangeCity,
+    handleBulkChangeCategory
+  } = useLocationsAdmin(setLocationSelection);
+  const {
+    explorationModes,
+    error: modesError,
+    load: loadExplorationModes,
+    handleCreate: handleCreateMode,
+    handleUpdate: handleUpdateMode,
+    handleDelete: handleDeleteMode
+  } = useModesAdmin(setModeSelection);
+  const {
+    categories,
+    error: categoriesError,
+    load: loadCategories,
+    handleCreate: handleCreateCategory,
+    handleUpdate: handleUpdateCategory,
+    handleDelete: handleDeleteCategory
+  } = useCategoriesAdmin(setCategorySelection);
+  const {
+    users,
+    error: usersError,
+    load: loadUsers,
+    handleToggleHiddenAccess: handleToggleUserHiddenAccess,
+    handleToggleBlock: handleToggleUserBlock,
+    handleDelete: handleDeleteUser
+  } = useUsersAdmin();
+  const {
+    accounts,
+    error: accountsError,
+    load: loadAccounts,
+    handleCreate: handleCreateAccount,
+    handleUpdate: handleUpdateAccount,
+    handleDelete: handleDeleteAccount
+  } = useAccountsAdmin(setAccountSelection);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [reports, setReports] = useState<PoiReport[]>([]);
+  const [photos, setPhotos] = useState<AdminPhoto[]>([]);
 
-  async function loadCountries() {
-    const res = await fetch("/api/countries");
-    if (!res.ok) throw new Error("Failed to load countries");
-    setCountries((await res.json()) as Country[]);
-  }
-  async function loadAreas() {
-    const res = await fetch("/api/areas");
-    if (!res.ok) throw new Error("Failed to load areas");
-    setAreas((await res.json()) as Area[]);
-  }
-  async function loadRegions() {
-    const res = await fetch("/api/regions");
-    if (!res.ok) throw new Error("Failed to load regions");
-    setRegions((await res.json()) as Region[]);
-  }
-  async function loadPois() {
-    const res = await fetch("/api/pois");
-    if (!res.ok) throw new Error("Failed to load pois");
-    setPois((await res.json()) as Poi[]);
-  }
-  async function loadExplorationModes() {
-    const res = await fetch("/api/exploration-modes");
-    if (!res.ok) throw new Error("Failed to load exploration modes");
-    setExplorationModes((await res.json()) as ExplorationMode[]);
-  }
-  async function loadCategories() {
-    const res = await fetch("/api/categories");
-    if (!res.ok) throw new Error("Failed to load categories");
-    setCategories((await res.json()) as Category[]);
-  }
-  async function loadUsers() {
-    const res = await fetch("/api/admin/users");
-    if (!res.ok) throw new Error("Failed to load users");
-    setUsers((await res.json()) as AdminUser[]);
-  }
-  async function loadAccounts() {
-    const res = await fetch("/api/admin/accounts");
-    if (!res.ok) throw new Error("Failed to load accounts");
-    setAccounts((await res.json()) as AdminAccount[]);
-  }
   async function loadReports() {
     const res = await fetch("/api/admin/reports");
     if (!res.ok) throw new Error("Failed to load reports");
@@ -240,666 +254,19 @@ export function AdminPanel() {
     ]);
   }
 
-  async function checkSessionAndLoad() {
-    setAuthView({ mode: "loading" });
-    try {
-      const res = await fetch("/api/admin/session");
-      if (!res.ok) throw new Error("Session check failed");
-      const { authenticated, admin } = (await res.json()) as {
-        authenticated: boolean;
-        admin: { name: string; email: string } | null;
-      };
-
-      if (!authenticated) {
-        setAuthView({ mode: "login" });
-        return;
-      }
-
-      setCurrentAdmin(admin);
-      await loadAllAdminData();
-      setAuthView({ mode: "ready" });
-    } catch {
-      setAuthView({
-        mode: "error",
-        message: "Не удалось загрузить админ-панель. Проверьте соединение и попробуйте снова."
-      });
-    }
-  }
-
-  useEffect(() => {
-    void checkSessionAndLoad();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleLogin = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setLoginError(null);
-    setIsLoggingIn(true);
-
-    try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!res.ok) {
-        setLoginError("Неверный email или пароль.");
-        return;
-      }
-
-      const { admin } = (await res.json()) as { admin: { name: string; email: string } };
-      setCurrentAdmin(admin);
-
-      setPassword("");
-      await loadAllAdminData();
-      setAuthView({ mode: "ready" });
-    } catch {
-      setLoginError("Не удалось войти. Проверьте соединение и попробуйте снова.");
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
-    setCurrentAdmin(null);
-    setAuthView({ mode: "login" });
-  };
-
-  const handleCreateCountry = async (input: CountryInput) => {
-    setCountriesError(null);
-    const res = await fetch("/api/countries", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setCountriesError("Не удалось создать страну.");
-      return;
-    }
-
-    const created = (await res.json()) as Country;
-    await loadCountries();
-    setCountrySelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateCountry = async (id: string, input: CountryInput) => {
-    setCountriesError(null);
-    const res = await fetch(`/api/countries/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setCountriesError("Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadCountries();
-  };
-
-  const handleDeleteCountry = async (country: Country) => {
-    if (!window.confirm(`Удалить «${country.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setCountriesError(null);
-    const res = await fetch(`/api/countries/${country.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setCountriesError(data?.error ?? "Не удалось удалить страну.");
-      return;
-    }
-
-    setCountrySelection({ mode: "empty" });
-    await loadCountries();
-  };
-
-  const handleCreateArea = async (input: AreaInput) => {
-    setAreasError(null);
-    const res = await fetch("/api/areas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setAreasError("Не удалось создать регион.");
-      return;
-    }
-
-    const created = (await res.json()) as Area;
-    await loadAreas();
-    setAreaSelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateArea = async (id: string, input: AreaInput) => {
-    setAreasError(null);
-    const res = await fetch(`/api/areas/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setAreasError("Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadAreas();
-  };
-
-  const handleDeleteArea = async (area: Area) => {
-    if (!window.confirm(`Удалить «${area.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setAreasError(null);
-    const res = await fetch(`/api/areas/${area.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setAreasError(data?.error ?? "Не удалось удалить регион.");
-      return;
-    }
-
-    setAreaSelection({ mode: "empty" });
-    await loadAreas();
-  };
-
-  const handleCreateCity = async (input: RegionInput) => {
-    setCitiesError(null);
-    const res = await fetch("/api/regions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setCitiesError("Не удалось создать город.");
-      return;
-    }
-
-    const created = (await res.json()) as Region;
-    await loadRegions();
-    setCitySelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateCity = async (id: string, input: RegionInput) => {
-    setCitiesError(null);
-    const res = await fetch(`/api/regions/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setCitiesError("Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadRegions();
-  };
-
-  const handleDeleteCity = async (region: Region) => {
-    if (!window.confirm(`Удалить «${region.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setCitiesError(null);
-    const res = await fetch(`/api/regions/${region.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setCitiesError(data?.error ?? "Не удалось удалить город.");
-      return;
-    }
-
-    setCitySelection({ mode: "empty" });
-    await loadRegions();
-  };
-
-  const handleCreateLocation = async (input: PoiInput) => {
-    setLocationsError(null);
-    const res = await fetch("/api/pois", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setLocationsError("Не удалось создать локацию.");
-      return;
-    }
-
-    const created = (await res.json()) as Poi;
-    await loadPois();
-    setLocationSelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateLocation = async (id: string, input: PoiInput) => {
-    setLocationsError(null);
-    const res = await fetch(`/api/pois/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setLocationsError("Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadPois();
-  };
-
-  const handleDeleteLocation = async (poi: Poi) => {
-    if (!window.confirm(`Удалить «${poi.name}»? Локацию можно будет восстановить из корзины.`)) {
-      return;
-    }
-
-    setLocationsError(null);
-    const res = await fetch(`/api/pois/${poi.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      setLocationsError("Не удалось удалить локацию.");
-      return;
-    }
-
-    setLocationSelection({ mode: "empty" });
-    await loadPois();
-  };
-
-  const handleDuplicateLocation = async (poi: Poi) => {
-    setLocationsError(null);
-    const input: PoiInput = {
-      regionId: poi.regionId,
-      name: `${poi.name} (копия)`,
-      nameByLanguage: poi.nameByLanguage,
-      coordinates: poi.coordinates,
-      description: poi.description,
-      descriptionByLanguage: poi.descriptionByLanguage,
-      rating: poi.rating,
-      photos: poi.photos,
-      category: poi.category,
-      tags: poi.tags,
-      seasons: poi.seasons,
-      photoScore: poi.photoScore,
-      difficulty: poi.difficulty,
-      durationMinutes: poi.durationMinutes,
-      importance: poi.importance,
-      status: "draft"
-    };
-    const res = await fetch("/api/pois", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setLocationsError("Не удалось дублировать локацию.");
-      return;
-    }
-
-    const created = (await res.json()) as Poi;
-    await loadPois();
-    setLocationSelection({ mode: "edit", id: created.id });
-  };
-
-  const toggleLocationSelected = (id: string) => {
-    setLocationSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAllLocationsSelected = (ids: string[]) => {
-    setLocationSelectedIds((prev) => {
-      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
-      return allSelected ? new Set() : new Set(ids);
-    });
-  };
-
-  const handleBulkSetStatus = async (status: "draft" | "published") => {
-    setLocationsError(null);
-    setIsBulkWorking(true);
-    try {
-      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
-      await Promise.all(
-        targets.map((poi) =>
-          fetch(`/api/pois/${poi.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...poi, status })
-          })
-        )
-      );
-      setLocationSelectedIds(new Set());
-      await loadPois();
-    } finally {
-      setIsBulkWorking(false);
-    }
-  };
-
-  const handleBulkDeleteLocations = async () => {
-    if (!window.confirm(`Удалить выбранные локации (${locationSelectedIds.size})? Их можно будет восстановить из корзины.`)) {
-      return;
-    }
-
-    setLocationsError(null);
-    setIsBulkWorking(true);
-    try {
-      await Promise.all([...locationSelectedIds].map((id) => fetch(`/api/pois/${id}`, { method: "DELETE" })));
-      setLocationSelectedIds(new Set());
-      setLocationSelection({ mode: "empty" });
-      await loadPois();
-    } finally {
-      setIsBulkWorking(false);
-    }
-  };
-
-  const loadLocationsTrash = async () => {
-    setLocationsError(null);
-    const res = await fetch("/api/admin/locations-trash");
-    if (!res.ok) {
-      setLocationsError("Не удалось загрузить корзину.");
-      return;
-    }
-    setLocationsTrash((await res.json()) as TrashedPoi[]);
-  };
-
-  const handleOpenLocationsTrash = async () => {
-    setIsLocationsTrashOpen(true);
-    await loadLocationsTrash();
-  };
-
-  const handleRestoreLocation = async (id: string) => {
-    setLocationsError(null);
-    const res = await fetch(`/api/admin/locations-trash/${id}`, { method: "POST" });
-    if (!res.ok) {
-      setLocationsError("Не удалось восстановить локацию.");
-      return;
-    }
-    await Promise.all([loadLocationsTrash(), loadPois()]);
-  };
-
-  const handlePurgeLocation = async (id: string) => {
-    if (!window.confirm("Удалить локацию навсегда? Это действие нельзя отменить.")) {
-      return;
-    }
-    setLocationsError(null);
-    const res = await fetch(`/api/admin/locations-trash/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      setLocationsError("Не удалось удалить локацию навсегда.");
-      return;
-    }
-    await loadLocationsTrash();
-  };
-
-  const handleBulkChangeCity = async () => {
-    if (!bulkCityTarget) return;
-    setLocationsError(null);
-    setIsBulkWorking(true);
-    try {
-      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
-      await Promise.all(
-        targets.map((poi) =>
-          fetch(`/api/pois/${poi.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...poi, regionId: bulkCityTarget })
-          })
-        )
-      );
-      setLocationSelectedIds(new Set());
-      setBulkCityTarget("");
-      await loadPois();
-    } finally {
-      setIsBulkWorking(false);
-    }
-  };
-
-  const handleBulkChangeCategory = async () => {
-    if (!bulkCategoryTarget) return;
-    setLocationsError(null);
-    setIsBulkWorking(true);
-    try {
-      const targets = pois.filter((poi) => locationSelectedIds.has(poi.id));
-      await Promise.all(
-        targets.map((poi) =>
-          fetch(`/api/pois/${poi.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...poi, category: bulkCategoryTarget })
-          })
-        )
-      );
-      setLocationSelectedIds(new Set());
-      setBulkCategoryTarget("");
-      await loadPois();
-    } finally {
-      setIsBulkWorking(false);
-    }
-  };
-
-  const handleCreateMode = async (input: ExplorationModeInput) => {
-    setModesError(null);
-    const res = await fetch("/api/exploration-modes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setModesError("Не удалось создать режим.");
-      return;
-    }
-
-    const created = (await res.json()) as ExplorationMode;
-    await loadExplorationModes();
-    setModeSelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateMode = async (id: string, input: ExplorationModeInput) => {
-    setModesError(null);
-    const res = await fetch(`/api/exploration-modes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      setModesError("Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadExplorationModes();
-  };
-
-  const handleDeleteMode = async (mode: ExplorationMode) => {
-    if (!window.confirm(`Удалить режим «${mode.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setModesError(null);
-    const res = await fetch(`/api/exploration-modes/${mode.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setModesError(data?.error ?? "Не удалось удалить режим.");
-      return;
-    }
-
-    setModeSelection({ mode: "empty" });
-    await loadExplorationModes();
-  };
-
-  const handleCreateCategory = async (input: CategoryInput) => {
-    setCategoriesError(null);
-    const res = await fetch("/api/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setCategoriesError(data?.error ?? "Не удалось создать категорию.");
-      return;
-    }
-
-    const created = (await res.json()) as Category;
-    await loadCategories();
-    setCategorySelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateCategory = async (id: string, input: CategoryInput) => {
-    setCategoriesError(null);
-    const res = await fetch(`/api/admin/categories/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setCategoriesError(data?.error ?? "Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadCategories();
-  };
-
-  const handleDeleteCategory = async (category: Category) => {
-    if (!window.confirm(`Удалить категорию «${category.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setCategoriesError(null);
-    const res = await fetch(`/api/admin/categories/${category.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setCategoriesError(data?.error ?? "Не удалось удалить категорию.");
-      return;
-    }
-
-    setCategorySelection({ mode: "empty" });
-    await loadCategories();
-  };
-
-  const handleToggleUserHiddenAccess = async (user: AdminUser) => {
-    setUsersError(null);
-    const res = await fetch(`/api/admin/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ canAccessHiddenCategories: !user.canAccessHiddenCategories })
-    });
-
-    if (!res.ok) {
-      setUsersError("Не удалось изменить доступ к скрытым категориям.");
-      return;
-    }
-
-    await loadUsers();
-  };
-
-  const handleToggleUserBlock = async (user: AdminUser) => {
-    const action = user.isBlocked ? "разблокировать" : "заблокировать";
-    if (!window.confirm(`Вы действительно хотите ${action} пользователя «${user.email}»?`)) {
-      return;
-    }
-
-    setUsersError(null);
-    const res = await fetch(`/api/admin/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isBlocked: !user.isBlocked })
-    });
-
-    if (!res.ok) {
-      setUsersError("Не удалось изменить статус пользователя.");
-      return;
-    }
-
-    await loadUsers();
-  };
-
-  const handleDeleteUser = async (user: AdminUser) => {
-    if (!window.confirm(`Удалить пользователя «${user.email}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setUsersError(null);
-    const res = await fetch(`/api/admin/users/${user.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      setUsersError("Не удалось удалить пользователя.");
-      return;
-    }
-
-    await loadUsers();
-  };
-
-  const handleCreateAccount = async (input: { name: string; email: string; password: string }) => {
-    setAccountsError(null);
-    const res = await fetch("/api/admin/accounts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setAccountsError(data?.error ?? "Не удалось создать администратора.");
-      return;
-    }
-
-    const created = (await res.json()) as AdminAccount;
-    await loadAccounts();
-    setAccountSelection({ mode: "edit", id: created.id });
-  };
-
-  const handleUpdateAccount = async (id: string, input: { name: string; email: string; password: string }) => {
-    setAccountsError(null);
-    const res = await fetch(`/api/admin/accounts/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setAccountsError(data?.error ?? "Не удалось сохранить изменения.");
-      return;
-    }
-
-    await loadAccounts();
-  };
-
-  const handleDeleteAccount = async (account: AdminAccount) => {
-    if (!window.confirm(`Удалить администратора «${account.name}»? Это действие нельзя отменить.`)) {
-      return;
-    }
-
-    setAccountsError(null);
-    const res = await fetch(`/api/admin/accounts/${account.id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
-      setAccountsError(data?.error ?? "Не удалось удалить администратора.");
-      return;
-    }
-
-    setAccountSelection({ mode: "empty" });
-    await loadAccounts();
-  };
+  const {
+    authView,
+    currentAdmin,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loginError,
+    isLoggingIn,
+    checkSessionAndLoad,
+    handleLogin,
+    handleLogout
+  } = useAdminAuth(loadAllAdminData);
 
   if (authView.mode === "loading") {
     return null;
@@ -1332,7 +699,7 @@ export function AdminPanel() {
                 <Button type="button" size="sm" variant="outline" className="text-red-600" disabled={isBulkWorking} onClick={handleBulkDeleteLocations}>
                   Удалить
                 </Button>
-                <Button type="button" size="sm" variant="ghost" disabled={isBulkWorking} onClick={() => setLocationSelectedIds(new Set())}>
+                <Button type="button" size="sm" variant="ghost" disabled={isBulkWorking} onClick={clearLocationSelected}>
                   Снять выделение
                 </Button>
               </>
